@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Data (large files - track separately or use Git LFS)
+data/osfi_guidelines/*.pdf
+data/bank_reports/*.pdf
+data/parsed/
+
+# Docker
+.dockerignore
+
+# Misc
+*.log
+.cache/

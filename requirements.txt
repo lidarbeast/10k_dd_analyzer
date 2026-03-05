@@ -1,0 +1,20 @@
+# Phase 1: Data Acquisition & Corpus Preparation
+
+# PDF parsing
+docling>=2.0.0
+
+# Text chunking
+langchain-text-splitters>=0.3.0
+
+# Embeddings (free, local)
+sentence-transformers>=3.0.0
+
+# Vector DB
+pinecone-client>=3.0.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Dev
+pytest>=8.0.0
+ruff>=0.4.0
