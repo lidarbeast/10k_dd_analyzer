@@ -1,0 +1,179 @@
+{
+  "dimension_id": "d1_financial_health",
+  "version": "3.2",
+  "name": "Financial Health",
+  "description": "Assesses the overall financial strength and leverage profile of the target company using cash flow, debt, and profitability signals extracted from any SEC 10-K filing.",
+  "authoritative_sources": [
+    {
+      "label": "SEC Regulation S-K Item 303 \u2014 Management's Discussion and Analysis (modernized November 2020)",
+      "url": "https://www.sec.gov/files/rules/final/2020/33-10890.pdf",
+      "access": "Free. SEC adopting release for MD&A modernization.",
+      "key_content": "Item 303(b)(1) requires companies to identify and discuss: (a) known trends, demands, commitments, events or uncertainties that will materially affect liquidity; (b) material changes in capital resources including expected changes in mix and relative cost of debt vs. equity; (c) internal and external sources of liquidity and any material unused sources. The 'reasonably likely' threshold governs \u2014 disclosure is mandatory where a trend or uncertainty is reasonably likely to have a material effect. This is the direct regulatory basis for what a company MUST disclose about financial health. If a company is silent on a trend, it has affirmatively determined that trend is not reasonably likely to be material."
+    },
+    {
+      "label": "SEC Interpretive Release FR-72 (Release 33-8350, December 19, 2003) \u2014 MD&A Guidance",
+      "url": "https://www.sec.gov/rules-regulations/2003/12/commission-guidance-regarding-managements-discussion-analysis-financial-condition-results-operations",
+      "access": "Free from SEC.gov.",
+      "key_content": "The SEC's principal interpretive guidance on what a compliant MD&A looks like. Key requirements for financial health evaluation: (1) Companies must discuss quality and variability of earnings and cash flow, not just reported figures; (2) Liquidity discussion must identify sources of short-term funding AND the risk that those sources become unavailable (e.g., 'registrant that identifies principal source of liquidity as operating cash flows may need to disclose the extent of the risk that a decrease in demand would reduce availability of funds'); (3) Material trends must be disclosed even if not required by GAAP. FR-72 also requires discussion of critical accounting estimates that affect earnings quality."
+    },
+    {
+      "label": "SEC Interpretive Release FR-83 (Release 33-9144, September 17, 2010) \u2014 Liquidity and Capital Resources Disclosures",
+      "url": "https://www.sec.gov/rules-regulations/2010/09/commission-guidance-presentation-liquidity-capital-resources-disclosures-managements-discussion",
+      "access": "Free from SEC.gov.",
+      "key_content": "The SEC's most specific guidance on liquidity disclosure. Requires: (1) disclosure of known contractual and other obligations affecting future liquidity, including debt maturities; (2) discussion of intra-period borrowing patterns that may not be apparent from period-end balances; (3) discussion of parent/subsidiary funding arrangements; (4) identification of any restrictions on cash held by subsidiaries that affect parent-level liquidity. FR-83 addresses off-balance-sheet arrangements as liquidity sources/uses."
+    },
+    {
+      "label": "SEC Division of Corporation Finance Financial Reporting Manual (FRM) \u2014 Topic 9 (MD&A)",
+      "url": "https://www.sec.gov/about/divisions-offices/division-corporation-finance/financial-reporting-manual/frm-topic-9",
+      "access": "Free from SEC.gov. Staff guidance originally internal, made public in 2008.",
+      "key_content": "FRM Section 9210.1: 'A key objective of the liquidity and capital resources discussion is to provide a clear picture of the company's ability to generate cash and to meet existing known or reasonably likely future cash requirements.' Section 9210.2: 'To the extent a material deficiency is identified, the registrant should disclose the steps taken to remedy the deficiency.' These are the staff's operational interpretation of Item 303 \u2014 effectively the checklist the SEC examines filings against."
+    },
+    {
+      "label": "S&P Corporate Methodology (January 7, 2024) \u2014 Financial Risk Profile framework",
+      "url": "https://www.maalot.co.il/Publications/MT20240214173645.PDF",
+      "access": "Free (S&P Israeli affiliate mirror). Full criteria at spglobal.com/ratingsdirect (registration required).",
+      "key_content": "Six-tier FRP: (1) Minimal, (2) Modest, (3) Intermediate, (4) Significant, (5) Aggressive, (6) Highly Leveraged. Core ratios: FFO/Debt and Debt/EBITDA. Highly Leveraged: FFO/Debt < 12%, Debt/EBITDA > 5x. Aggressive: FFO/Debt 12-20%, Debt/EBITDA 4-5x."
+    },
+    {
+      "label": "Altman Z-Score Revised Model (Altman, 2000)",
+      "url": "Google Scholar \u2014 search: 'Altman 2000 predicting financial distress companies' (NYU Stern working paper)",
+      "access": "Free via Google Scholar.",
+      "key_content": "Z = 1.2*(Working Capital/Total Assets) + 1.4*(Retained Earnings/Total Assets) + 3.3*(EBIT/Total Assets) + 0.6*(Market Cap/Total Liabilities) + 1.0*(Revenue/Total Assets). Zones: Z < 1.81 = Distress, 1.81-2.99 = Grey, Z > 2.99 = Safe."
+    }
+  ],
+  "mandatory_10k_items": [
+    {
+      "item": "Item 7 \u2014 Liquidity and Capital Resources subsection",
+      "label": "MD&A Liquidity Discussion",
+      "rationale": "Under S-K Item 303(b)(1) and FR-72/FR-83, this is where companies must disclose all known material trends affecting liquidity, capital resource mix, and debt servicing capacity. Silence on a financial health issue here means company counsel determined it is not 'reasonably likely' to be material. Specific language about sources and availability of funding is required."
+    },
+    {
+      "item": "Item 7 \u2014 Results of Operations subsection",
+      "label": "MD&A Results of Operations",
+      "rationale": "Under S-K Item 303(b)(2), companies must discuss material changes in revenue, gross profit, and operating income with causal analysis. FR-72 requires discussion of earnings quality and variability, not just numeric changes."
+    },
+    {
+      "item": "Item 8",
+      "label": "Financial Statements",
+      "rationale": "Audited income statement, balance sheet, and cash flow statement \u2014 source for quantitative ratio computation including Altman Z-Score inputs and S&P FRP proxy ratios."
+    }
+  ],
+  "retrieval_queries": [
+    "net loss operating losses revenue decline results of operations financial performance",
+    "total debt long-term debt outstanding principal balance borrowings credit facility",
+    "cash flow from operations working capital cash and cash equivalents liquidity",
+    "stockholders equity deficit accumulated deficit total liabilities book value",
+    "interest expense debt service leverage financial covenants debt obligations",
+    "gross profit EBITDA operating income margin adjusted financial results",
+    "debt maturity repayment schedule refinancing capital structure obligations",
+    "senior notes aggregate principal amount outstanding borrowings indebtedness",
+    "floor plan facility term loan revolving credit total debt instruments"
+  ],
+  "alternate_queries": [
+    "impairment restructuring charges write-down financial distress going concern",
+    "covenant amendment waiver default breach credit agreement",
+    "free cash flow capital expenditures burn rate runway financing activities"
+  ],
+  "evidence_schema": {
+    "primary_signals": [
+      {
+        "signal": "Net income or net loss \u2014 magnitude and multi-year trend",
+        "source_item": "Item 7 Results of Operations + Item 8 Income Statement",
+        "what_to_look_for": "Recurring net losses, especially growing in magnitude over two or more consecutive years. S-K 303(b)(2) requires management to explain the causes of material changes \u2014 a company with recurring losses must address this.",
+        "weight": "primary"
+      },
+      {
+        "signal": "Total debt quantum and effective interest rate",
+        "source_item": "Item 7 Liquidity + Item 8 Balance Sheet",
+        "what_to_look_for": "Total long-term debt and stated interest rate. Under FR-72/FR-83, companies must disclose the risk that funding sources become unavailable. High-yield or distressed-level interest rates (above ~10%) signal borrowing cost consistent with speculative-grade credit.",
+        "weight": "primary"
+      },
+      {
+        "signal": "Operating cash flow \u2014 sign and trend",
+        "source_item": "Item 7 Liquidity + Item 8 Cash Flow Statement",
+        "what_to_look_for": "FRM Topic 9 Section 9210.2 requires disclosure of any 'known trends that will result in liquidity decreasing.' Negative operating cash flow for two or more consecutive years triggers this disclosure requirement and is a primary distress signal.",
+        "weight": "primary"
+      },
+      {
+        "signal": "Book equity or stockholders deficiency",
+        "source_item": "Item 8 Balance Sheet",
+        "what_to_look_for": "Negative total stockholders equity indicates accumulated losses exceed contributed capital. Required to be discussed under Item 303 as a capital structure risk.",
+        "weight": "primary"
+      }
+    ],
+    "corroborating_signals": [
+      "Interest coverage ratio below 2x (EBIT / interest expense)",
+      "Revenue declining year-over-year for two or more periods \u2014 management must explain causes under S-K 303(b)(2)",
+      "Debt covenant violations or amendment requests disclosed in MD&A \u2014 required disclosure under FR-72",
+      "Goodwill or intangible asset impairment charges taken in current year",
+      "MD&A discussion of steps taken to remedy a material liquidity deficiency (FRM 9210.2) \u2014 presence of this language itself confirms a deficiency exists",
+      "Management identifies operating cash flow as primary liquidity source AND discloses demand-reduction risk \u2014 FR-72 pattern for distressed liquidity"
+    ],
+    "absence_signals": [
+      "No material long-term debt \u2014 strong LOW indicator",
+      "Positive and growing operating cash flow over two or more years \u2014 LOW indicator",
+      "MD&A states cash and equivalents are sufficient to meet operating requirements for the next 12 months without qualification \u2014 LOW indicator (FR-72 compliant sufficiency statement)",
+      "Revenue growing with expanding margins \u2014 LOW indicator"
+    ],
+    "debt_terminology_note": "Companies rarely use the phrase 'long-term debt' in narrative sections. In actual 10-K filings, debt is typically referred to by its specific instrument name: 'Senior Notes,' 'Term Loan,' 'Convertible Notes,' 'Floor Plan Facility,' 'Revolving Credit Facility.' Always search for these specific instrument names in addition to generic terms. The aggregate debt balance is typically stated once in MD&A as: 'we had outstanding $X [aggregate principal amount / total borrowings] under our [instrument names].'",
+    "cross_section_evidence": [
+      "Item 1A may contain forward-looking statements about debt covenant risk that supplement Item 7 liquidity discussion",
+      "Item 8 footnotes (debt instruments, going concern notes) are primary sources for exact debt balances, maturity schedules, and covenant terms \u2014 often more precise than Item 7 narrative",
+      "Item 9A changes-in-controls section occasionally contains disclosures about accounting restatements that affect financial health assessment"
+    ]
+  },
+  "rubric": {
+    "HIGH": {
+      "threshold": "Altman Z-Score < 1.81 (distress zone) AND at least two of: net loss present, negative operating cash flow, negative book equity, Debt/EBITDA > 5x (S&P Highly Leveraged), interest coverage < 1x. Under FR-72, the company's own MD&A should disclose these as material trends \u2014 evaluate whether disclosure is adequate or whether the signals appear in financials without corresponding MD&A acknowledgment (itself a disclosure deficiency).",
+      "sp_frp_equivalent": "FRP 5 (Aggressive) or FRP 6 (Highly Leveraged): FFO/Debt < 20%, Debt/EBITDA > 4x",
+      "narrative": "Multiple simultaneous financial distress signals. Debt unsustainable relative to cash generation. Rating equivalent: speculative grade B or below."
+    },
+    "MEDIUM": {
+      "threshold": "Altman Z-Score 1.81-2.99 (grey zone), OR Z-Score < 1.81 with only one additional distress signal. MD&A may discuss steps being taken to address identified deficiencies (FRM 9210.2 pattern \u2014 presence of remediation language confirms the deficiency).",
+      "sp_frp_equivalent": "FRP 3 (Intermediate) or FRP 4 (Significant): Debt/EBITDA 2-5x, FFO/Debt 12-45%",
+      "narrative": "Financial pressure present but a credible path to stability exists. Not in acute distress."
+    },
+    "LOW": {
+      "threshold": "Altman Z-Score > 2.99 (safe zone) AND positive operating cash flow AND positive book equity AND no disclosed covenant violations AND MD&A provides an unqualified sufficiency statement for the next 12 months (FR-72 compliant).",
+      "sp_frp_equivalent": "FRP 1 (Minimal) to FRP 3 (Intermediate): Debt/EBITDA < 3x, FFO/Debt > 30%",
+      "narrative": "Financially healthy. Revenue growing, cash generation strong, debt manageable or absent."
+    }
+  },
+  "rubric_sources": [
+    "SEC S-K Item 303(b)(1) (2020) \u2014 'reasonably likely' disclosure threshold for liquidity trends",
+    "SEC FR-72 (Release 33-8350, 2003) \u2014 quality and variability of earnings and cash flow standard",
+    "SEC FR-83 (Release 33-9144, 2010) \u2014 contractual obligations and intra-period borrowing disclosure",
+    "SEC FRM Topic 9, Section 9210.1-9210.2 \u2014 staff operational interpretation of Item 303",
+    "S&P Corporate Methodology Jan 2024 \u2014 FRP six-tier definitions",
+    "Altman (2000) Z-Score revised model \u2014 1.81 and 2.99 zone boundaries"
+  ],
+  "no_evidence_handling": "If financial statements and MD&A are not retrievable, return INCONCLUSIVE. Do not default to MEDIUM.",
+  "ground_truth_labels": {
+    "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
+    "labels": [
+      {
+        "company": "Carvana FY2022",
+        "label": "HIGH"
+      },
+      {
+        "company": "Peloton FY2023",
+        "label": "HIGH"
+      },
+      {
+        "company": "Shopify FY2025",
+        "label": "LOW"
+      }
+    ]
+  },
+  "prompt_template": {
+    "system": "You are a financial due diligence analyst evaluating a company's financial health from its SEC 10-K filing. Under SEC S-K Item 303 and the FR-72/FR-83 interpretive releases, companies are required to disclose all material known trends affecting liquidity and capital resources. Assess both the quantitative financial signals AND the quality of the company's own MD&A disclosures \u2014 a company that has distress signals in its financials but inadequate MD&A discussion may itself be exhibiting a disclosure deficiency. Assign a verdict of HIGH, MEDIUM, or LOW. Cite specific passages before stating your verdict.",
+    "user_template": "## Task\nEvaluate the Financial Health dimension for {company_name}.\n\n## Rubric\n**HIGH:** Altman Z-Score < 1.81 AND two or more of: net loss, negative operating cash flow, negative book equity, Debt/EBITDA > 5x.\n**MEDIUM:** Z-Score 1.81-2.99, OR only one distress signal alongside elevated leverage.\n**LOW:** Z-Score > 2.99, positive operating cash flow, positive book equity, no covenant violations, unqualified 12-month sufficiency statement in MD&A.\n\n## Retrieved Sections\n{retrieved_chunks}\n\n## Instructions\n1. Extract all quantitative financial signals (net income/loss, total debt, operating cash flow, equity balance) with exact figures.\n2. Estimate Debt/EBITDA and interest coverage where data permits.\n3. Evaluate MD&A quality: Does the company's Item 7 Liquidity discussion adequately acknowledge and explain the signals visible in Item 8? Under FR-72, silence on a material trend is itself a disclosure deficiency. NOTE: If Item 7 is sparse, check Item 8 footnotes directly \u2014 debt instrument notes and maturity schedules in Item 8 are often more precise than the MD&A narrative and should be retrieved regardless of section label.\n4. Note trend direction across all reported periods.\n5. Map findings to rubric thresholds. State verdict with criteria met.\n\n## Output Format\n{\n  \"dimension\": \"financial_health\",\n  \"verdict\": \"HIGH|MEDIUM|LOW\",\n  \"confidence\": 0.0-1.0,\n  \"evidence\": [{\"signal\": \"\", \"value\": \"\", \"source_passage\": \"\", \"source_item\": \"\"}],\n  \"trend\": \"improving|deteriorating|stable\",\n  \"mda_disclosure_quality\": \"adequate|inadequate|not_assessed\",\n  \"rubric_criteria_met\": [],\n  \"reasoning\": \"\",\n  \"flags\": []\n}"
+  },
+  "target_sections": [
+    "item_7",
+    "item_8",
+    "footnotes"
+  ],
+  "section_filter_mode": "soft",
+  "section_filter_note": "target_sections lists preferred 10-K Items for retrieval scoring/boosting. These are NOT exclusive filters \u2014 all filing sections remain eligible for retrieval. Use target_sections to rank retrieved chunks, not to exclude non-matching chunks."
+}

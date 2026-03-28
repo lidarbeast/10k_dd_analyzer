@@ -1,0 +1,218 @@
+{
+  "dimension_id": "d2_going_concern_liquidity",
+  "version": "3.2",
+  "name": "Going Concern & Liquidity",
+  "description": "Assesses whether auditors or management have raised formal doubt about the company's ability to continue as a going concern, and evaluates adequacy of the liquidity position over the next 12 months. Applicable to any SEC 10-K filing.",
+  "authoritative_sources": [
+    {
+      "label": "FASB ASC 205-40 (ASU 2014-15, effective December 15, 2016) \u2014 Going Concern",
+      "url": "https://www.fasb.org/page/document?pdf=ASU+2014-15.pdf",
+      "access": "Free direct download from FASB.org.",
+      "key_content": "Management's evaluation framework: Step 1 \u2014 do conditions and events, in aggregate, raise substantial doubt about the entity's ability to meet obligations within 12 months of financial statement issuance? Step 2 \u2014 do management's plans make it probable that: (a) the plans will be effectively implemented within the same 12-month period, AND (b) the plans, if implemented, will alleviate the substantial doubt? If Step 2 is not passed, management must disclose: the principal conditions giving rise to substantial doubt, management's evaluation of significance relative to its ability to meet obligations, and management's plans. The 12-month window runs from the issuance date, not the reporting date. Adverse conditions enumerated: recurring operating losses, working capital deficiency, negative operating cash flows, loan defaults, need to restructure debt."
+    },
+    {
+      "label": "PCAOB Auditing Standard AS 2415 \u2014 Consideration of an Entity's Ability to Continue as a Going Concern",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2415",
+      "access": "Free from PCAOB.org.",
+      "key_content": "AS 2415 is the auditor's going concern standard \u2014 the standard that directly governs whether an explanatory going concern paragraph appears in the auditor's report. This is distinct from AS 2201 (which covers ICFR). AS 2415 Para 3: The auditor must evaluate whether there is substantial doubt about the entity's ability to continue as a going concern for a reasonable period of time, not to exceed one year beyond the financial statement date. AS 2415 Para 4 lists conditions warranting auditor attention: negative trends (recurring operating losses, working capital deficiencies, negative cash flows, adverse key financial ratios); other indications of possible financial difficulties (loan defaults, dividend arrearages, denial of trade credit, restructuring necessity); internal matters (work stoppages, dependence on success of a project); external matters (legal proceedings, loss of key franchise). When doubt exists and is not alleviated, the auditor must include an explanatory paragraph in the audit report."
+    },
+    {
+      "label": "SEC Interpretive Release FR-83 (Release 33-9144, September 17, 2010) \u2014 Liquidity and Capital Resources Disclosures",
+      "url": "https://www.sec.gov/rules-regulations/2010/09/commission-guidance-presentation-liquidity-capital-resources-disclosures-managements-discussion",
+      "access": "Free from SEC.gov.",
+      "key_content": "FR-83 is the SEC's specific guidance on what Item 303 requires for liquidity disclosure. Requirements directly relevant to going concern evaluation: (1) Companies must disclose known contractual and other obligations affecting future liquidity, including scheduled debt maturities \u2014 a company with a debt maturity within 12 months must describe it and its refinancing plan; (2) Companies must describe any material restrictions on use of cash (e.g. subsidiary cash not available to parent); (3) Intra-period borrowing patterns must be disclosed if period-end balances are not representative of liquidity during the period. A MEDIUM going concern verdict often arises from FR-83 non-compliance: the company's debt maturity schedule reveals risk not acknowledged in the going concern narrative."
+    },
+    {
+      "label": "SEC Regulation S-K Item 303(b)(1) \u2014 MD&A Liquidity and Capital Resources (modernized 2020)",
+      "url": "https://www.sec.gov/files/rules/final/2020/33-10890.pdf",
+      "access": "Free from SEC.gov.",
+      "key_content": "Item 303(b)(1) requires: identify any known trends, demands, commitments, events, or uncertainties that will result in or are reasonably likely to result in a material change in liquidity; describe internal and external sources of liquidity; identify any material unused sources of liquid assets; discuss material commitments for capital expenditures and expected funding sources. The 'reasonably likely' threshold: once a trend that will materially affect liquidity is identified as reasonably likely, disclosure is mandatory. If a company faces a debt maturity cliff but does not disclose it as a liquidity risk, the company's counsel has determined it is not 'reasonably likely' to affect liquidity \u2014 itself an assessment you can test against the financials."
+    },
+    {
+      "label": "KPMG Going Concern Handbook (April 2024)",
+      "url": "https://kpmg.com/kpmg-us/content/dam/kpmg/frv/pdf/2024/handbook-going-concern.pdf",
+      "access": "Free from KPMG.com.",
+      "key_content": "Practitioner interpretation of ASC 205-40 two-step framework. 'Probable' under ASC 450 = likely to occur. 12-month window runs from financial statement issuance date. Management's plans must be both probable of implementation AND probable of resolving the conditions. Relevant hardest case: plans that involve raising new equity or debt capital \u2014 these plans require consideration of whether the capital markets are reasonably accessible to the company at the time of assessment."
+    }
+  ],
+  "mandatory_10k_items": [
+    {
+      "item": "Auditor's Report",
+      "label": "Report of Independent Registered Public Accounting Firm",
+      "rationale": "Under PCAOB AS 2415, the auditor must include an explanatory going concern paragraph when substantial doubt is not alleviated. The paragraph will appear under a 'Going Concern' heading or contain 'substantial doubt about [its/the company's] ability to continue as a going concern.' This is the most authoritative signal \u2014 externally verified by a PCAOB-registered auditor. Note: this is a SEPARATE opinion from the ICFR opinion (which is governed by AS 2201)."
+    },
+    {
+      "item": "Item 7 \u2014 Liquidity and Capital Resources",
+      "label": "MD&A Liquidity Discussion",
+      "rationale": "Under FR-83 and S-K Item 303(b)(1), this section must disclose all known debt maturities, refinancing plans, sources and availability of liquidity. This is where MEDIUM cases are resolved: a company that passes AS 2415 Step 2 (auditor does not qualify) may still have live structural liquidity risk described here that meets MEDIUM criteria."
+    },
+    {
+      "item": "Item 8 \u2014 Notes (Note 1 Basis of Presentation and Debt footnotes)",
+      "label": "Financial Statement Notes",
+      "rationale": "ASC 205-40 requires going concern disclosure in the notes. Note 1 contains the most explicit going concern language in management's own words. Debt footnotes contain maturity schedules, acceleration clauses, and covenant terms essential to evaluating MEDIUM cases."
+    }
+  ],
+  "retrieval_queries": [
+    "substantial doubt ability to continue as a going concern management plans 12 months obligations",
+    "going concern explanatory paragraph auditor opinion basis of preparation uncertainty",
+    "liquidity capital resources cash runway obligations ability to meet fund operations",
+    "debt maturity date refinancing risk outstanding principal acceleration clause covenant",
+    "covenant compliance default waiver amendment credit agreement financial covenants breach",
+    "debtor in possession DIP financing bankruptcy reorganization plan chapter 11",
+    "working capital deficiency cash burn operating losses ability to fund"
+  ],
+  "alternate_queries": [
+    "sources and uses of cash borrowing capacity revolving credit available undrawn",
+    "management plans raise capital equity offering refinance alleviate doubt",
+    "cash equivalents short-term investments available funds unrestricted"
+  ],
+  "evidence_schema": {
+    "primary_signals": [
+      {
+        "signal": "Going concern explanatory paragraph in auditor's report under PCAOB AS 2415",
+        "source_item": "Auditor's Report",
+        "what_to_look_for": "Under PCAOB AS 2415 Para 3, the auditor includes an explanatory paragraph when substantial doubt exists and is not alleviated. Look for a heading 'Going Concern' or the phrase 'substantial doubt about [its] ability to continue as a going concern' in the auditor's report body. This paragraph is distinct from the ICFR adverse opinion. Presence is sufficient alone for HIGH.",
+        "weight": "primary \u2014 sufficient alone for HIGH"
+      },
+      {
+        "signal": "Management 'substantial doubt' disclosure in Note 1 or MD&A under FASB ASC 205-40",
+        "source_item": "Item 8 Note 1 / Item 7 Liquidity",
+        "what_to_look_for": "ASC 205-40-50-4 requires management to explicitly disclose: (a) the principal conditions giving rise to substantial doubt, (b) management's plans, and (c) whether those plans alleviate the doubt. Required language: 'These conditions raise substantial doubt about the Company's ability to continue as a going concern.' If present, it is a mandatory GAAP disclosure.",
+        "weight": "primary \u2014 sufficient alone for HIGH"
+      },
+      {
+        "signal": "DIP financing or active Chapter 11 / voluntary reorganization proceedings",
+        "source_item": "Item 7 / Note 1",
+        "what_to_look_for": "References to 'Debtor-in-Possession,' 'DIP facility,' 'Chapter 11,' or 'Plan of Reorganization.' This is the most extreme going concern condition \u2014 beyond doubt, into actual insolvency proceedings.",
+        "weight": "primary \u2014 sufficient alone for HIGH"
+      },
+      {
+        "signal": "Contingent debt maturity or acceleration clause within 12-18 months \u2014 FR-83 pattern",
+        "source_item": "Item 7 Liquidity / Item 8 Debt footnote",
+        "what_to_look_for": "A specific debt maturity or springing acceleration condition that would trigger within the next 12-18 months, contingent on another condition not being met (threshold not achieved). Under FR-83, this must be disclosed in the liquidity section. The MEDIUM case: auditor passed AS 2415 Step 2 (plans alleviate doubt) but the structural cliff exists in the debt terms. Look for IF/THEN language: 'IF [condition] is not met by [date], THEN [debt accelerates / matures].'",
+        "weight": "primary for MEDIUM \u2014 live contingent cliff without auditor qualification"
+      }
+    ],
+    "corroborating_signals": [
+      "Negative operating cash flows for two or more consecutive periods \u2014 one of AS 2415 Para 4 enumerated conditions",
+      "Working capital deficiency (current liabilities exceed current assets) \u2014 AS 2415 Para 4 enumerated condition",
+      "Management cash runway statement under 18 months at current burn rate",
+      "Covenant violation disclosed or waiver obtained from lenders \u2014 AS 2415 Para 4 enumerated condition (loan default)",
+      "Rating agency downgrade to CCC or below cited in the filing period",
+      "New equity or debt capital raise required as part of management's AS 205-40 Step 2 plans \u2014 KPMG Handbook flags this as higher-uncertainty plan"
+    ],
+    "absence_signals": [
+      "Explicit management statement that current liquidity is sufficient for at least 12 months (FR-83 compliant sufficiency statement) \u2014 strong LOW indicator when combined with clean auditor opinion",
+      "Clean auditor opinion with no going concern paragraph \u2014 necessary but not sufficient alone for LOW; must be combined with absence of MEDIUM structural risk signals",
+      "Large positive working capital position \u2014 LOW indicator",
+      "Recent repayment of material debt obligations \u2014 LOW indicator"
+    ],
+    "false_positive_guards": [
+      {
+        "guard": "GAAP standard going concern assumption \u2014 NOT a qualification",
+        "pattern": "prepared in conformity with U.S. GAAP, which contemplate continuation of the Company as a going concern",
+        "explanation": "This phrase appears in virtually every set of financial statements as the normal going concern assumption under ASC 810 / ASC 205. It is the baseline assumption \u2014 the OPPOSITE of a going concern qualification. Do NOT treat this as an AS 2415 or ASC 205-40 signal. An actual going concern qualification will contain 'substantial doubt about [its/the Company's] ability to continue as a going concern' \u2014 an entirely different phrase expressing an adverse conclusion."
+      },
+      {
+        "guard": "Generic risk factor 'going concern' references \u2014 NOT a qualification",
+        "pattern": "going concern risk' or 'going concern issues' in Item 1A risk factor context",
+        "explanation": "Companies routinely include forward-looking risk factors stating 'we may face going concern issues in the future if...' This is hypothetical risk factor language under Item 1A, not an actual AS 2415 qualification or ASC 205-40 disclosure. Ignore unless the language is in the auditor's report or Note 1 Basis of Presentation with 'substantial doubt' phrasing."
+      },
+      {
+        "guard": "Management 12-month sufficiency statement \u2014 positive liquidity signal",
+        "pattern": "operating activities and cash commitments for...at least the next 12 months",
+        "explanation": "An affirmative management statement that current liquidity is sufficient for at least the next 12 months is an FR-83-compliant sufficiency statement \u2014 a strong LOW indicator. Do NOT confuse this with a going concern acknowledgment. Carvana FY2022 provides this statement despite severe financial distress \u2014 it means management passed ASC 205-40 Step 2, not that no risk exists."
+      }
+    ],
+    "cross_section_evidence": [
+      "Item 8 footnotes (Note 1 Basis of Presentation or a dedicated Liquidity note) may contain management's going concern assessment separate from MD&A \u2014 this is where ASC 205-40 Step 2 mitigating factors are disclosed",
+      "Item 8 debt footnotes are the primary location for springing maturity conditions, covenant acceleration triggers, and other structural liquidity risks (FR-83 pattern) \u2014 do not rely solely on Item 7 narrative",
+      "Item 1A may contain forward-looking debt maturity and refinancing risk language that corroborates or supplements the Item 7 liquidity discussion",
+      "The auditor's going concern paragraph (AS 2415), if present, is in Item 8 within the Report of Independent Registered Public Accounting Firm \u2014 it is a separate paragraph from the financial statement opinion and from the ICFR opinion"
+    ]
+  },
+  "rubric": {
+    "HIGH": {
+      "threshold": "PCAOB AS 2415 auditor going concern paragraph present (auditor found substantial doubt not alleviated) OR company filing as DIP/Chapter 11 OR management discloses substantial doubt under ASC 205-40 in Note 1 or MD&A.",
+      "source": "PCAOB AS 2415 Para 3 \u2014 auditor going concern paragraph requirement. FASB ASC 205-40-50-4 \u2014 management disclosure when doubt not alleviated.",
+      "narrative": "An external auditor with PCAOB fiduciary duty has concluded AS 2415 conditions exist and plans do not alleviate them, OR management has made the same determination under mandatory GAAP standards. The highest-certainty going concern signal because it is externally verified."
+    },
+    "MEDIUM": {
+      "threshold": "No auditor AS 2415 going concern paragraph (Step 2 plans passed auditor review) BUT one or more of: (a) contingent debt cliff within 12-18 months explicitly named and quantified under FR-83 disclosure requirements; (b) covenant risk described as material with no committed resolution; (c) management cash runway under 18 months at stated burn rate; (d) Step 2 plans depend on raising new capital in uncertain markets (KPMG Handbook higher-uncertainty pattern).",
+      "source": "FASB ASC 205-40 two-step framework \u2014 passing Step 2 removes mandatory disclosure but underlying conditions may persist. SEC FR-83 \u2014 contingent debt maturities must be disclosed in liquidity section.",
+      "narrative": "Not in going concern territory per PCAOB/GAAP standards as of the filing date, but carrying real near-term structural liquidity risk. The hardest verdict \u2014 requires the agent to find risk in debt terms and maturity structures, not keyword-match on 'going concern.'",
+      "filing_example_pattern": "A company with severe D1 financial distress (large net losses, high leverage) but no AS 2415 going concern paragraph AND a positive management 12-month sufficiency statement is NOT HIGH on this dimension. It may be MEDIUM if near-term contingent debt maturities or covenant risk are disclosed, or LOW if no such structural triggers are present. The D1 and D2 dimensions are intentionally independent \u2014 a company can be D1 HIGH and D2 LOW simultaneously."
+    },
+    "LOW": {
+      "threshold": "Clean PCAOB AS 2415 auditor opinion (no going concern paragraph) AND management provides FR-83-compliant explicit positive 12-month sufficiency statement AND positive working capital AND no material debt maturities within 12 months without committed refinancing.",
+      "source": "AS 2415 Para 3 \u2014 absence of paragraph means auditor found no substantial doubt or Step 2 plans alleviate it. ASC 205-40 Step 1 \u2014 no adverse conditions present. FR-83 \u2014 sufficiency statement indicates management has met disclosure requirement for liquidity adequacy.",
+      "narrative": "No liquidity risk within the analytical horizon. Cash generation exceeds obligations; management meets FR-83 standard for positive liquidity disclosure."
+    }
+  },
+  "rubric_sources": [
+    "PCAOB AS 2415 Para 3-4 \u2014 auditor going concern evaluation standard and enumerated adverse conditions",
+    "FASB ASC 205-40 (ASU 2014-15) \u2014 'substantial doubt' definition and two-step management assessment",
+    "SEC FR-83 (Release 33-9144, 2010) \u2014 contingent debt maturity and FR-83 liquidity disclosure requirements",
+    "SEC S-K Item 303(b)(1) (2020) \u2014 'reasonably likely' liquidity trend disclosure threshold",
+    "KPMG Going Concern Handbook April 2024 \u2014 capital-raise plan uncertainty analysis"
+  ],
+  "no_evidence_handling": "If auditor's report is not retrieved, search explicitly for 'substantial doubt' and 'going concern' in all available chunks. If neither found, flag INCONCLUSIVE \u2014 do not default to LOW.",
+  "ground_truth_labels": {
+    "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
+    "labels": [
+      {
+        "company": "Carvana FY2022",
+        "label": "HIGH",
+        "anchor": "KPMG AS 2415 going concern qualification with explicit substantial doubt language"
+      },
+      {
+        "company": "Peloton FY2023",
+        "label": "MEDIUM",
+        "anchor": "No AS 2415 auditor qualification but live contingent debt cliff with named trigger condition and quantified amount \u2014 FR-83 disclosed"
+      },
+      {
+        "company": "Shopify FY2025",
+        "label": "LOW",
+        "anchor": "Clean AS 2415 auditor opinion; positive working capital; FR-83-compliant management sufficiency statement; material debt repaid in period"
+      }
+    ]
+  },
+  "prompt_template": {
+    "system": "You are a financial due diligence analyst evaluating going concern and liquidity risk from a company's SEC 10-K filing. You are applying two distinct but related frameworks: (1) PCAOB AS 2415 \u2014 the auditor's standard governing whether a going concern paragraph appears in the audit report; and (2) FASB ASC 205-40 \u2014 the GAAP standard governing management's own going concern disclosure. For MEDIUM cases, you are evaluating whether SEC FR-83 liquidity disclosure requirements reveal structural debt cliff risk even where no formal going concern conclusion exists. Cite specific passages before stating your verdict.",
+    "user_template": "## Task\nEvaluate the Going Concern & Liquidity dimension for {company_name}.\n\n## Rubric\n**HIGH:** PCAOB AS 2415 auditor going concern paragraph with 'substantial doubt' language, OR DIP/Chapter 11, OR management ASC 205-40 disclosure of substantial doubt in Note 1 or MD&A.\n**MEDIUM:** No auditor qualification BUT contingent debt cliff within 12-18 months disclosed per FR-83, OR cash runway < 18 months with no committed refinancing, OR Step 2 plans depend on uncertain capital markets access.\n**LOW:** Clean AS 2415 auditor opinion AND FR-83-compliant positive 12-month sufficiency statement AND positive working capital AND no near-term maturity without committed refinancing.\n\n## Retrieved Sections\n{retrieved_chunks}\n\n## Instructions\n1. Search the auditor's report for PCAOB AS 2415 going concern paragraph. Report verbatim what you find.\n2. Search Note 1 / Basis of Presentation for ASC 205-40 substantial doubt language. Report verbatim.\n3. Search MD&A Liquidity section (Item 7) for: (a) management going concern assessment, (b) cash balance and stated runway, (c) debt maturity dates or contingent acceleration conditions (FR-83 pattern). ALSO search Item 8 footnotes directly \u2014 springing maturity clauses, covenant acceleration triggers, and contingent repayment conditions are typically disclosed only in the debt instrument footnotes, not in the Item 7 narrative. Do not rely on Item 7 alone for structural liquidity risk.\n4. Note whether management provides an explicit FR-83-compliant 12-month sufficiency statement.\n5. If no going concern language found, evaluate whether FR-83 liquidity disclosures or debt footnotes reveal a MEDIUM structural risk.\n6. State verdict and explain which specific standard criteria were met.\n\n## Output Format\n{\n  \"dimension\": \"going_concern_liquidity\",\n  \"verdict\": \"HIGH|MEDIUM|LOW\",\n  \"confidence\": 0.0-1.0,\n  \"as2415_paragraph_found\": true,\n  \"as2415_quote\": \"\",\n  \"asc205_40_disclosure_found\": true,\n  \"management_sufficiency_statement\": \"\",\n  \"evidence\": [{\"signal\": \"\", \"value\": \"\", \"source_passage\": \"\", \"source_item\": \"\"}],\n  \"rubric_criteria_met\": [],\n  \"reasoning\": \"\",\n  \"flags\": []\n}"
+  },
+  "embedded_standard_text": {
+    "_purpose": "Verbatim authoritative text embedded here so the agent can apply the evaluation framework directly without needing to retrieve standards separately. Text sourced from PCAOB.org and FASB.org public documents.",
+    "PCAOB_AS2415_Para_03_two_step_evaluation_procedure": {
+      "source": "PCAOB AS 2415, Para .03 (current version, effective for audits of fiscal years ending on or after December 15, 2017)",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2415",
+      "verbatim_text": "The auditor should evaluate whether there is substantial doubt about the entity's ability to continue as a going concern for a reasonable period of time in the following manner: (1) The auditor considers whether the results of his procedures performed in planning, gathering evidential matter relative to the various audit objectives, and completing the audit identify conditions and events that, when considered in the aggregate, indicate there could be substantial doubt about the entity's ability to continue as a going concern for a reasonable period of time. (2) If the auditor believes there is substantial doubt about the entity's ability to continue as a going concern for a reasonable period of time, he should (a) obtain information about management's plans that are intended to mitigate the effect of such conditions or events, and (b) assess the likelihood that such plans can be effectively implemented. (3) After the auditor has evaluated management's plans, he concludes whether he has substantial doubt about the entity's ability to continue as a going concern for a reasonable period of time. If the auditor concludes there is substantial doubt, he should (a) consider the adequacy of disclosure about the entity's possible inability to continue as a going concern for a reasonable period of time, and (b) include an explanatory paragraph, including an appropriate title (immediately following the opinion paragraph), in his audit report to reflect his conclusion. If the auditor concludes that substantial doubt does not exist, he should consider the need for disclosure."
+    },
+    "PCAOB_AS2415_Para_06_enumerated_adverse_conditions": {
+      "source": "PCAOB AS 2415, Para .06",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2415",
+      "verbatim_text": "The following are examples of conditions and events that, when considered in the aggregate, indicate there could be substantial doubt about the entity's ability to continue as a going concern: (1) Negative trends \u2014 for example, recurring operating losses, working capital deficiencies, negative cash flows from operating activities, adverse key financial ratios. (2) Other indications of possible financial difficulties \u2014 for example, default on loan or similar agreements, arrearages in dividends, denial of usual trade credit from suppliers, restructuring of debt, noncompliance with statutory capital requirements, need to seek new sources or methods of financing or to dispose of substantial assets. (3) Internal matters \u2014 for example, work stoppages or other labor difficulties, substantial dependence on the success of a particular project, uneconomic long-term commitments, need to significantly revise operations. (4) External matters that have occurred \u2014 for example, legal proceedings, legislation, or similar matters that might jeopardize an entity's ability to operate; loss of a key franchise, license, or patent; loss of a principal customer or supplier; uninsured or underinsured catastrophe.",
+      "evaluation_use": "Agent should systematically check each of the four categories against the retrieved filing text. ANY condition in ANY category may contribute to substantial doubt when considered in aggregate with others. Category (1) Negative trends maps directly to Item 8 financial statements. Category (2) Financial difficulties maps to debt footnotes and MD&A covenant discussion. Categories (3) and (4) map to Item 1A and Item 3."
+    },
+    "PCAOB_AS2415_standard_going_concern_paragraph_template": {
+      "source": "PCAOB AS 2415, illustrative explanatory paragraph (AS 2415 Para .13 / AS 3101 Para .18)",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2415",
+      "verbatim_text": "The accompanying financial statements have been prepared assuming that the Company will continue as a going concern. As discussed in Note X to the financial statements, the Company has suffered recurring losses from operations and has a net capital deficiency that raise substantial doubt about its ability to continue as a going concern. Management's plans in regard to these matters are also described in Note X. The financial statements do not include any adjustments that might result from the outcome of this uncertainty.",
+      "evaluation_use": "When searching for the going concern paragraph in a retrieved auditor's report, look for text that substantially matches this template. The key required phrases are: 'prepared assuming that the Company will continue as a going concern' AND 'raise substantial doubt about its ability to continue as a going concern.' A going concern paragraph must NOT use conditional language ('there may be substantial doubt' or 'unless the Company is able to obtain...') \u2014 AS 2415 fn.5 explicitly prohibits conditional wording."
+    },
+    "FASB_ASC205_40_Step1_Step2_framework": {
+      "source": "FASB ASC 205-40-50 (ASU 2014-15, codified effective December 15, 2016)",
+      "url": "https://www.fasb.org/page/document?pdf=ASU+2014-15.pdf",
+      "verbatim_text": "Step 1: When relevant conditions and events are identified, management shall consider whether it is probable that the entity will be unable to meet its obligations as they become due within one year after the date that the financial statements are issued (or within one year after the date that the financial statements are available to be issued). If conditions and events, considered in the aggregate, indicate that it is probable that the entity will be unable to meet its obligations as they become due within one year after the date that the financial statements are issued (or within one year after the date that the financial statements are available to be issued), substantial doubt about the entity's ability to continue as a going concern exists. Step 2: When substantial doubt exists, management shall consider whether its plans that are intended to mitigate the conditions or events that raise substantial doubt are probable of being effectively implemented and, if so, whether those plans mitigate the substantial doubt. If management's plans are probable of being effectively implemented and, when implemented, will mitigate the conditions or events that raise substantial doubt within one year after the date that the financial statements are issued, then substantial doubt is alleviated. Required disclosure when doubt NOT alleviated (ASC 205-40-50-4): The principal conditions and events that raise substantial doubt; Management's evaluation of the significance of those conditions and events in relation to the entity's ability to meet its obligations; Management's plans that are intended to mitigate the conditions or events that raise substantial doubt.",
+      "evaluation_use": "Management's ASC 205-40 assessment runs parallel to the auditor's AS 2415 assessment but independently. Both must be evaluated. A company can pass AS 2415 Step 2 (auditor satisfied) while still disclosing substantial doubt under ASC 205-40 if management's own assessment of plan effectiveness is less optimistic than the auditor's. Note 1 (Basis of Presentation) is where the ASC 205-40-50-4 disclosure appears."
+    }
+  },
+  "target_sections": [
+    "item_8",
+    "auditor_report",
+    "item_7",
+    "footnotes"
+  ],
+  "section_filter_mode": "soft",
+  "section_filter_note": "target_sections lists preferred 10-K Items for retrieval scoring/boosting. These are NOT exclusive filters \u2014 all filing sections remain eligible for retrieval. Use target_sections to rank retrieved chunks, not to exclude non-matching chunks."
+}

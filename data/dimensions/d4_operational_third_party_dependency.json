@@ -1,0 +1,168 @@
+{
+  "dimension_id": "d4_operational_third_party_dependency",
+  "version": "3.2",
+  "name": "Operational & Third-Party Dependency",
+  "description": "Assesses the degree to which the company's operations depend on named single-source suppliers, manufacturers, technology providers, financial partners, or distribution arrangements whose loss would cause a material adverse effect. Applicable to any SEC 10-K filing.",
+  "authoritative_sources": [
+    {
+      "label": "SEC Regulation S-K Item 101(c) as modernized \u2014 Adopting Release (November 9, 2020)",
+      "url": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+      "access": "Free direct download from SEC.gov.",
+      "key_content": "Item 101(c) (2020) is principles-based: disclose 'any dependence on one or a few customers, the loss of any one or more of which would have a material adverse effect on the registrant and its subsidiaries taken as a whole.' The same material adverse effect standard applies to suppliers, manufacturers, and service providers by analogy under principles-based application. The 2020 modernization explicitly moved away from bright-line rules (the old 10% customer revenue threshold) to allow disclosure of dependencies that matter to the business even if they don't reach a numeric threshold. Key evaluative implication: any named dependency in Item 1 with material adverse effect language represents an affirmative counsel determination that the dependency IS material."
+    },
+    {
+      "label": "SEC Regulation S-K Item 105 \u2014 Risk Factors (modernized November 2020)",
+      "url": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+      "access": "Free (same adopting release as Item 103 and Item 101).",
+      "key_content": "Item 105 requires risk factors to be 'company-specific' and 'material.' The SEC explicitly stated in the adopting release that risk factors must not be 'risks that could apply to any issuer or any offering.' This is the direct standard governing operational risk factors in Item 1A. Under Item 105, a named third party appearing in a risk factor (e.g., 'if [named provider] terminates our agreement, we would be unable to...') is a company-specific, counsel-verified material risk disclosure. Generic language ('we depend on third-party suppliers') without named entities may not satisfy Item 105's specificity requirement \u2014 but by the same token, its presence without named entities is a weaker signal than named dependency disclosure."
+    },
+    {
+      "label": "SEC FR-72 (Release 33-8350, 2003) \u2014 MD&A Disclosure of Operational Trends and Uncertainties",
+      "url": "https://www.sec.gov/rules-regulations/2003/12/commission-guidance-regarding-managements-discussion-analysis-financial-condition-results-operations",
+      "access": "Free from SEC.gov.",
+      "key_content": "FR-72 requires that material trends and uncertainties be discussed in MD&A regardless of whether they are required by specific S-K line-item rules. If a company has completed a significant outsourcing transaction (e.g., exiting owned manufacturing), the transition costs, new dependency created, and impact on operational flexibility are required to be discussed in MD&A as material trends under FR-72. The presence of transition-related charges in MD&A, combined with disclosure of the resulting dependency in Item 1/1A, is a robust corroborating pattern for HIGH dependency risk."
+    },
+    {
+      "label": "S&P Corporate Methodology (January 7, 2024) \u2014 Competitive Position: Scale, Scope, and Diversity",
+      "url": "https://www.maalot.co.il/Publications/MT20240214173645.PDF",
+      "access": "Free (S&P mirror). Section D of the Corporate Methodology document.",
+      "key_content": "Competitive position encompasses: competitive advantage, scale/scope/diversity, operating efficiency, and profitability. S&P's scale/scope/diversity assessment explicitly considers: customer concentration, supplier concentration, product/service diversity, and geographic diversity. A company that is highly concentrated in a single supplier or provider scores negatively on this component. S&P rates a 'weak' competitive position when scale/scope/diversity is significantly limited \u2014 including by single-source operational dependency."
+    }
+  ],
+  "mandatory_10k_items": [
+    {
+      "item": "Item 1",
+      "label": "Business Description \u2014 Manufacturing, Supply Chain, Technology, Customers, Distribution",
+      "rationale": "Under Item 101(c) (2020 principles-based standard), companies must disclose dependencies whose loss would have a material adverse effect. This is the primary location for named dependency disclosures. Look at subsections describing how the product is made, delivered, and sold."
+    },
+    {
+      "item": "Item 1A",
+      "label": "Risk Factors \u2014 Operational, Supply Chain, Technology Risk subsections",
+      "rationale": "Under Item 105 (2020 specificity requirement), risk factors naming specific third parties in operational dependency contexts represent counsel-verified material, company-specific risk disclosures. The Item 105 standard distinguishes material named-dependency disclosures from boilerplate generic risk language."
+    },
+    {
+      "item": "Item 7",
+      "label": "MD&A \u2014 Operational context, restructuring, outsourcing transitions",
+      "rationale": "Under FR-72, material outsourcing transactions and their resulting dependencies must be discussed as material trends in MD&A. Transition charges and the resulting new dependency profile should appear together. Also look for contractual purchase commitments to a single supplier in the MD&A discussion of liquidity obligations."
+    }
+  ],
+  "retrieval_queries": [
+    "sole supplier sole manufacturer contract manufacturer outsource depend on third party provider",
+    "single source concentration risk supplier dependency key vendor critical third party",
+    "material adverse effect loss of supplier provider manufacturer operations disruption",
+    "payment processing provider exclusive arrangement financial partner loan purchaser servicer",
+    "logistics provider third-party logistics distribution fulfillment outsourced operations",
+    "license agreement distribution arrangement dependent brand franchise renewal termination",
+    "contract manufacturing offshore sole production facility geographic concentration",
+    "committed forward flow arrangement purchase finance receivables loan sale facility",
+    "floor plan facility inventory financing committed purchase arrangement"
+  ],
+  "alternate_queries": [
+    "cloud infrastructure technology provider platform dependency software service agreement",
+    "key customer revenue concentration single customer government customer dependent",
+    "supply chain disruption geographic single country sourcing concentration"
+  ],
+  "evidence_schema": {
+    "primary_signals": [
+      {
+        "signal": "Named sole-source or exclusive provider with explicit 'material adverse effect' language \u2014 Item 101(c) / Item 105 verified",
+        "source_item": "Item 1 / Item 1A",
+        "what_to_look_for": "A named company or category identified as the exclusive or sole source for a critical function, with explicit language that loss would have a 'material adverse effect.' Under Item 101(c) and Item 105, this disclosure represents company counsel's affirmative determination that (a) the dependency is material and (b) the named entity is company-specific (not generic). The absence of an alternative sourcing path elevates this to HIGH.",
+        "weight": "primary \u2014 sufficient alone for HIGH when no mitigation described"
+      },
+      {
+        "signal": "Complete outsourcing of a core function \u2014 FR-72 material trend pattern",
+        "source_item": "Item 1 + Item 7 MD&A",
+        "what_to_look_for": "Disclosure that the company has exited all owned capacity in a critical area (manufacturing, logistics, technology infrastructure) and now relies entirely on third parties. Under FR-72, the transition and resulting dependency should appear in MD&A as a material trend. The combination of Item 1 business description disclosure + MD&A transition discussion is a robust HIGH pattern.",
+        "weight": "primary for HIGH"
+      },
+      {
+        "signal": "Named financial or transaction provider handling majority of volume \u2014 Item 105 company-specific",
+        "source_item": "Item 1A",
+        "what_to_look_for": "A named financial institution, payment processor, or commercial partner described in company-specific Item 1A risk factor language (not generic) as handling a majority or critical portion of transaction volume. Under Item 105, the naming of the specific provider in risk factors \u2014 with quantified volume or explicit material adverse effect language \u2014 represents a counsel-verified material risk.",
+        "weight": "primary for HIGH or MEDIUM depending on whether substitution is described"
+      },
+      {
+        "signal": "Committed financial facility or forward flow arrangement with a named external counterparty",
+        "source_item": "Item 1 / Item 7 / Item 8 debt footnotes",
+        "what_to_look_for": "In financial services, automotive, or lending businesses, a named external financial institution may be the committed buyer of loan originations or the sole provider of inventory financing. Language such as 'committed to purchase up to $X billion of finance receivables' or 'floor plan facility with [named institution]' constitutes an operational dependency if the company's business model depends on continuous access to this facility. Evaluate whether the commitment is bilateral (both parties committed) vs. at-will (either party can terminate).",
+        "weight": "primary for MEDIUM when bilateral committed; HIGH if sole channel with no disclosed alternative"
+      }
+    ],
+    "corroborating_signals": [
+      "Geographic concentration of supplier base in a single country \u2014 Item 105 specific geographic risk factor (not generic geopolitical risk)",
+      "Contractual purchase commitments to a single supplier disclosed in debt/obligations footnotes",
+      "Transition charges in MD&A resulting from recent outsourcing \u2014 FR-72 pattern confirming structural change",
+      "Named provider handling a quantified majority of transaction or revenue volume",
+      "Prior supply chain disruption cited as a causal driver of revenue or margin decline in MD&A results of operations discussion"
+    ],
+    "absence_signals": [
+      "Item 1 describes manufacturing across multiple owned facilities in multiple geographies \u2014 LOW indicator for supply dependency",
+      "Item 1A operational risk factors use only generic language without named entities \u2014 under Item 105 specificity standard, may indicate no material named dependencies exist",
+      "No single customer represents a material percentage of revenue and explicitly stated \u2014 LOW indicator for customer concentration"
+    ],
+    "owned_vs_external_guard": {
+      "instruction": "Before classifying any named entity as a third-party dependency, verify whether the entity is an owned subsidiary or recently acquired business. Key indicators that an entity is OWNED (not a dependency): (a) the filing describes an 'acquisition of X% of equity interests'; (b) the entity is listed in the subsidiaries exhibit; (c) the filing describes it as 'our [division/subsidiary/wholly owned]'; (d) the entity's financial results are consolidated into the company's financials. An owned entity cannot be a third-party dependency \u2014 its loss is a divestiture risk, not a supply chain or provider dependency. Only classify an entity as a dependency if it is explicitly external to the consolidated group.",
+      "example": "ADESA in Carvana FY2022 appears 51 times but was acquired for $2.2B in May 2022 and is consolidated infrastructure \u2014 NOT a third-party dependency. Ally Financial in the same filing IS an external party providing a committed forward flow facility for finance receivables \u2014 a genuine financial dependency."
+    },
+    "cross_section_evidence": [
+      "Item 8 debt and commitment footnotes are essential for financial-service dependencies (floor plan facilities, forward flow arrangements, securitisation commitments) \u2014 these are often the only place where the full terms and sole-source nature of financial partnerships are disclosed",
+      "Item 7 MD&A liquidity section discusses operational financing arrangements and may name specific counterparties whose loss would impair operations",
+      "Item 8 revenue footnotes may disclose customer concentration data (ASC 280 segment reporting) that Item 1 does not",
+      "Item 2 (Properties) may reveal single-facility or single-location operational dependencies not described in Item 1"
+    ]
+  },
+  "rubric": {
+    "HIGH": {
+      "threshold": "Named single-source or exclusive dependency in Item 1 or Item 1A \u2014 meeting Item 101(c) material adverse effect standard AND Item 105 company-specificity standard \u2014 with no described alternative sourcing path or substitute. Company counsel has affirmatively determined the dependency is material AND company-specific.",
+      "source": "17 CFR \u00a7229.101(c) (2020) \u2014 material adverse effect dependency standard. 17 CFR \u00a7229.105 (2020) \u2014 company-specificity requirement confirming counsel has verified the named dependency as material to this specific company.",
+      "narrative": "The company has publicly disclosed, under dual SEC disclosure standards, that a named third party is essential with no practical substitute. Both Item 101(c) and Item 105 have been independently satisfied \u2014 the strongest available external verification of a material, company-specific operational single point of failure."
+    },
+    "MEDIUM": {
+      "threshold": "Named dependency meeting Item 101(c) or Item 105 standards BUT mitigation is described (alternative sourcing available, contractual renewal rights, partial substitution feasible), OR two or more named material dependencies each not sole-source. The dependency is real and counsel-verified but not catastrophic-loss.",
+      "source": "17 CFR \u00a7229.101(c) \u2014 material dependency disclosed. Mitigation described reduces from HIGH to MEDIUM because loss of the dependency, while material, is not operationally catastrophic.",
+      "narrative": "Material operational concentration is counsel-verified under SEC disclosure standards, but the company has acknowledged and partially mitigated the risk."
+    },
+    "LOW": {
+      "threshold": "No named single-source dependencies in Item 1 or Item 1A meeting the material adverse effect standard. Operations spread across multiple providers. Item 1A does not contain company-specific named-entity dependency risk factors satisfying Item 105 specificity standard.",
+      "source": "Absence of Item 101(c) material dependency disclosure. Absence of Item 105 company-specific named dependency risk factors.",
+      "narrative": "Company counsel has determined, under both Item 101(c) and Item 105, that no single provider dependency meets the material adverse effect and company-specificity standards for disclosure."
+    }
+  },
+  "rubric_sources": [
+    "17 CFR \u00a7229.101(c) (Reg S-K Item 101) as amended November 9, 2020 \u2014 principles-based material dependency standard",
+    "17 CFR \u00a7229.105 (Reg S-K Item 105) as amended November 9, 2020 \u2014 company-specificity requirement for risk factors",
+    "SEC FR-72 (Release 33-8350, 2003) \u2014 MD&A disclosure of material outsourcing trends and resulting dependencies",
+    "S&P Corporate Methodology Jan 2024 Section D \u2014 scale, scope, and diversity component of competitive position"
+  ],
+  "no_evidence_handling": "If Item 1 and Item 1A are not retrieved, flag INCONCLUSIVE. Do not infer LOW from absence of chunks.",
+  "ground_truth_labels": {
+    "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
+    "labels": [
+      {
+        "company": "Carvana FY2022",
+        "label": "HIGH"
+      },
+      {
+        "company": "Peloton FY2023",
+        "label": "HIGH"
+      },
+      {
+        "company": "Shopify FY2025",
+        "label": "MEDIUM"
+      }
+    ]
+  },
+  "prompt_template": {
+    "system": "You are an operational due diligence analyst evaluating third-party and supply chain dependency risk from a company's SEC 10-K filing. Apply two SEC disclosure standards as your primary filters: (1) S-K Item 101(c) (2020) \u2014 any named dependency with 'material adverse effect' language in Item 1 represents company counsel's affirmative determination of materiality; (2) S-K Item 105 (2020) \u2014 any company-specific named third party in Item 1A risk factors (not generic language) represents a counsel-verified material, company-specific dependency. Distinguish between disclosures that meet Item 105's specificity standard (named entities, specific consequences) vs. generic industry risk language. Cite specific passages before stating your verdict.",
+    "user_template": "## Task\nEvaluate the Operational & Third-Party Dependency dimension for {company_name}.\n\n## Rubric\n**HIGH:** Named sole-source dependency with 'material adverse effect' language in Item 1 or Item 1A (Item 101c + Item 105 both satisfied) AND no described substitute.\n**MEDIUM:** Named material dependency with mitigation described, OR two or more named material dependencies each not sole-source.\n**LOW:** No named single-source dependencies; no company-specific named-entity dependency risk factors in Item 1A meeting Item 105 specificity standard.\n\n## Retrieved Sections\n{retrieved_chunks}\n\n## Instructions\n1. Extract every named third party from Item 1 and Item 1A. FIRST verify each named entity: is it an owned subsidiary/acquisition (consolidated, not a dependency) or an external counterparty? Check for acquisition language, subsidiary listings, and consolidation references before classifying any entity as a dependency.\n2. For each external party: (a) what is the dependency for, (b) does 'material adverse effect' language appear, (c) does it meet Item 105 specificity (named entity, not generic), (d) is any alternative or mitigation described. NOTE: Financial-service dependencies (floor plan facilities, forward flow purchase arrangements, securitisation partners) are primarily disclosed in Item 8 debt and commitment footnotes \u2014 these are often the only location where sole-source nature and full commitment terms are stated. Always retrieve Item 8 footnotes for companies in financial services, automotive, or lending-adjacent industries.\n3. Look for FR-72 patterns: outsourcing transitions in MD&A that create new named dependencies.\n4. Assess sole-source vs. concentrated-but-substitutable.\n5. Note geographic concentration where named countries/regions appear.\n6. State verdict with specific Item 101(c)/Item 105 criteria analysis.\n\n## Output Format\n{\n  \"dimension\": \"operational_third_party_dependency\",\n  \"verdict\": \"HIGH|MEDIUM|LOW\",\n  \"confidence\": 0.0-1.0,\n  \"named_dependencies\": [\n    {\"entity_name\": \"\", \"dependency_type\": \"manufacturer|logistics|technology|financial|distribution|license\", \"sole_source\": false, \"material_adverse_effect_language\": false, \"item105_specific\": false, \"mitigation_described\": false, \"source_passage\": \"\", \"source_item\": \"\"}\n  ],\n  \"geographic_concentration\": \"\",\n  \"rubric_criteria_met\": [],\n  \"reasoning\": \"\",\n  \"flags\": []\n}"
+  },
+  "target_sections": [
+    "item_1",
+    "item_1a",
+    "item_7",
+    "footnotes"
+  ],
+  "section_filter_mode": "soft",
+  "section_filter_note": "target_sections lists preferred 10-K Items for retrieval scoring/boosting. These are NOT exclusive filters \u2014 all filing sections remain eligible for retrieval. Use target_sections to rank retrieved chunks, not to exclude non-matching chunks."
+}

@@ -1,0 +1,259 @@
+{
+  "dimension_id": "d5_internal_controls_governance",
+  "version": "3.2",
+  "name": "Internal Controls & Governance Risk",
+  "description": "Assesses whether the company has disclosed material weaknesses in ICFR, and evaluates governance quality using disclosures in Item 9A, Item 1A, and the new SEC cybersecurity governance requirements in Item 106. Applicable to large accelerated and accelerated filer 10-Ks.",
+  "authoritative_sources": [
+    {
+      "label": "PCAOB Auditing Standard AS 2201 \u2014 Audit of Internal Control Over Financial Reporting",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2201",
+      "access": "Free from PCAOB.org.",
+      "key_content": "Appendix A three-tier severity hierarchy: (1) Control deficiency \u2014 design or operating failure that does not prevent/detect misstatements; no public disclosure required. (2) Significant deficiency \u2014 less severe than material weakness but important enough to merit attention of governance; communicated to audit committee in writing but NOT publicly disclosed. (3) Material weakness \u2014 reasonable possibility that a material misstatement will not be prevented, detected, or corrected on a timely basis; requires adverse ICFR opinion and mandatory public disclosure in Item 9A. Para .02: 'If one or more material weaknesses exist, the company's ICFR cannot be considered effective.' Para .69-70: Four indicators of material weakness: (a) auditor identifies material misstatement not detected by company controls; (b) restatement of previously issued financial statements; (c) ineffective audit committee oversight; (d) identified fraud by senior management."
+    },
+    {
+      "label": "PCAOB Auditing Standard AS 2415 \u2014 Consideration of an Entity's Ability to Continue as a Going Concern",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2415",
+      "access": "Free from PCAOB.org.",
+      "key_content": "Note: AS 2415 governs going concern (D2 dimension). Cited here because the AS 2201 ICFR adverse opinion and the AS 2415 going concern paragraph are two SEPARATE auditor conclusions that can appear independently in the same audit report. An adverse ICFR opinion under AS 2201 does not imply and is not implied by a going concern paragraph under AS 2415. In evaluation: a filing can have both (Carvana FY2022 pattern), either alone, or neither."
+    },
+    {
+      "label": "COSO 2013 Internal Control \u2014 Integrated Framework",
+      "url": "https://www.coso.org/guidance-on-ic",
+      "access": "Free executive summary from COSO.org.",
+      "key_content": "Five components that companies must maintain for effective ICFR: (1) Control Environment \u2014 tone at top, board oversight, HR policies; (2) Risk Assessment \u2014 identification of financial reporting risks; (3) Control Activities \u2014 policies and procedures including IT controls; (4) Information & Communication \u2014 quality of financial information flows; (5) Monitoring Activities \u2014 ongoing and separate evaluations. Companies state their ICFR is based on the COSO 2013 framework in Item 9A \u2014 a material weakness will typically be described as a deficiency in one or more of these five components. Understanding which COSO component failed tells you whether the weakness is systemic (Control Environment \u2014 HIGH severity) or process-specific (Control Activities \u2014 more isolated)."
+    },
+    {
+      "label": "SOX Section 404 \u2014 Management Assessment and Auditor Attestation",
+      "url": "https://www.sec.gov/files/rules/final/2003/33-8238.pdf",
+      "access": "Free from SEC.gov.",
+      "key_content": "Section 404(a): Management of all accelerated and large accelerated filers must assess ICFR effectiveness annually and include the assessment in the 10-K. Section 404(b): Independent auditor of large accelerated filers must attest to and report on management's ICFR assessment. This is the AS 2201 audit. The SOX 404(b) auditor attestation provides external verification of material weakness disclosures \u2014 meaning for large accelerated filers, a material weakness is independently confirmed by a PCAOB-registered auditor."
+    },
+    {
+      "label": "SEC Regulation S-K Item 106 \u2014 Cybersecurity Risk Management, Strategy, Governance, and Incidents (Final Rule, July 26, 2023)",
+      "url": "https://www.sec.gov/resources-small-businesses/small-business-compliance-guides/cybersecurity-risk-management-strategy-governance-incident-disclosure",
+      "access": "Free from SEC.gov. Full adopting release: https://www.sec.gov/files/rules/final/2023/33-11216.pdf",
+      "key_content": "Item 106 is mandatory in annual reports on Form 10-K for fiscal years ending on or after December 15, 2023. Requires disclosure of: (a) Risk management: processes for assessing, identifying, and managing material cybersecurity risks, including use of third-party assessors and monitoring of third-party service providers; (b) Strategy: whether cybersecurity risks have materially affected or are reasonably likely to materially affect the registrant; (c) Governance: board oversight of cybersecurity risks AND management's role \u2014 specifically naming management positions or committees responsible and their relevant expertise. 17 CFR \u00a7229.106(c)(2)(i) requires disclosure of 'the relevant expertise' of persons managing cybersecurity risk. This creates a measurable governance quality signal: a company with a named CISO with described credentials + board-level oversight committee = strong Item 106 compliance. A company with vague or absent Item 106 disclosure may have gaps in governance structure."
+    },
+    {
+      "label": "SEC FR-72 (Release 33-8350, 2003) \u2014 MD&A Critical Accounting Estimates",
+      "url": "https://www.sec.gov/rules-regulations/2003/12/commission-guidance-regarding-managements-discussion-analysis-financial-condition-results-operations",
+      "access": "Free from SEC.gov.",
+      "key_content": "FR-72 requires companies to disclose critical accounting estimates in MD&A \u2014 estimates that are uncertain and could materially affect results if different assumptions were used. A material weakness in ICFR related to a critical accounting estimate (e.g., a weakness in valuation controls for a major asset category) directly connects to FR-72 disclosure obligations. If a company has an ICFR weakness affecting a critical estimate area, MD&A should discuss this connection under FR-72."
+    }
+  ],
+  "mandatory_10k_items": [
+    {
+      "item": "Item 9A",
+      "label": "Controls and Procedures",
+      "rationale": "Primary mandatory location under SOX 404. Contains: (a) management's conclusion on ICFR effectiveness under COSO 2013; (b) material weakness description if ICFR is not effective; (c) remediation actions. For large accelerated filers, also contains the auditor's separate AS 2201 ICFR attestation. The management conclusion and auditor opinion are separate \u2014 both must be evaluated."
+    },
+    {
+      "item": "Item 1C",
+      "label": "Cybersecurity (new, required for fiscal years ending after December 15, 2023)",
+      "rationale": "Under S-K Item 106, companies must disclose cybersecurity governance structure \u2014 board oversight and management expertise. This is a mandatory, SEC-codified governance quality indicator. Filed as Item 1C in the 10-K index. For filings that predate the December 2023 effective date, this item may be absent \u2014 note the filing year when evaluating."
+    },
+    {
+      "item": "Item 1A",
+      "label": "Risk Factors \u2014 Internal Controls subsections",
+      "rationale": "Under Item 105 (2020), company-specific risk factors about ICFR describe forward-looking control risks. Language about 'inability to maintain effective ICFR' with company-specific detail signals the control environment is considered an ongoing risk by management. Also contains cybersecurity governance risk factors that complement Item 1C."
+    },
+    {
+      "item": "Auditor's Report",
+      "label": "Separate Auditor's Report on ICFR (AS 2201 opinion)",
+      "rationale": "For large accelerated filers, the auditor issues a separate opinion on ICFR effectiveness under AS 2201. This opinion is distinct from the financial statement audit opinion (which may contain an AS 2415 going concern paragraph). An adverse AS 2201 ICFR opinion independently confirms a material weakness \u2014 external PCAOB-registered verification. Must be identified and evaluated separately from the financial statement opinion."
+    }
+  ],
+  "retrieval_queries": [
+    "material weakness internal control over financial reporting management assessment effective",
+    "Item 9A controls procedures disclosure controls evaluation conclusion effectiveness",
+    "COSO framework control environment risk assessment control activities monitoring",
+    "segregation of duties user access controls IT general controls financial systems",
+    "remediation material weakness remediated corrective actions complete in progress",
+    "adverse opinion internal control over financial reporting auditor attestation",
+    "cybersecurity Item 106 CISO board oversight risk management strategy governance"
+  ],
+  "alternate_queries": [
+    "restatement prior period financial statements error correction misstatement accounting",
+    "significant deficiency control deficiency identified communicated audit committee",
+    "SOX Section 404 Sarbanes-Oxley annual assessment management report effectiveness"
+  ],
+  "evidence_schema": {
+    "primary_signals": [
+      {
+        "signal": "Material weakness in Item 9A \u2014 management ICFR ineffectiveness conclusion",
+        "source_item": "Item 9A",
+        "what_to_look_for": "Explicit management conclusion that ICFR is NOT effective as of year-end, with description of the material weakness \u2014 which COSO component failed, which accounts/processes were affected. Under AS 2201, this is the mandatory public disclosure of the finding. Note which COSO component is cited: a Control Environment weakness is more systemic than a Control Activities weakness.",
+        "weight": "primary \u2014 sufficient alone for HIGH"
+      },
+      {
+        "signal": "Adverse AS 2201 auditor ICFR opinion \u2014 external PCAOB verification",
+        "source_item": "Auditor's Report on ICFR",
+        "what_to_look_for": "The auditor's separate ICFR opinion reaching an adverse conclusion \u2014 typically 'because of the effect of the material weakness described above, the Company did not maintain effective internal control over financial reporting.' Under SOX 404(b), this is independently verified by a PCAOB-registered auditor. Note: this must be distinguished from the AS 2415 going concern paragraph and the financial statement opinion \u2014 all three are separate.",
+        "weight": "primary \u2014 external PCAOB verification of HIGH"
+      },
+      {
+        "signal": "Consecutive-year material weakness disclosures \u2014 systemic control environment failure",
+        "source_item": "Item 9A \u2014 current year with references to prior years",
+        "what_to_look_for": "Current-year material weakness PLUS references to material weaknesses in one or more prior fiscal years. Under COSO 2013 Component 1 (Control Environment), persistent failures across multiple years indicate the root cause is at the tone-at-top or structural level, not an isolated process failure. AS 2201 Para .69 notes that prior-year weaknesses not remediated elevate severity.",
+        "weight": "primary \u2014 systemic severity indicator"
+      },
+      {
+        "signal": "Item 106 cybersecurity governance \u2014 board oversight and CISO expertise",
+        "source_item": "Item 1C (for filings after December 2023 fiscal year-end)",
+        "what_to_look_for": "Under 17 CFR \u00a7229.106(c), companies must disclose: (a) board oversight structure for cybersecurity risk \u2014 is there a designated committee or does the full board oversee it; (b) management role \u2014 named positions or committees responsible; (c) relevant expertise \u2014 credentials, certifications, prior experience of persons managing cybersecurity risk. Strong Item 106 compliance (named CISO with described credentials + board-level oversight + described monitoring process) is a positive LOW governance indicator. Vague or absent Item 106 disclosure (generic language, no named positions, no expertise described) signals governance gaps consistent with MEDIUM.",
+        "weight": "corroborating \u2014 governance quality signal for MEDIUM/LOW differentiation"
+      }
+    ],
+    "corroborating_signals": [
+      "Item 1A risk factor language about ICFR risk with company-specific detail \u2014 under Item 105, signals management considers ICFR an ongoing material risk",
+      "Remediation described as in-progress as of filing date \u2014 weakness exists but not yet resolved",
+      "AS 2201 Para .69 indicator: auditor identified misstatement not caught by company controls",
+      "Prior-year financial restatement disclosed",
+      "Control failure linked to an operational or regulatory consequence (e.g., ICFR weakness directly related to Item 3 enforcement action)",
+      "Audit committee described without a financial expert \u2014 negative governance signal under SEC rules (Exchange Act Section 10A)"
+    ],
+    "absence_signals": [
+      "Management conclusion in Item 9A: ICFR was effective as of year-end \u2014 necessary condition for LOW",
+      "Auditor's AS 2201 ICFR opinion: unqualified \u2014 external confirmation for LOW",
+      "Item 1C contains strong Item 106 compliance: named CISO with described expertise, named board oversight committee \u2014 positive governance indicator",
+      "Audit committee financial expert described with relevant credentials \u2014 positive governance signal"
+    ],
+    "false_positive_guards": [
+      {
+        "guard": "Item 1A forward-looking material weakness risk factor \u2014 NOT an actual disclosure",
+        "pattern": "if material weaknesses in our internal control over financial reporting are identified / we may be unable to remediate material weaknesses / we cannot assure you that material weaknesses will not occur",
+        "explanation": "This is standard Item 1A risk factor boilerplate used by virtually all public companies, including those with fully effective ICFR. Under Item 105, this is a forward-looking hypothetical risk. It does NOT indicate a current material weakness. An actual material weakness disclosure is in Item 9A and contains: (a) the explicit management conclusion that ICFR 'was not effective as of [date]'; (b) a description of the specific weakness \u2014 what control failed, which accounts were affected. The agent must find the Item 9A conclusion, not merely the presence of 'material weakness' anywhere in the filing."
+      },
+      {
+        "guard": "Auditor ICFR opinion \u2014 distinguish unqualified from adverse",
+        "pattern": "the Company maintained, in all material respects, effective internal control over financial reporting",
+        "explanation": "This is the unqualified (clean) AS 2201 ICFR opinion \u2014 the LOW signal. The adverse opinion instead reads: 'because of the effect of the material weakness described above, the Company did not maintain effective internal control over financial reporting.' These two opinions are structurally opposite. The phrase 'effective internal control over financial reporting' appears in BOTH \u2014 what distinguishes them is the preceding clause. Always read the full opinion sentence, not just the keyword."
+      },
+      {
+        "guard": "Auditor ICFR review language \u2014 NOT the opinion",
+        "pattern": "assessing the risk that a material weakness exists, testing and evaluating the design and operating effectiveness",
+        "explanation": "This is the standard description of the auditor's ICFR review procedure \u2014 it appears in every AS 2201 audit report regardless of outcome. It describes what the auditor did, not what they found. Do not treat this as evidence of a material weakness. The conclusion follows this procedural language."
+      }
+    ],
+    "item_9a_location_note": "Item 9A is typically a SHORT section \u2014 often just 1-2 paragraphs containing: (a) the management conclusion on disclosure controls effectiveness; (b) the management ICFR conclusion; (c) a reference to the auditor's ICFR report. The full auditor ICFR opinion is in Item 8 (Financial Statements), not in Item 9A itself. When searching for the auditor's AS 2201 opinion, look in Item 8 for the 'Report of Independent Registered Public Accounting Firm' section headed 'Opinion on internal control over financial reporting' \u2014 this is separate from the financial statement opinion which is headed 'Opinion on the financial statements.'",
+    "coso_component_inference": {
+      "instruction": "Companies do not always name the COSO component explicitly in their material weakness description. Use these mappings to infer the component from the type of control that failed:",
+      "mappings": {
+        "IT General Controls (ITGCs) / user access controls / change management / system availability": "Component 3 \u2014 Control Activities (IT subcomponent)",
+        "Financial close process / journal entry controls / account reconciliation failures": "Component 3 \u2014 Control Activities (financial reporting subcomponent)",
+        "Inventory valuation / cost accounting / asset impairment assessment": "Component 3 \u2014 Control Activities (specific process)",
+        "Title and registration / operational process controls affecting financial reporting": "Component 3 \u2014 Control Activities (operational-financial interface)",
+        "Tone at top / board oversight failures / senior management misconduct": "Component 1 \u2014 Control Environment (most systemic)",
+        "Monitoring of subsidiary controls / lack of ongoing assessment": "Component 5 \u2014 Monitoring Activities",
+        "Failure to identify new financial reporting risks from business changes": "Component 2 \u2014 Risk Assessment"
+      }
+    },
+    "cross_section_evidence": [
+      "The AS 2201 ICFR auditor opinion is located in Item 8 within the Report of Independent Registered Public Accounting Firm, under the heading 'Opinion on internal control over financial reporting' \u2014 it is a separate section from the financial statement opinion ('Opinion on the financial statements') and must be retrieved from Item 8, not Item 9A",
+      "Item 1A risk factors may contain forward-looking material weakness language \u2014 retrieve and classify as hypothetical risk disclosure, not actual weakness evidence",
+      "Item 1C (cybersecurity, effective December 15 2023) is a separate item from Item 9A and must be retrieved independently for post-2023 filings to evaluate Item 106 compliance",
+      "Item 8 critical audit matters (CAMs) section may reference internal control weaknesses or significant accounting judgments that corroborate or contextualize Item 9A disclosures"
+    ]
+  },
+  "rubric": {
+    "HIGH": {
+      "threshold": "Material weakness in Item 9A (management ICFR ineffectiveness conclusion under COSO/AS 2201) AND/OR adverse AS 2201 auditor ICFR opinion. Consecutive-year disclosures OR Control Environment-level COSO component failure elevate confidence. Connection between ICFR weakness and a regulatory or operational consequence is an additional HIGH indicator.",
+      "source": "PCAOB AS 2201 Appendix A \u2014 material weakness definition. AS 2201 Para .02 \u2014 ICFR cannot be considered effective with a material weakness. SOX 404(b) \u2014 auditor attestation independently verifies for large accelerated filers.",
+      "narrative": "ICFR confirmed insufficient by management and independently verified by PCAOB-registered auditor. For large accelerated filers, this is the highest-certainty governance failure signal available in a 10-K."
+    },
+    "MEDIUM": {
+      "threshold": "Prior-year material weakness asserted as remediated in the current year (auditor has issued clean AS 2201 opinion but remediation was recent), OR significant deficiency-level issues described in Item 1A without formal material weakness classification, OR remediation in-progress as of filing date, OR Item 106 cybersecurity governance disclosure is vague/absent for a fiscal year ending after December 2023.",
+      "source": "AS 2201 \u2014 recently remediated weakness carries ongoing monitoring uncertainty. Item 106 (2023) \u2014 vague compliance suggests governance structure gaps without reaching material weakness severity.",
+      "narrative": "Control environment is imperfect but not at current material weakness severity. Risk present at lower certainty than HIGH."
+    },
+    "LOW": {
+      "threshold": "Management concludes ICFR is effective under COSO 2013 AND auditor issues unqualified AS 2201 ICFR opinion AND no significant deficiency language in Item 1A AND (for post-December 2023 filings) Item 106 provides strong cybersecurity governance disclosure with named positions, described expertise, and board-level oversight.",
+      "source": "AS 2201 Para .02 \u2014 absence of material weakness = ICFR effective. SOX 404(b) \u2014 auditor attestation provides external verification. S-K Item 106 (2023) \u2014 strong compliance signals functioning governance structure.",
+      "narrative": "ICFR effective per both management and independent auditor. Governance structure functioning and disclosed with specificity."
+    }
+  },
+  "rubric_sources": [
+    "PCAOB AS 2201 Appendix A \u2014 material weakness / significant deficiency / control deficiency hierarchy",
+    "PCAOB AS 2201 Para .02 \u2014 ICFR effectiveness standard",
+    "PCAOB AS 2201 Para .69-70 \u2014 four indicators of material weakness",
+    "SOX Section 404 (15 U.S.C. \u00a77262) \u2014 management assessment (404a) and auditor attestation (404b)",
+    "COSO 2013 Framework \u2014 five components (Control Environment failure = most systemic)",
+    "SEC S-K Item 106 (17 CFR \u00a7229.106, effective December 2023) \u2014 cybersecurity governance disclosure requirements"
+  ],
+  "filer_category_note": "SOX 404(b) auditor attestation (AS 2201) is required only for large accelerated filers and accelerated filers. Smaller reporting companies only provide the management assessment (404a) \u2014 which reduces external verification. Confirm filer category from the 10-K cover page. Note also that Item 1C (S-K Item 106 cybersecurity) is required for ALL registrants for fiscal years ending on or after December 15, 2023 \u2014 it is not limited to large accelerated filers.",
+  "no_evidence_handling": "If Item 9A is not retrieved, search for 'material weakness', 'internal control', and 'effective as of' across all chunks. If explicit management conclusion language is not found, flag INCONCLUSIVE. Do not infer effectiveness without the explicit management conclusion statement.",
+  "ground_truth_labels": {
+    "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
+    "labels": [
+      {
+        "company": "Carvana FY2022",
+        "label": "HIGH",
+        "anchor": "Material weakness + adverse AS 2201 ICFR opinion + control failure directly linked to multi-state regulatory enforcement (Item 3)"
+      },
+      {
+        "company": "Peloton FY2023",
+        "label": "HIGH",
+        "anchor": "Third consecutive year of material weakness across different COSO control domains; adverse AS 2201 ICFR opinion each year"
+      },
+      {
+        "company": "Shopify FY2025",
+        "label": "LOW",
+        "anchor": "Clean management conclusion + unqualified AS 2201 opinion + Item 1C (Item 106) with named CISO, described expertise, board-level cybersecurity oversight"
+      }
+    ]
+  },
+  "prompt_template": {
+    "system": "You are a governance and controls due diligence analyst evaluating a company's internal control quality from its SEC 10-K filing. Apply three distinct evaluation frameworks: (1) PCAOB AS 2201 \u2014 governs whether a material weakness exists and whether the auditor issues an adverse ICFR opinion; (2) COSO 2013 \u2014 identifies which of five components failed when a material weakness is present (Control Environment failures are most systemic); (3) SEC S-K Item 106 (2023) \u2014 governs cybersecurity governance disclosure quality for filings after December 2023. Distinguish the AS 2201 ICFR opinion from the AS 2415 going concern paragraph \u2014 they are separate auditor conclusions. Cite specific passages before stating your verdict.",
+    "user_template": "## Task\nEvaluate the Internal Controls & Governance Risk dimension for {company_name}.\n\n## Rubric\n**HIGH:** Material weakness in Item 9A AND/OR adverse AS 2201 ICFR opinion. Consecutive-year weaknesses or Control Environment COSO failures elevate confidence.\n**MEDIUM:** Prior-year weakness asserted as remediated this year; OR significant deficiency in Item 1A; OR remediation in-progress; OR vague/absent Item 106 cybersecurity governance for post-December 2023 filing.\n**LOW:** Effective ICFR conclusion AND unqualified AS 2201 opinion AND no Item 1A significant deficiency language AND (if applicable) strong Item 106 compliance.\n\n## Retrieved Sections\n{retrieved_chunks}\n\n## Instructions\n1. Find management's ICFR conclusion in Item 9A \u2014 extract verbatim: 'effective' or 'not effective' with date. CRITICAL: Do NOT use mentions of 'material weakness' from Item 1A risk factors as evidence of an actual weakness \u2014 these are hypothetical forward-looking statements. The actual conclusion must be in Item 9A and will contain the phrase 'internal control over financial reporting was [effective/not effective] as of [date]'.\n2. Find the auditor's AS 2201 ICFR opinion in Item 8, under the heading 'Opinion on internal control over financial reporting'. Retrieve Item 8 directly \u2014 do not assume this content will be present in Item 9A chunks. This section is SEPARATE from both the financial statement opinion ('Opinion on the financial statements') and any AS 2415 going concern paragraph. An unqualified opinion reads: 'the Company maintained...effective internal control over financial reporting.' An adverse opinion reads: 'because of the effect of the material weakness...the Company did not maintain effective internal control.' Read the full sentence \u2014 both contain 'effective internal control' but have opposite meanings based on the preceding clause.\n3. If material weakness found: (a) which COSO component failed, (b) which accounts/processes affected, (c) is this year 1 or a consecutive-year occurrence, (d) is remediation complete or in-progress.\n4. For post-December 2023 filings: evaluate Item 1C under Item 106 \u2014 does it name a CISO with described expertise? Does it describe board oversight structure with specificity?\n5. Note any governance quality indicators (audit committee financial expert, board cybersecurity committee).\n6. State verdict with specific AS 2201/COSO/Item 106 criteria analysis.\n\n## Output Format\n{\n  \"dimension\": \"internal_controls_governance\",\n  \"verdict\": \"HIGH|MEDIUM|LOW\",\n  \"confidence\": 0.0-1.0,\n  \"management_conclusion\": \"effective|not_effective|not_found\",\n  \"management_conclusion_quote\": \"\",\n  \"auditor_as2201_opinion\": \"unqualified|adverse|not_found\",\n  \"material_weaknesses\": [\n    {\"description\": \"\", \"coso_component\": \"\", \"consecutive_years\": 0, \"remediation_status\": \"complete|in_progress|not_started\", \"source_passage\": \"\"}\n  ],\n  \"item106_compliance\": \"strong|vague|absent|not_applicable\",\n  \"item106_notes\": \"\",\n  \"governance_quality_indicators\": [],\n  \"rubric_criteria_met\": [],\n  \"reasoning\": \"\",\n  \"flags\": []\n}"
+  },
+  "embedded_standard_text": {
+    "_purpose": "Verbatim authoritative text embedded so the agent can apply the evaluation framework directly. Sourced from PCAOB.org and COSO public documents.",
+    "PCAOB_AS2201_AppendixA_three_tier_severity_hierarchy": {
+      "source": "PCAOB AS 2201, Appendix A, Paragraphs A3, A7, A11",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2201",
+      "verbatim_text": {
+        "A3_control_deficiency": "A deficiency in internal control over financial reporting exists when the design or operation of a control does not allow management or employees, in the normal course of performing their assigned functions, to prevent or detect misstatements on a timely basis. A deficiency in design exists when (a) a control necessary to meet the control objective is missing or (b) an existing control is not properly designed so that, even if the control operates as designed, the control objective would not be met. A deficiency in operation exists when a properly designed control does not operate as designed, or when the person performing the control does not possess the necessary authority or competence to perform the control effectively.",
+        "A7_material_weakness": "A material weakness is a deficiency, or a combination of deficiencies, in internal control over financial reporting, such that there is a reasonable possibility that a material misstatement of the company's annual or interim financial statements will not be prevented or detected on a timely basis.",
+        "A11_significant_deficiency": "A significant deficiency is a deficiency, or a combination of deficiencies, in internal control over financial reporting that is less severe than a material weakness, yet important enough to merit attention by those responsible for oversight of the company's financial reporting."
+      },
+      "evaluation_use": "The three tiers are ordered by severity: control deficiency (no required public disclosure) < significant deficiency (communicated to audit committee, NOT publicly disclosed) < material weakness (mandatory public disclosure in Item 9A, adverse ICFR opinion required). When Item 9A uses the phrase 'material weakness' it has crossed the A7 threshold. When it does not, check whether 'significant deficiency' language appears \u2014 that is a MEDIUM signal. Absence of both is required for LOW."
+    },
+    "PCAOB_AS2201_Para02_effectiveness_standard": {
+      "source": "PCAOB AS 2201, Para .02",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2201",
+      "verbatim_text": "A company's internal control over financial reporting cannot be considered effective if one or more material weaknesses in internal control over financial reporting exist.",
+      "evaluation_use": "This is the binary effectiveness test. A single confirmed material weakness = ICFR cannot be considered effective = management must conclude ICFR is 'not effective' in Item 9A. There is no threshold-by-threshold analysis \u2014 it is all-or-nothing at the material weakness level."
+    },
+    "PCAOB_AS2201_Para69_four_indicators_of_material_weakness": {
+      "source": "PCAOB AS 2201, Para .69",
+      "url": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2201",
+      "verbatim_text": "The following circumstances are indicators of material weaknesses in internal control over financial reporting: (1) An identification of fraud, whether or not material, on the part of senior management. (2) A restatement of previously issued financial statements to reflect the correction of a material misstatement. (3) Identification by the auditor of a material misstatement of financial statements in the current period that was not initially identified by the company's internal control over financial reporting (even if management subsequently corrects the misstatement). (4) Ineffective oversight of the company's external financial reporting and internal control over financial reporting by the company's audit committee.",
+      "evaluation_use": "These four are per se indicators \u2014 any single one is sufficient to flag a probable material weakness, even if not yet formally disclosed. When reading a 10-K, check: (1) Does Item 3 or management's discussion reference fraud by senior management? (2) Does any note discuss a restatement of prior financials? (3) Does the auditor's report or Item 9A mention the auditor found a misstatement not caught by internal controls? (4) Does the audit committee discussion show inactive or absent oversight? Presence of any of these in the filing should be flagged even if Item 9A does not formally declare a material weakness."
+    },
+    "COSO_2013_five_components_and_17_principles": {
+      "source": "COSO 2013 Internal Control \u2014 Integrated Framework, Executive Summary",
+      "url": "https://www.coso.org/guidance-on-ic",
+      "verbatim_text": {
+        "component_1_control_environment": "Control Environment: The control environment is the set of standards, processes, and structures that provide the basis for carrying out internal control across the organization. The board of directors and senior management establish the tone at the top regarding the importance of internal control including expected standards of conduct. Relevant principles: commitment to integrity and ethical values; independence of board oversight; establishment of authority, responsibility, and accountability; commitment to competence; accountability for internal control responsibilities.",
+        "component_2_risk_assessment": "Risk Assessment: Every entity faces a variety of risks from external and internal sources. Risk assessment involves a dynamic and iterative process for identifying and assessing risks to the achievement of objectives. Relevant principles: specification of appropriate objectives; identification and analysis of risks; assessment of fraud risk; identification and assessment of significant change.",
+        "component_3_control_activities": "Control Activities: Control activities are the actions established through policies and procedures that help ensure that management's directives to mitigate risks to the achievement of objectives are carried out. Control activities are performed at all levels of the entity, at various stages within business processes, and over the technology environment. Relevant principles: selection and development of control activities; selection and development of general controls over technology; deployment of control activities through policies and procedures.",
+        "component_4_information_communication": "Information and Communication: Information is necessary for the entity to carry out internal control responsibilities to support the achievement of its objectives. Communication occurs both internally and externally and provides the organization with the information needed to carry out day-to-day internal control activities. Relevant principles: use of relevant, quality information; internal communication of information; communication with external parties.",
+        "component_5_monitoring": "Monitoring Activities: Ongoing evaluations, separate evaluations, or some combination of the two are used to ascertain whether each of the five components of internal control, including controls to effect the principles within each component, is present and functioning. Relevant principles: selection, development, and performance of ongoing and separate evaluations; evaluation and communication of deficiencies."
+      },
+      "evaluation_use": "When a material weakness is disclosed in Item 9A, management typically identifies the COSO component that failed. Use these definitions to assess severity: a Component 1 (Control Environment) failure \u2014 at the board, senior management, or tone-at-top level \u2014 is the most systemic and indicates a structural governance problem that likely affects multiple processes. A Component 3 (Control Activities) failure affecting a specific process (e.g., IT access controls for a particular system) is more contained. Consecutive-year material weaknesses, or weaknesses spanning multiple COSO components, indicate the root cause is at Component 1 or Component 5 (monitoring failure)."
+    },
+    "SOX_404_filer_category_requirements": {
+      "source": "Sarbanes-Oxley Act Section 404; SEC Rules 13a-15 and 15d-15 (17 CFR \u00a7\u00a7 240.13a-15, 240.15d-15)",
+      "url": "https://www.sec.gov/files/rules/final/2003/33-8238.pdf",
+      "verbatim_text": "Section 404(a) \u2014 Management Assessment: Applicable to all accelerated filers and large accelerated filers. Management must include in the annual report: (1) a statement of management's responsibility for establishing and maintaining adequate ICFR; (2) a statement identifying the framework used by management to evaluate ICFR; (3) management's assessment of the effectiveness of ICFR as of the end of the most recent fiscal year; (4) a statement that the registered public accounting firm has issued an attestation report on ICFR (for large accelerated filers). Section 404(b) \u2014 Auditor Attestation: Applicable to large accelerated filers only. The registered public accounting firm must attest to and report on management's assessment. The attestation is performed under PCAOB AS 2201 and results in a separate opinion on ICFR effectiveness.",
+      "evaluation_use": "Confirm filer category from the 10-K cover page before evaluating this dimension. Large accelerated filer: both 404(a) management assessment AND 404(b) auditor attestation are present \u2014 material weakness is externally verified by PCAOB-registered auditor (highest certainty). Accelerated filer: same as large accelerated filer. Non-accelerated filer / smaller reporting company: only 404(a) management assessment \u2014 no independent auditor attestation, meaning a material weakness is management's own determination without external verification. The verdict confidence should be adjusted accordingly: HIGH with 404(b) attestation is higher certainty than HIGH from 404(a) only."
+    }
+  },
+  "target_sections": [
+    "item_9a",
+    "item_8",
+    "auditor_report"
+  ],
+  "section_filter_mode": "soft",
+  "section_filter_note": "target_sections lists preferred 10-K Items for retrieval scoring/boosting. These are NOT exclusive filters \u2014 all filing sections remain eligible for retrieval. Use target_sections to rank retrieved chunks, not to exclude non-matching chunks."
+}

@@ -1,0 +1,179 @@
+{
+  "dimension_id": "d3_legal_regulatory_exposure",
+  "version": "3.2",
+  "name": "Legal & Regulatory Exposure",
+  "description": "Assesses the materiality and severity of legal proceedings, government enforcement actions, regulatory penalties, and investigations disclosed in any SEC 10-K filing.",
+  "authoritative_sources": [
+    {
+      "label": "SEC Regulation S-K Item 103 as modernized \u2014 Adopting Release (November 9, 2020)",
+      "url": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+      "access": "Free direct download from SEC.gov.",
+      "key_content": "Item 103 mandatory disclosure thresholds: (1) Dollar threshold \u2014 proceedings where amount in controversy exceeds 10% of current assets must be disclosed; (2) Government enforcement threshold \u2014 any proceeding where a government authority is a party must be disclosed unless company reasonably believes monetary sanctions will be less than $300,000 (raised from $100,000 in 2020 amendment). Companies may self-set a higher threshold not exceeding the lesser of $1 million or 1% of current assets. Critical evaluative implication: any proceeding appearing in Item 3 has been affirmatively determined by company counsel to meet at least one threshold \u2014 meaning materiality has already been established by the preparer. An empty or boilerplate Item 3 means company counsel determined that NO proceedings clear these bars."
+    },
+    {
+      "label": "SEC Regulation S-K Item 105 \u2014 Risk Factors (modernized November 2020)",
+      "url": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+      "access": "Free (same adopting release as Item 103).",
+      "key_content": "Item 105 (2020 modernization) requires risk factors to be company-specific and non-generic. Companies must limit risk factors to those material to the specific company and must not include 'risks that could apply to any issuer or any offering.' This means any government investigation, regulatory proceeding, or enforcement risk described specifically in Item 1A risk factors \u2014 with company-specific detail rather than generic industry language \u2014 has been determined by company counsel to be material and specific to that company. An investigation named in Item 1A with specific dates, amounts, or government bodies is a more reliable signal than boilerplate."
+    },
+    {
+      "label": "FASB ASC 450-20 \u2014 Loss Contingencies",
+      "url": "https://asc.fasb.org (free with registration). Deloitte Roadmap to Contingencies: deloitte.com (free, no registration).",
+      "access": "Free.",
+      "key_content": "Three-tier probability hierarchy for legal contingencies: (1) 'Probable' \u2014 likely to occur; company must accrue the liability on the balance sheet and disclose the nature and estimate; (2) 'Reasonably possible' \u2014 more than remote but less than probable; company must disclose but does not accrue; (3) 'Remote' \u2014 slight chance; no disclosure required. Critical evaluative signal: if a company has ACCRUED a legal liability (recorded as a balance sheet obligation), management has internally assessed the outcome as 'probable' \u2014 the highest GAAP probability tier. The difference between an accrued liability and a disclosure-only liability represents a meaningful risk gradient."
+    },
+    {
+      "label": "SEC FR-72 (Release 33-8350, 2003) \u2014 MD&A Disclosure of Legal Trends and Uncertainties",
+      "url": "https://www.sec.gov/rules-regulations/2003/12/commission-guidance-regarding-managements-discussion-analysis-financial-condition-results-operations",
+      "access": "Free from SEC.gov.",
+      "key_content": "FR-72 requires that material known trends, demands, commitments, events and uncertainties be disclosed in MD&A even if not required by specific line-item disclosure rules. This means a significant legal proceeding that has progressed materially since the last fiscal year must be discussed in MD&A Item 7 even if it is already in Item 3. If a legal matter appears in Item 3 but management does NOT discuss it in MD&A as a material uncertainty, that absence is itself a disclosure quality signal worth flagging."
+    }
+  ],
+  "mandatory_10k_items": [
+    {
+      "item": "Item 3",
+      "label": "Legal Proceedings",
+      "rationale": "Primary mandatory location under Item 103. Any proceeding here has cleared company counsel's materiality filter ($300,000 government threshold or 10% of current assets). An empty Item 3 or 'we are not a party to any material proceedings' is itself informative \u2014 it represents a counsel determination of no material exposure."
+    },
+    {
+      "item": "Item 1A",
+      "label": "Risk Factors \u2014 Legal and Regulatory subsections",
+      "rationale": "Under Item 105 (2020), risk factors must be company-specific. Named government investigations, regulatory proceedings, or enforcement risks in Item 1A with specific details (named agencies, dates, dollar amounts) represent material, company-specific disclosures. The specificity required under Item 105 makes generic risk factor language distinguishable from substantive disclosures."
+    },
+    {
+      "item": "Item 8 \u2014 Commitments and Contingencies note",
+      "label": "Financial Statement Contingencies",
+      "rationale": "Source of accrued legal liabilities (= 'probable' outcome per ASC 450-20) and disclosed-but-not-accrued contingencies (= 'reasonably possible'). Compare accrued amounts to current assets to assess Item 103 10% threshold. An accrued legal liability is the strongest available signal that management has made an internal high-probability determination of adverse outcome."
+    }
+  ],
+  "retrieval_queries": [
+    "legal proceedings government investigation enforcement action penalty sanctions regulatory",
+    "SEC Department of Justice federal agency investigation inquiry subpoena formal order",
+    "civil penalty settlement consent decree injunction regulatory order government authority",
+    "product recall consumer safety regulatory violation enforcement proceedings compliance",
+    "securities class action shareholder lawsuit fraud derivative litigation pending",
+    "accrued legal liabilities contingent liability loss contingency reasonably possible probable",
+    "license suspension revocation state regulatory action compliance order proceeding",
+    "ordinary course of business claims legal actions material adverse effect do not believe"
+  ],
+  "alternate_queries": [
+    "criminal investigation grand jury subpoena regulatory probe federal state enforcement",
+    "personal injury wrongful death mass tort class action product liability damages",
+    "intellectual property patent trademark litigation monetary damages injunction"
+  ],
+  "evidence_schema": {
+    "primary_signals": [
+      {
+        "signal": "Named government authority as party with quantified monetary sanction \u2014 Item 103 trigger",
+        "source_item": "Item 3 / Item 1A",
+        "what_to_look_for": "A named government body identified as a party with a specific dollar amount. Per Item 103, a government proceeding expected to generate over $300,000 in sanctions must be disclosed. The combination of named government authority + quantified amount is the strongest HIGH signal \u2014 both company counsel and the SEC disclosure threshold have independently affirmed materiality.",
+        "weight": "primary \u2014 sufficient alone for HIGH"
+      },
+      {
+        "signal": "Active formal federal investigation \u2014 Item 105 specificity standard",
+        "source_item": "Item 1A / Item 3",
+        "what_to_look_for": "A named federal investigation (SEC, DOJ, FTC, CFPB, CPSC, or equivalent) described in company-specific detail in Item 1A risk factors. Under the 2020 Item 105 specificity requirement, generic 'we may be subject to SEC investigations' language does not meet the disclosure standard \u2014 company-specific named investigations signal affirmative materiality determination by counsel.",
+        "weight": "primary for HIGH"
+      },
+      {
+        "signal": "Accrued legal liability \u2014 ASC 450-20 'probable' determination",
+        "source_item": "Item 8 Commitments and Contingencies note",
+        "what_to_look_for": "A stated dollar accrual for a specific legal matter on the balance sheet. Under ASC 450-20, an accrual = management's internal determination that the adverse outcome is 'probable.' Compare the accrual to current assets: above 10% of current assets triggers mandatory Item 103 disclosure. The accrual being present at all means management has crossed the highest GAAP probability threshold.",
+        "weight": "primary \u2014 'probable' probability determination"
+      },
+      {
+        "signal": "Amount in controversy exceeds 10% of current assets \u2014 Item 103 dollar threshold",
+        "source_item": "Item 3 / Item 8",
+        "what_to_look_for": "Compare any quantified legal exposure (accrued or disclosed as reasonably possible) to the current assets figure on the balance sheet. The Item 103 10% threshold is the SEC's own materiality measure for legal proceedings.",
+        "weight": "primary when threshold crossed"
+      }
+    ],
+    "corroborating_signals": [
+      "Multiple active proceedings across different jurisdictions simultaneously",
+      "Consent decree or ongoing monitoring obligation from prior settlement still in effect",
+      "Named officers or directors as defendants \u2014 signals fraud or fiduciary breach allegations",
+      "Pattern of violations \u2014 prior settlement with same regulatory body within past 5 years",
+      "MD&A discusses a legal matter as a material uncertainty under FR-72 (going beyond Item 3 disclosure) \u2014 indicates management considers it a trend likely to affect financial condition"
+    ],
+    "absence_signals": [
+      "Item 3 contains only 'we are not a party to any material legal proceedings' \u2014 company counsel has affirmatively determined no proceedings clear the $300,000 government threshold or 10% dollar threshold",
+      "Prior period accrual disclosed as released or settled with no new proceedings opened \u2014 LOW improvement signal",
+      "Item 1A legal/regulatory risk factors use only generic industry language (no company-specific named investigations) \u2014 consistent with Item 105 standard for non-material company-specific risk"
+    ],
+    "boilerplate_low_patterns": [
+      {
+        "pattern": "we are involved in various claims and legal actions that arise in the ordinary course of business...we do not believe that the ultimate resolution of these actions will have a material adverse effect",
+        "classification": "LOW \u2014 canonical Item 3 boilerplate denial",
+        "explanation": "This is the standard Item 3 boilerplate used by companies with no material proceedings. Company counsel has affirmatively determined that no pending proceedings clear either the $300,000 government threshold or the 10% of current assets dollar threshold under Item 103. The phrase 'we do not believe that the ultimate resolution...will have a material adverse effect' is the explicit counsel materiality determination. Classify as LOW."
+      },
+      {
+        "pattern": "From time to time, we may be subject to legal proceedings in the ordinary course of business",
+        "classification": "LOW \u2014 forward-looking generic legal risk language",
+        "explanation": "Generic Item 1A risk factor language about potential future litigation. Under Item 105 (2020), risk factors must be company-specific to be material. This phrasing is not company-specific and does not name any current proceedings or government authorities. Do not treat as a D3 evidence signal."
+      },
+      {
+        "pattern": "we are not a party to any legal proceedings that we believe would, individually or in the aggregate, be likely to have a material adverse effect",
+        "classification": "LOW \u2014 explicit boilerplate denial variant",
+        "explanation": "Variant of the standard Item 3 boilerplate denial. Same interpretation: company counsel has made an affirmative materiality determination that no proceedings clear the Item 103 thresholds."
+      }
+    ],
+    "temporal_scope_note": "Regulatory enforcement actions against a company may appear in filings after the fiscal year in which the underlying events occurred. If Item 3 is boilerplate in the filing under review but external information suggests enforcement actions exist, this represents a temporal mismatch \u2014 the filing is still evaluated on what it actually discloses. Do not import knowledge from outside the filing text.",
+    "cross_section_evidence": [
+      "Item 8 footnotes (contingencies note, ASC 450-20) are the primary location for quantified legal accruals and settlement amounts \u2014 Item 3 often cross-references these footnotes for dollar figures rather than stating them directly",
+      "Item 7 MD&A may contain discussion of legal proceedings that materially affect liquidity or results of operations, required under FR-72 \u2014 this can contain detail not in Item 3",
+      "Item 1 (Business) may describe regulatory licensing requirements and compliance obligations that establish the regulatory environment for assessing Item 1A risk factor specificity",
+      "Item 8 footnotes may contain income tax contingency disclosures (ASC 740-10) that constitute regulatory exposure not captured in Item 3"
+    ]
+  },
+  "rubric": {
+    "HIGH": {
+      "threshold": "One or more of: (a) named government authority as party with quantified monetary sanction in Item 3 (Item 103 government threshold met); (b) active named federal investigation in Item 1A with company-specific detail meeting Item 105 specificity standard; (c) total legal exposure exceeds 10% of current assets (Item 103 dollar threshold); (d) accrual recorded on balance sheet (ASC 450-20 'probable' determination).",
+      "source": "17 CFR \u00a7229.103 \u2014 $300,000 government threshold and 10% of current assets dollar threshold. ASC 450-20 \u2014 'probable' accrual standard.",
+      "narrative": "Material legal exposure with concrete, externally-filtered disclosure under mandatory SEC standards. Named, quantified, and cleared at least one disclosure threshold."
+    },
+    "MEDIUM": {
+      "threshold": "Proceedings disclosed as 'reasonably possible' (ASC 450-20) without accrual and without quantified government sanctions, OR government authority named in Item 1A but matter described as early/informal inquiry stage without formal action, OR civil litigation (no government authority) with quantified material damages exposure meeting the 10% current assets threshold.",
+      "source": "FASB ASC 450-20 \u2014 'reasonably possible' requires note disclosure but not accrual. Item 105 \u2014 company-specific named investigation in risk factors without formal enforcement.",
+      "narrative": "Legal proceedings present but not yet at the highest-certainty tier. Disclosed under GAAP or Item 105 as material but outcome remains uncertain."
+    },
+    "LOW": {
+      "threshold": "Item 3 empty or contains only a boilerplate no-material-proceedings denial. No named government authority in Item 1A with company-specific detail. No accrued legal liabilities above immaterial levels. No active federal investigations described.",
+      "source": "Absence of Item 103 disclosure \u2014 company counsel determined no proceedings meet the $300,000 government threshold or 10% dollar threshold. Absence of Item 105 company-specific legal risk factor content.",
+      "narrative": "No material legal exposure at time of filing. Ordinary course disputes exist below mandatory disclosure thresholds."
+    }
+  },
+  "rubric_sources": [
+    "17 CFR \u00a7229.103 (Reg S-K Item 103) as amended November 9, 2020 \u2014 $300,000 government threshold, 10% of current assets dollar threshold",
+    "17 CFR \u00a7229.105 (Reg S-K Item 105) as amended November 9, 2020 \u2014 company-specificity requirement for risk factors",
+    "FASB ASC 450-20 \u2014 probable/reasonably possible/remote probability hierarchy and accrual standard",
+    "SEC FR-72 (Release 33-8350, 2003) \u2014 MD&A disclosure of material legal trends and uncertainties"
+  ],
+  "no_evidence_handling": "If Item 3 is not retrieved, search for 'legal proceedings' and 'government' across all retrieved chunks. If no legal content found anywhere, flag INCONCLUSIVE.",
+  "ground_truth_labels": {
+    "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
+    "labels": [
+      {
+        "company": "Carvana FY2022",
+        "label": "HIGH"
+      },
+      {
+        "company": "Peloton FY2023",
+        "label": "HIGH"
+      },
+      {
+        "company": "Shopify FY2025",
+        "label": "LOW"
+      }
+    ]
+  },
+  "prompt_template": {
+    "system": "You are a legal due diligence analyst evaluating a company's legal and regulatory exposure from its SEC 10-K filing. Apply three distinct analytical standards: (1) SEC S-K Item 103 \u2014 any proceeding in Item 3 has cleared the $300,000 government threshold or 10% of current assets threshold by company counsel's affirmative determination; (2) SEC S-K Item 105 \u2014 company-specific named investigations in Item 1A (not generic language) signal affirmative materiality determination; (3) FASB ASC 450-20 \u2014 accrued legal liabilities mean management has internally assessed the outcome as 'probable.' Cite specific passages before stating your verdict.",
+    "user_template": "## Task\nEvaluate the Legal & Regulatory Exposure dimension for {company_name}.\n\n## Rubric\n**HIGH:** Named government authority with quantified sanction in Item 3 (Item 103 government threshold); OR active named federal investigation in Item 1A with company-specific detail (Item 105); OR legal exposure > 10% of current assets; OR accrued legal liability (ASC 450-20 'probable').\n**MEDIUM:** Disclosed as 'reasonably possible' without accrual and without quantified government sanctions; OR government authority in early informal stage; OR civil litigation with material quantified damages but no government authority.\n**LOW:** Item 3 empty or boilerplate only; no named government authority; no company-specific named investigations in Item 1A.\n\n## Retrieved Sections\n{retrieved_chunks}\n\n## Instructions\n1. Read Item 3 fully. For each proceeding: identify parties (especially government authorities), dollar amounts, and current status.\n2. Read Item 1A. Distinguish company-specific named investigations (Item 105 material) from generic industry risk language.\n3. Read Commitments and Contingencies note. Identify any accrued legal liabilities (= ASC 450-20 'probable' determination).\n4. If accruals present, compare to current assets to assess Item 103 10% dollar threshold. NOTE: Quantified legal accruals and settlement amounts are typically disclosed in Item 8 contingencies footnotes (ASC 450-20) rather than Item 3 \u2014 Item 3 often cross-references these footnotes for dollar figures. Retrieve Item 8 contingencies note even if Item 3 is boilerplate, as material amounts may only appear there.\n5. Check whether material legal matters in Item 3 are also discussed in MD&A per FR-72 \u2014 absence may indicate a disclosure quality issue.\n6. State verdict and explain which specific standard criteria were met.\n\n## Output Format\n{\n  \"dimension\": \"legal_regulatory_exposure\",\n  \"verdict\": \"HIGH|MEDIUM|LOW\",\n  \"confidence\": 0.0-1.0,\n  \"government_authority_present\": false,\n  \"government_authorities_named\": [],\n  \"quantified_penalties\": [],\n  \"accrued_liabilities\": null,\n  \"asc450_probability_tier\": \"probable|reasonably_possible|remote|not_applicable\",\n  \"evidence\": [{\"proceeding\": \"\", \"authority\": \"\", \"amount\": \"\", \"status\": \"\", \"source_passage\": \"\", \"source_item\": \"\"}],\n  \"rubric_criteria_met\": [],\n  \"reasoning\": \"\",\n  \"flags\": []\n}"
+  },
+  "target_sections": [
+    "item_3",
+    "item_1a"
+  ],
+  "section_filter_mode": "soft",
+  "section_filter_note": "target_sections lists preferred 10-K Items for retrieval scoring/boosting. These are NOT exclusive filters \u2014 all filing sections remain eligible for retrieval. Use target_sections to rank retrieved chunks, not to exclude non-matching chunks."
+}

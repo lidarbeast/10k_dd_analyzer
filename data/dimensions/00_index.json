@@ -1,0 +1,139 @@
+{
+  "project": "M&A Due Diligence Analyzer",
+  "version": "3.0",
+  "last_updated": "2026-03-10",
+  "design_principles": {
+    "agent_configs": "Dimension config files (d1-d5) are general-purpose. They encode regulatory frameworks, evidence logic, and rubric thresholds. They contain NO company-specific content \u2014 no named entities, no example companies, no ground truth labels. They are loaded by the Analysis Agent and must work on any 10-K.",
+    "ground_truth": "ground_truth.json is used ONLY by the evaluation harness. It must never be passed to the Analysis Agent as context. It contains the 15 labeled examples, key evidence descriptions, and evaluation notes.",
+    "separation_rationale": "Mixing ground truth into agent configs would bias the agent toward the test companies and produce inflated accuracy scores that do not generalize."
+  },
+  "agent_facing_files": [
+    {
+      "file": "d1_financial_health.json",
+      "name": "Financial Health",
+      "sp_framework": "Financial Risk Profile \u2014 cash flow/leverage analysis",
+      "primary_source": "S&P Corporate Methodology Jan 2024 + Altman Z-Score (2000)",
+      "mandatory_items": [
+        "Item 7",
+        "Item 8"
+      ],
+      "retrieval_queries_count": 7,
+      "alternate_queries_count": 3
+    },
+    {
+      "file": "d2_going_concern_liquidity.json",
+      "name": "Going Concern & Liquidity",
+      "sp_framework": "Liquidity modifier \u2014 Exceptional/Strong/Adequate/Less-than-Adequate/Weak",
+      "primary_source": "FASB ASC 205-40 (ASU 2014-15) + KPMG Going Concern Handbook 2024",
+      "mandatory_items": [
+        "Auditor's Report",
+        "Item 7 Liquidity subsection",
+        "Item 8 Note 1 and Debt footnotes"
+      ],
+      "retrieval_queries_count": 7,
+      "alternate_queries_count": 3,
+      "key_design_note": "MEDIUM rubric targets structured debt cliff / springing maturity pattern \u2014 Step 1 conditions present but Step 2 management plans have passed auditor review. Requires debt footnote retrieval, not just going concern keyword search."
+    },
+    {
+      "file": "d3_legal_regulatory_exposure.json",
+      "name": "Legal & Regulatory Exposure",
+      "sp_framework": "Business Risk Profile \u2014 regulatory and litigation subfactor",
+      "primary_source": "17 CFR \u00a7229.103 (Reg S-K Item 103) as amended Nov 9 2020 + FASB ASC 450-20",
+      "mandatory_items": [
+        "Item 3",
+        "Item 1A (regulatory risk factors)",
+        "Item 8 Commitments and Contingencies"
+      ],
+      "retrieval_queries_count": 7,
+      "alternate_queries_count": 3
+    },
+    {
+      "file": "d4_operational_third_party_dependency.json",
+      "name": "Operational & Third-Party Dependency",
+      "sp_framework": "Competitive Position \u2014 scale, scope, and diversity component",
+      "primary_source": "17 CFR \u00a7229.101(c) (Reg S-K Item 101) as amended Nov 9 2020",
+      "mandatory_items": [
+        "Item 1 Business Description",
+        "Item 1A operational risk factors",
+        "Item 7"
+      ],
+      "retrieval_queries_count": 7,
+      "alternate_queries_count": 3,
+      "key_design_note": "MEDIUM rubric requires distinguishing sole-source (HIGH) from named-but-major-provider-with-mitigation (MEDIUM). The named_dependencies output array with sole_source and mitigation_described boolean fields forces this distinction."
+    },
+    {
+      "file": "d5_internal_controls_governance.json",
+      "name": "Internal Controls & Governance Risk",
+      "sp_framework": "Management and Governance modifier",
+      "primary_source": "PCAOB AS 2201 + COSO 2013 Framework + SOX Section 404",
+      "mandatory_items": [
+        "Item 9A",
+        "Auditor's Report on ICFR",
+        "Item 1A controls subsection"
+      ],
+      "retrieval_queries_count": 7,
+      "alternate_queries_count": 3,
+      "key_design_note": "Filer scope note in config: SOX 404(b) auditor attestation applies to large accelerated filers only. All three test companies qualify. consecutive_years field in output schema captures multi-year weakness patterns."
+    }
+  ],
+  "evaluator_facing_files": [
+    {
+      "file": "ground_truth.json",
+      "description": "15-example labeled test set with key evidence descriptions, hardest verdict annotations, false positive trap warnings, and EDGAR XBRL URLs for Z-Score computation. NEVER passed to the Analysis Agent."
+    }
+  ],
+  "retrieval_config": {
+    "embedding_model": "text-embedding-004 (Google AI Studio)",
+    "vector_store": "Pinecone serverless free tier",
+    "chunk_strategy": "LlamaIndex semantic chunking",
+    "confidence_threshold": 0.75,
+    "retry_on_low_confidence": true,
+    "section_type_filter": false,
+    "section_types": [
+      "item_1",
+      "item_1a",
+      "item_3",
+      "item_7",
+      "item_8",
+      "item_9a",
+      "auditor_report",
+      "footnotes"
+    ],
+    "section_filter_mode": "soft",
+    "section_filter_note": "Retrieval is section-aware but not section-exclusive. Each dimension config specifies target_sections as preferred retrieval anchors for Pinecone metadata scoring/boosting, but all sections of the filing remain eligible for retrieval. This is necessary because: (1) EDGAR HTML-rendered PDFs have imprecise section boundaries and chunks may be mis-labeled; (2) material evidence for a dimension often appears outside its primary Item (e.g. D3 civil penalty accruals in Item 8 footnotes; D5 ICFR auditor opinion embedded in Item 8 rather than Item 9A; D2 springing maturity conditions in Item 8 debt footnotes). Section metadata should be used to RANK retrieved chunks, not to EXCLUDE them.",
+    "section_boost_weight": 0.2,
+    "section_boost_note": "When using hybrid retrieval (dense + BM25), apply a +0.2 score boost to chunks whose section_type metadata matches the dimension's target_sections list. Do not apply a penalty or exclusion to non-matching chunks."
+  },
+  "evaluation_config": {
+    "primary_metric": "rating_accuracy",
+    "target_accuracy": 0.75,
+    "secondary_metrics": [
+      "evidence_recall",
+      "retrieval_retry_rate",
+      "avg_retrieval_confidence"
+    ],
+    "target_evidence_recall": 0.7,
+    "target_retry_rate_below": 0.2,
+    "target_avg_confidence_above": 0.8,
+    "tracking": "MLflow local server"
+  },
+  "sources_index": {
+    "S&P Corporate Methodology Jan 2024": "https://www.maalot.co.il/Publications/MT20240214173645.PDF",
+    "S&P Plain-language summary": "https://www.spglobal.com/content/dam/spglobal/ratings/en/documents/pdfs/041019_howweratenonfinancialcorporateentities.pdf",
+    "FASB ASU 2014-15 (ASC 205-40)": "https://www.fasb.org/page/document?pdf=ASU+2014-15.pdf",
+    "KPMG Going Concern Handbook 2024": "https://kpmg.com/kpmg-us/content/dam/kpmg/frv/pdf/2024/handbook-going-concern.pdf",
+    "SEC S-K Modernization Adopting Release (Items 101 and 103)": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+    "SEC S-K Compliance Guide": "https://www.sec.gov/resources-small-businesses/small-business-compliance-guides/modernization-regulation-s-k-items-101-103-105-small-entity-compliance-guide",
+    "PCAOB AS 2201": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2201",
+    "COSO 2013 Framework": "https://www.coso.org/guidance-on-ic",
+    "SOX Section 404 adopting release": "https://www.sec.gov/rules/final/2003/33-8238.pdf",
+    "Altman Z-Score 2000": "Google Scholar \u2014 'Altman 2000 predicting financial distress companies'",
+    "SEC FR-72 (Release 33-8350, 2003)": "https://www.sec.gov/rules-regulations/2003/12/commission-guidance-regarding-managements-discussion-analysis-financial-condition-results-operations",
+    "SEC FR-83 (Release 33-9144, 2010)": "https://www.sec.gov/rules-regulations/2010/09/commission-guidance-presentation-liquidity-capital-resources-disclosures-managements-discussion",
+    "SEC S-K Item 303 (Release 33-10890, 2020)": "https://www.sec.gov/files/rules/final/2020/33-10890.pdf",
+    "SEC S-K Item 105 (Release 33-10825, 2020)": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+    "SEC S-K Item 106 Cybersecurity (Release 33-11216, 2023)": "https://www.sec.gov/files/rules/final/2023/33-11216.pdf",
+    "SEC FRM Topic 9": "https://www.sec.gov/about/divisions-offices/division-corporation-finance/financial-reporting-manual/frm-topic-9",
+    "PCAOB AS 2415 Going Concern": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2415"
+  }
+}
