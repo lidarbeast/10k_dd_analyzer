@@ -1,1 +1,1 @@
-# OSFI Compliance Analyzer
+# M&A Due Diligence Analyzer

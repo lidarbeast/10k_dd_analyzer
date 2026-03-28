@@ -1,50 +1,66 @@
 """
-Shared state definition for the LangGraph compliance audit pipeline.
+Shared state definition for the LangGraph M&A due diligence pipeline.
 
-AuditState is the TypedDict that flows through all graph nodes.
+DDState is the TypedDict that flows through all graph nodes.
 """
 
 from typing import TypedDict
 
 
-class ClauseResult(TypedDict):
-    """Result of analyzing a single OSFI clause against a bank policy."""
-    clause_id: str
-    clause_text: str
-    verdict: str            # PASS | PARTIAL | FAIL
-    evidence: str           # Retrieved OSFI excerpt used for grading
-    policy_excerpt: str     # Matching bank policy text
-    reasoning: str          # LLM explanation of the verdict
-    risk_severity: str      # LOW | MEDIUM | HIGH | CRITICAL
-    retrieval_score: float  # Top similarity score from Pinecone
-    retrieval_attempts: int # Number of retrieval calls made (1 or 2)
+class FilingChunk(TypedDict):
+    """A chunk of a parsed SEC 10-K filing with section metadata."""
+    text: str
+    headings: list[str]
+    source_page: int
+    source_document: str
+    label: str
 
 
-class PolicyChunk(TypedDict):
-    """A chunk of bank policy mapped to an OSFI clause."""
-    clause_id: str
-    policy_chunk: str
-    retrieval_query: str
+class DimensionSpec(TypedDict):
+    """Specification for a single due diligence dimension, loaded from config JSON."""
+    dimension_id: str
+    name: str
+    retrieval_queries: list[str]
+    alternate_queries: list[str]
+    rubric: dict               # {"HIGH": {...}, "MEDIUM": {...}, "LOW": {...}}
+    prompt_template: dict      # {"system": str, "user_template": str}
+    target_sections: list[str]
 
 
-class OSFIClause(TypedDict):
-    """A single OSFI guideline clause from the audit checklist."""
-    clause_id: str
-    clause_text: str
-    requirement_summary: str
+class EvidenceCitation(TypedDict):
+    """A single piece of evidence backing a verdict."""
+    text: str
+    source_page: int
 
 
-class AuditState(TypedDict):
-    """Shared state flowing through the LangGraph compliance pipeline."""
+class VerdictCard(TypedDict):
+    """Structured verdict for a single due diligence dimension."""
+    dimension: str             # e.g. "financial_health"
+    rating: str                # LOW | MEDIUM | HIGH
+    confidence: float          # 0.0–1.0: max similarity score of top retrieved chunk
+    reasoning: str             # One-paragraph synthesis
+    evidence_citations: list[EvidenceCitation]
+    flags: list[str]           # Specific risk signals found
+    retrieval_attempts: int    # 1 if first retrieval sufficient, 2 if retry triggered
+
+
+class DDState(TypedDict):
+    """Shared state flowing through the LangGraph due diligence pipeline."""
     # Input
     company_name: str
-    policy_chunks: list[PolicyChunk]
-    osfi_checklist: list[OSFIClause]
+    filing_path: str
 
-    # Processing state
-    current_clause_index: int
-    retrieval_attempts: int
+    # Document Agent output
+    filing_chunks: list[FilingChunk]
 
-    # Output
-    graded_results: list[ClauseResult]
-    report: dict  # Final aggregated compliance report
+    # Dimension loop state
+    dimensions: list[DimensionSpec]
+    current_dim_index: int
+
+    # Analysis output (accumulated across dimensions)
+    verdicts: list[VerdictCard]
+    retrieval_attempts: list[int]
+    confidence_scores: list[float]
+
+    # Report output
+    report: dict  # Final aggregated DD report
