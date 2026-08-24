@@ -84,17 +84,63 @@ def validate_graph_run() -> dict[str, Any]:
     assert set(report["ratings"].keys()) == {d["dimension_id"] for d in final_state["dimensions"]}
     assert all(rating in {"LOW", "MEDIUM", "HIGH"} for rating in report["ratings"].values())
 
+    # A healthy run carries no degraded dimensions and is marked trustworthy.
+    assert report["degraded_dimensions"] == {}, report["degraded_dimensions"]
+    assert report["trustworthy"] is True
+
+    return final_state
+
+
+def validate_degraded_run() -> dict[str, Any]:
+    """Every dimension fails at the model call.
+
+    Without flag reporting this produces four MEDIUM verdicts that look exactly
+    like real analysis — the failure mode the report must make visible.
+    """
+    class _FailingLLM:
+        def invoke(self, messages):
+            raise RuntimeError("503 model overloaded")
+
+    from src import config as _config
+    orig_delay = _config.LLM_RETRY_BASE_SECONDS
+    _config.LLM_RETRY_BASE_SECONDS = 0.0
+    try:
+        retrieval_agent.query_index = _mock_query_index
+        analysis_agent._llm = _FailingLLM()
+        compiled = build_graph()
+        final_state = compiled.invoke(
+            _new_state("Shopify", "data/parsed/shop-20251231.json"),
+            config={"recursion_limit": 50},
+        )
+    finally:
+        _config.LLM_RETRY_BASE_SECONDS = orig_delay
+
+    report = final_state["report"]
+    dim_count = len(final_state["dimensions"])
+
+    # Ratings alone are indistinguishable from a healthy run...
+    assert all(r == "MEDIUM" for r in report["ratings"].values())
+    # ...so the report must say so explicitly.
+    assert report["trustworthy"] is False, "A fully failed run must not be marked trustworthy"
+    assert len(report["degraded_dimensions"]) == dim_count, report["degraded_dimensions"]
+    assert all("analysis_error" in f for f in report["degraded_dimensions"].values())
+
     return final_state
 
 
 def main() -> int:
     validate_graph_run()
+    validate_degraded_run()
     print("\n✓ Graph smoke test passed")
     return 0
 
 
 def test_graph_runs_all_dimensions_and_builds_report() -> None:
     validate_graph_run()
+
+
+def test_degraded_run_is_reported_as_untrustworthy() -> None:
+    validate_degraded_run()
 
 
 if __name__ == "__main__":

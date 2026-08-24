@@ -55,20 +55,30 @@ class _FakeLLM:
 
 
 @contextlib.contextmanager
-def patched_llm(responder):
+def patched_llm(responder, *, max_retries: int = 1):
     """Swap `analysis_agent._get_llm` for a fake, restoring it on exit.
 
     Restoring matters for the same reason it does in the retrieval harness:
     `analysis_agent` is a cached module, so a fake left installed would leak
     into any later test in the session.
+
+    Retry backoff is zeroed and retries default to 1 so failure-path tests do
+    not spend real seconds sleeping; pass `max_retries` to exercise the retry
+    loop itself.
     """
     fake = _FakeLLM(responder)
     original = analysis_agent._get_llm
+    orig_retries = config.LLM_MAX_RETRIES
+    orig_delay = config.LLM_RETRY_BASE_SECONDS
     analysis_agent._get_llm = lambda: fake
+    config.LLM_MAX_RETRIES = max_retries
+    config.LLM_RETRY_BASE_SECONDS = 0.0
     try:
         yield fake
     finally:
         analysis_agent._get_llm = original
+        config.LLM_MAX_RETRIES = orig_retries
+        config.LLM_RETRY_BASE_SECONDS = orig_delay
 
 
 def _dimension(**overrides) -> dict:
@@ -224,6 +234,39 @@ def test_analysis_error_flagged() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Retry: transient failures must not become verdicts
+# ---------------------------------------------------------------------------
+
+def test_retries_then_succeeds() -> None:
+    """A transient failure (rate limit) must be retried, not converted into a
+    MEDIUM verdict indistinguishable from real analysis.
+    """
+    calls = {"n": 0}
+
+    def flaky(messages):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            return RuntimeError("429 rate limit exceeded")
+        return json.dumps({"verdict": "HIGH", "reasoning": "ok", "evidence": [], "flags": []})
+
+    with patched_llm(flaky, max_retries=3) as fake:
+        verdict = _analyze(_dimension(), chunks=[_chunk()])
+
+    assert len(fake.calls) == 3, f"Expected 3 attempts, got {len(fake.calls)}"
+    assert verdict["rating"] == config.RATING_HIGH
+    assert "analysis_error" not in verdict["flags"], "Recovered call must not be flagged"
+
+
+def test_gives_up_after_max_retries() -> None:
+    """Exhausted retries still fail closed to a flagged verdict, never a silent one."""
+    with patched_llm(lambda m: RuntimeError("429 rate limit"), max_retries=2) as fake:
+        verdict = _analyze(_dimension(), chunks=[_chunk()])
+
+    assert len(fake.calls) == 2, "Should stop at max_retries"
+    assert "analysis_error" in verdict["flags"]
+
+
+# ---------------------------------------------------------------------------
 # Test 9: loader validation of the new field
 # ---------------------------------------------------------------------------
 
@@ -272,6 +315,8 @@ def main() -> int:
         test_valid_json_response,
         test_parse_error_flagged,
         test_analysis_error_flagged,
+        test_retries_then_succeeds,
+        test_gives_up_after_max_retries,
         test_loader_rejects_bad_rating,
         test_loader_normalizes_case,
     ]

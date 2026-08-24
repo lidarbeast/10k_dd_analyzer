@@ -144,14 +144,15 @@ Ordering is the safeguard: **define rule → derive labels → freeze rubrics �
 **Currently holding:**
 
 - Rubric definitions are fixed inputs — changing a rubric invalidates prior eval runs and requires a new MLflow experiment, not an edit to an existing one
+- Every LLM call has explicit retry and timeout handling — `_invoke_with_retry` in [src/agents/analysis_agent.py](src/agents/analysis_agent.py), bounded retries with exponential backoff, `LLM_TIMEOUT_SECONDS` on the client. The client's own `max_retries` is set to 0 so every attempt is logged rather than retried silently.
 - Embedding calls have bounded retry with exponential backoff (`_get_embeddings_with_retry` in [src/indexing/pinecone_ops.py](src/indexing/pinecone_ops.py))
 - Retrieval failures are contained per query — one failed query does not abort the dimension
 - The no-evidence path never calls the model; the fallback rating comes from the dimension's explicit `no_evidence_rating`, never from parsing prose
+- **A verdict that is not a finding is visibly marked.** `no_evidence`, `parse_error`, and `analysis_error` reach the report as `degraded_dimensions`, and `report["trustworthy"]` is `False` whenever any are present. Check that field before believing any rating.
 
 **Targets, not yet implemented** — do not assume these when reading the code:
 
-- ❌ *"Every LLM call has explicit retry and timeout handling."* [analysis_agent.py:322](src/agents/analysis_agent.py#L322) is a bare `invoke()` inside a `try/except` — no retry, no timeout.
-- ❌ *"Anything else fails closed."* Unparseable output and API errors currently fail **open** to `MEDIUM` with a `parse_error` / `analysis_error` flag. Worse, those flags never reach the report ([src/graph/build.py](src/graph/build.py)), so a total LLM outage looks like four ordinary MEDIUM verdicts.
+- ⚠️ *"Anything else fails closed."* Unparseable output and exhausted retries still fail **open** to `MEDIUM` rather than rejecting — but they are now flagged and surfaced via `degraded_dimensions`, so the failure is visible even though the rating is still emitted.
 - ❌ *Model routing* — every call goes to `LLM_MODEL`; there is no cheap model for retrieval or query construction.
 - ❌ *Token logging per node* — no token accounting anywhere.
 - ❌ *MLflow* — not imported anywhere yet.

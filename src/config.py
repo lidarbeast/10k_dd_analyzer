@@ -29,6 +29,13 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.0"))
 
+# Retry/timeout for analysis calls.  A rubric prompt is large and the free tier
+# rate-limits aggressively, so an unguarded call turns a transient 429 into a
+# MEDIUM verdict that is indistinguishable from a real one.
+LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
+LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "3"))
+LLM_RETRY_BASE_SECONDS = float(os.getenv("LLM_RETRY_BASE_SECONDS", "2.0"))
+
 # ---------------------------------------------------------------------------
 # Embedding Configuration
 # ---------------------------------------------------------------------------

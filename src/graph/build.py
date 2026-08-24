@@ -24,12 +24,46 @@ from src.state import DDState
 _log = logging.getLogger(__name__)
 
 
+# Flags that mean the verdict is not a finding: the model was never consulted,
+# or its answer could not be used.  A rating carrying one of these must never be
+# read as analysis.
+DEGRADED_FLAGS = frozenset({"no_evidence", "parse_error", "analysis_error"})
+
+
+def summarize_flags(verdicts: list) -> tuple[dict, dict]:
+    """Split verdict flags into all-flags and degraded-only views.
+
+    Returns (flags, degraded) keyed by dimension_id.  `degraded` is what makes a
+    silently failing run visible: without it, four analysis_error verdicts and
+    four genuine MEDIUM verdicts produce an identical report.
+    """
+    flags = {v["dimension"]: list(v.get("flags") or []) for v in verdicts if v.get("flags")}
+    degraded = {
+        dim: sorted(set(f) & DEGRADED_FLAGS)
+        for dim, f in flags.items()
+        if set(f) & DEGRADED_FLAGS
+    }
+    return flags, degraded
+
+
 def _build_report(state: DDState) -> DDState:
+    verdicts = state["verdicts"]
+    flags, degraded = summarize_flags(verdicts)
+
+    if degraded:
+        _log.warning(
+            "%d of %d dimensions produced a degraded verdict (no model finding): %s",
+            len(degraded), len(verdicts), degraded,
+        )
+
     state["report"] = {
         "company_name": state["company_name"],
         "filing_path": state["filing_path"],
-        "dimension_count": len(state["verdicts"]),
-        "ratings": {v["dimension"]: v["rating"] for v in state["verdicts"]},
+        "dimension_count": len(verdicts),
+        "ratings": {v["dimension"]: v["rating"] for v in verdicts},
+        "flags": flags,
+        "degraded_dimensions": degraded,
+        "trustworthy": not degraded,
         "retrieval_audits": state.get("_retrieval_audits", {}),
         "warnings": state.get("_warnings", []),
     }

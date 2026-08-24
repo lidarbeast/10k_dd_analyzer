@@ -52,11 +52,22 @@ def run_agent_chain(
         state = retrieval_agent.run(state)
         state = analysis_agent.run(state)
 
+    # Reuse the graph's flag summary so both runners report degradation
+    # identically — a verdict that is really an API failure must not look like
+    # analysis in either path.
+    from src.graph.build import summarize_flags
+
+    flags, degraded = summarize_flags(state["verdicts"])
+
     state["report"] = {
         "company_name": state["company_name"],
         "filing_path": state["filing_path"],
         "dimension_count": len(state["verdicts"]),
         "ratings": {v["dimension"]: v["rating"] for v in state["verdicts"]},
+        "flags": flags,
+        "degraded_dimensions": degraded,
+        "trustworthy": not degraded,
+        "retrieval_audits": state.get("_retrieval_audits", {}),
         "warnings": state.get("_warnings", []),
     }
     return state

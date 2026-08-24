@@ -11,6 +11,7 @@ Responsibilities:
 
 import json
 import logging
+import time
 from typing import Any
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -38,8 +39,47 @@ def _get_llm() -> ChatGoogleGenerativeAI:
             model=config.LLM_MODEL,
             temperature=config.LLM_TEMPERATURE,
             google_api_key=config.GOOGLE_API_KEY,
+            timeout=config.LLM_TIMEOUT_SECONDS,
+            # Retry is handled explicitly in _invoke_with_retry so that each
+            # attempt is logged; the client's own retry would be silent.
+            max_retries=0,
         )
     return _llm
+
+
+def _invoke_with_retry(messages: list[dict], dimension_id: str):
+    """Invoke the analysis model with bounded retries and exponential backoff.
+
+    Mirrors `_get_embeddings_with_retry` in src/indexing/pinecone_ops.py.  Without
+    this a single transient failure — a rate limit on the free tier, most likely —
+    becomes a MEDIUM verdict that reads exactly like a real one.
+    """
+    max_retries = max(1, config.LLM_MAX_RETRIES)
+    base_delay = max(0.0, config.LLM_RETRY_BASE_SECONDS)
+    last_error: Exception | None = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            return _get_llm().invoke(messages)
+        except Exception as e:
+            last_error = e
+            if attempt == max_retries:
+                break
+
+            sleep_seconds = base_delay * (2 ** (attempt - 1))
+            _log.warning(
+                "Analysis call failed for %s (attempt %s/%s): %s. Retrying in %.1fs",
+                dimension_id,
+                attempt,
+                max_retries,
+                e,
+                sleep_seconds,
+            )
+            time.sleep(sleep_seconds)
+
+    raise RuntimeError(
+        f"Analysis model call failed for {dimension_id} after {max_retries} attempt(s)."
+    ) from last_error
 
 
 def _collapse_ws(value: Any) -> str:
@@ -319,7 +359,7 @@ def analyze_dimension(
                 {"role": "system", "content": system_prompt},
                 {"role": "human", "content": user_prompt},
             ]
-            response = _get_llm().invoke(messages)
+            response = _invoke_with_retry(messages, dimension["dimension_id"])
             response_text = response.content
             parsed = _parse_verdict(str(response_text), dimension["dimension_id"])
         except Exception as e:
@@ -352,14 +392,6 @@ def analyze_dimension(
         "flags": parsed.get("flags", []),
         "retrieval_attempts": retrieval_attempts,
     }
-
-    # Validate rating
-    if verdict["rating"] not in config.VALID_RATINGS:
-        _log.warning(
-            f"Invalid rating '{verdict['rating']}' for {dimension['name']}; "
-            f"coercing to {config.RATING_MEDIUM}"
-        )
-        verdict["rating"] = config.RATING_MEDIUM
 
     _log.info(
         f"  Verdict: {verdict['rating']} "
