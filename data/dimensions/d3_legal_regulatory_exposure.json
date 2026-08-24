@@ -47,19 +47,14 @@
     }
   ],
   "retrieval_queries": [
-    "legal proceedings government investigation enforcement action penalty sanctions regulatory",
-    "SEC Department of Justice federal agency investigation inquiry subpoena formal order",
-    "civil penalty settlement consent decree injunction regulatory order government authority",
-    "product recall consumer safety regulatory violation enforcement proceedings compliance",
-    "securities class action shareholder lawsuit fraud derivative litigation pending",
-    "accrued legal liabilities contingent liability loss contingency reasonably possible probable",
-    "license suspension revocation state regulatory action compliance order proceeding",
-    "ordinary course of business claims legal actions material adverse effect do not believe"
+    "legal proceedings government investigation enforcement action SEC DOJ penalty sanctions consent decree settlement",
+    "contingent liability loss contingency accrued legal liabilities reasonably possible probable financial exposure",
+    "ordinary course of business claims do not believe material adverse effect boilerplate legal disclosure"
   ],
   "alternate_queries": [
-    "criminal investigation grand jury subpoena regulatory probe federal state enforcement",
-    "personal injury wrongful death mass tort class action product liability damages",
-    "intellectual property patent trademark litigation monetary damages injunction"
+    "securities class action shareholder litigation fraud derivative suit damages",
+    "criminal investigation grand jury regulatory probe federal state enforcement order",
+    "product liability recall consumer safety intellectual property patent infringement"
   ],
   "evidence_schema": {
     "primary_signals": [
@@ -149,6 +144,7 @@
     "SEC FR-72 (Release 33-8350, 2003) \u2014 MD&A disclosure of material legal trends and uncertainties"
   ],
   "no_evidence_handling": "If Item 3 is not retrieved, search for 'legal proceedings' and 'government' across all retrieved chunks. If no legal content found anywhere, flag INCONCLUSIVE.",
+  "no_evidence_rating": "INCONCLUSIVE",
   "ground_truth_labels": {
     "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
     "labels": [

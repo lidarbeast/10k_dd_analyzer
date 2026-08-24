@@ -53,18 +53,14 @@
     }
   ],
   "retrieval_queries": [
-    "substantial doubt ability to continue as a going concern management plans 12 months obligations",
-    "going concern explanatory paragraph auditor opinion basis of preparation uncertainty",
-    "liquidity capital resources cash runway obligations ability to meet fund operations",
-    "debt maturity date refinancing risk outstanding principal acceleration clause covenant",
-    "covenant compliance default waiver amendment credit agreement financial covenants breach",
-    "debtor in possession DIP financing bankruptcy reorganization plan chapter 11",
-    "working capital deficiency cash burn operating losses ability to fund"
+    "going concern substantial doubt ability to continue as a going concern auditor explanatory paragraph management plans",
+    "liquidity capital resources cash and cash equivalents available funds ability to fund operations cash runway",
+    "debt maturity covenant compliance waiver default refinancing risk springing maturity acceleration"
   ],
   "alternate_queries": [
-    "sources and uses of cash borrowing capacity revolving credit available undrawn",
-    "management plans raise capital equity offering refinance alleviate doubt",
-    "cash equivalents short-term investments available funds unrestricted"
+    "sources and uses of cash revolving credit borrowing capacity undrawn availability",
+    "equity offering capital raise dilution shares proceeds alleviate doubt",
+    "operating losses negative cash flow working capital deficiency burn rate"
   ],
   "evidence_schema": {
     "primary_signals": [
@@ -157,6 +153,7 @@
     "KPMG Going Concern Handbook April 2024 \u2014 capital-raise plan uncertainty analysis"
   ],
   "no_evidence_handling": "If auditor's report is not retrieved, search explicitly for 'substantial doubt' and 'going concern' in all available chunks. If neither found, flag INCONCLUSIVE \u2014 do not default to LOW.",
+  "no_evidence_rating": "INCONCLUSIVE",
   "ground_truth_labels": {
     "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
     "labels": [

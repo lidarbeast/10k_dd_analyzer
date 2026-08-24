@@ -59,21 +59,14 @@
     }
   ],
   "retrieval_queries": [
-    "net loss operating losses revenue decline results of operations financial performance",
-    "total debt long-term debt outstanding principal balance borrowings credit facility",
-    "cash flow from operations working capital cash and cash equivalents liquidity",
-    "stockholders equity deficit accumulated deficit total liabilities book value",
-    "interest expense debt service leverage financial covenants debt obligations",
-    "gross profit EBITDA operating income margin adjusted financial results",
-    "debt maturity repayment schedule refinancing capital structure obligations",
-    "senior notes aggregate principal amount outstanding borrowings indebtedness",
-    "floor plan facility term loan revolving credit total debt instruments"
+    "revenue net income operating income loss results of operations gross profit EBITDA margin profitability trend",
+    "cash flow from operations free cash flow capital expenditures cash burn working capital liquidity",
+    "Senior Notes Term Loan Convertible Notes Revolving Credit Facility aggregate principal outstanding borrowings interest expense coverage ratio covenant compliance maturity obligations"
   ],
   "alternate_queries": [
-    "impairment restructuring charges write-down financial distress going concern",
-    "covenant amendment waiver default breach credit agreement",
-    "free cash flow capital expenditures burn rate runway financing activities",
-    "liquidity risk doubt ability to continue as a going concern substantial doubt"
+    "accumulated deficit stockholders equity deficit impairment restructuring financial distress",
+    "debt to EBITDA leverage ratio funds from operations FFO to debt covenant maintenance test maximum leverage ratio financial covenants",
+    "going concern doubt ability to continue burn rate runway financing activities"
   ],
   "evidence_schema": {
     "primary_signals": [
@@ -125,17 +118,17 @@
   },
   "rubric": {
     "HIGH": {
-      "threshold": "EXPLICIT going concern doubt language in Item 7 Liquidity or Item 8 Note 1, OR Altman Z-Score < 1.81 (distress zone) AND at least two of: net loss present, negative operating cash flow, negative book equity, Debt/EBITDA > 5x (S&P Highly Leveraged), interest coverage < 1x. Under FR-72, the company's own MD&A should disclose these as material trends \u2014 evaluate whether disclosure is adequate or whether the signals appear in financials without corresponding MD&A acknowledgment (itself a disclosure deficiency).",
+      "threshold": "PRIMARY: Going concern doubt language present in Item 7 Liquidity or Item 8 Note 1. QUANTITATIVE: Altman Z-Score < 1.81 (distress zone) AND two or more of: net loss, negative operating cash flow, negative book equity, Debt/EBITDA > 5x, interest coverage < 1x. QUALITATIVE FALLBACK (when Z-Score inputs are not all retrievable): Two or more of: (a) net loss in current year, (b) negative operating cash flow, (c) negative total stockholders equity, (d) covenant violation or waiver disclosed in MD&A, (e) interest expense exceeds operating income. Under FR-72, evaluate whether distress signals in Item 8 are adequately disclosed in Item 7 \u2014 silence on a material trend is itself a disclosure deficiency.",
       "sp_frp_equivalent": "FRP 5 (Aggressive) or FRP 6 (Highly Leveraged): FFO/Debt < 20%, Debt/EBITDA > 4x",
       "narrative": "Multiple simultaneous financial distress signals. Debt unsustainable relative to cash generation. Rating equivalent: speculative grade B or below."
     },
     "MEDIUM": {
-      "threshold": "Altman Z-Score 1.81-2.99 (grey zone), OR Z-Score < 1.81 with only one additional distress signal. MD&A may discuss steps being taken to address identified deficiencies (FRM 9210.2 pattern \u2014 presence of remediation language confirms the deficiency).",
+      "threshold": "QUANTITATIVE: Altman Z-Score 1.81-2.99 (grey zone), OR Z-Score < 1.81 with only one additional distress signal. QUALITATIVE FALLBACK (when Z-Score inputs are not all retrievable): Exactly one HIGH qualitative signal present (net loss, negative OCF, negative equity, covenant issue, or coverage < 1x) alongside elevated but not extreme leverage, OR MD&A discusses steps being taken to address a liquidity deficiency (FRM 9210.2 pattern \u2014 presence of remediation language itself confirms the deficiency).",
       "sp_frp_equivalent": "FRP 3 (Intermediate) or FRP 4 (Significant): Debt/EBITDA 2-5x, FFO/Debt 12-45%",
       "narrative": "Financial pressure present but a credible path to stability exists. Not in acute distress."
     },
     "LOW": {
-      "threshold": "Altman Z-Score > 2.99 (safe zone) AND positive operating cash flow AND positive book equity AND no disclosed covenant violations AND MD&A provides an unqualified sufficiency statement for the next 12 months (FR-72 compliant).",
+      "threshold": "QUANTITATIVE: Altman Z-Score > 2.99 (safe zone) AND positive operating cash flow AND positive book equity AND no covenant violations AND unqualified 12-month sufficiency statement in MD&A. QUALITATIVE FALLBACK (when Z-Score inputs are not all retrievable): None of the HIGH qualitative signals are present AND operating cash flow is positive AND MD&A contains an unqualified statement that cash and equivalents are sufficient to meet operating requirements for the next 12 months (FR-72 compliant sufficiency statement).",
       "sp_frp_equivalent": "FRP 1 (Minimal) to FRP 3 (Intermediate): Debt/EBITDA < 3x, FFO/Debt > 30%",
       "narrative": "Financially healthy. Revenue growing, cash generation strong, debt manageable or absent."
     }
@@ -149,6 +142,7 @@
     "Altman (2000) Z-Score revised model \u2014 1.81 and 2.99 zone boundaries"
   ],
   "no_evidence_handling": "If financial statements and MD&A are not retrievable, return INCONCLUSIVE. Do not default to MEDIUM.",
+  "no_evidence_rating": "INCONCLUSIVE",
   "ground_truth_labels": {
     "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
     "labels": [
@@ -168,12 +162,11 @@
   },
   "prompt_template": {
     "system": "You are a financial due diligence analyst evaluating a company's financial health from its SEC 10-K filing. Under SEC S-K Item 303 and the FR-72/FR-83 interpretive releases, companies are required to disclose all material known trends affecting liquidity and capital resources. Assess both the quantitative financial signals AND the quality of the company's own MD&A disclosures \u2014 a company that has distress signals in its financials but inadequate MD&A discussion may itself be exhibiting a disclosure deficiency. Assign a verdict of HIGH, MEDIUM, or LOW. Cite specific passages before stating your verdict.",
-    "user_template": "## Task\nEvaluate the Financial Health dimension for {company_name}.\n\n## Rubric\n**HIGH:** (1) \"Going concern doubt\" language present in Item 7 Liquidity or Item 8 Note 1 (Basis of Presentation), OR (2) Altman Z-Score < 1.81 AND two or more of: net loss, negative operating cash flow, negative book equity, Debt/EBITDA > 5x.\n**MEDIUM:** Z-Score 1.81-2.99, OR one distress signal alongside elevated leverage, OR multiple covenant violations without going concern language.\n**LOW:** Z-Score > 2.99, positive operating cash flow, positive book equity, no covenant violations, unqualified 12-month sufficiency statement in MD&A.\n\n## Retrieved Sections\n{retrieved_chunks}\n\n## Instructions\n1. **PRIORITY: Scan for \"going concern doubt\" or \"substantial doubt about going concern\" language anywhere in Item 7 or auditor sections. If found, immediately flag verdict as HIGH.**\n2. Extract all quantitative financial signals (net income/loss, total debt, operating cash flow, equity balance) with exact figures.\n3. Estimate Debt/EBITDA and interest coverage where data permits.\n4. Evaluate MD&A quality: Does the company's Item 7 Liquidity discussion adequately acknowledge and explain the signals visible in Item 8? Under FR-72, silence on a material trend is itself a disclosure deficiency. NOTE: If Item 7 is sparse, check Item 8 footnotes directly — debt instrument notes and maturity schedules in Item 8 are often more precise than the MD&A narrative and should be retrieved regardless of section label.\n5. Note trend direction across all reported periods.\n6. Map findings to rubric thresholds. State verdict with criteria met.\n\n## Output Format\n{\n  \"dimension\": \"financial_health\",\n  \"verdict\": \"HIGH|MEDIUM|LOW\",\n  \"confidence\": 0.0-1.0,\n  \"evidence\": [{\"signal\": \"\", \"value\": \"\", \"source_passage\": \"\", \"source_item\": \"\"}],\n  \"trend\": \"improving|deteriorating|stable\",\n  \"mda_disclosure_quality\": \"adequate|inadequate|not_assessed\",\n  \"going_concern_flag\": true|false,\n  \"rubric_criteria_met\": [],\n  \"reasoning\": \"\",\n  \"flags\": []\n}"
+    "user_template": "## Task\nEvaluate the Financial Health dimension for {company_name}.\n\n## Retrieved Sections\n{retrieved_chunks}\n\n{dimension_guidance}\n\n## Instructions\n1. **PRIORITY: Scan for \"going concern doubt\" or \"substantial doubt about going concern\" language anywhere in Item 7 or auditor sections. If found, immediately flag verdict as HIGH.**\n2. Extract all quantitative financial signals (net income/loss, total debt, operating cash flow, equity balance) with exact figures.\n3. Estimate Debt/EBITDA and interest coverage where data permits.\n4. Evaluate MD&A quality: Does the company's Item 7 Liquidity discussion adequately acknowledge and explain the signals visible in Item 8? Under FR-72, silence on a material trend is itself a disclosure deficiency. NOTE: If Item 7 is sparse, check Item 8 footnotes directly \u2014 debt instrument notes and maturity schedules in Item 8 are often more precise than the MD&A narrative and should be retrieved regardless of section label.\n5. Note trend direction across all reported periods.\n6. Map findings to rubric thresholds. State verdict with criteria met.\n\n## Output Format\n{\n  \"dimension\": \"financial_health\",\n  \"verdict\": \"HIGH|MEDIUM|LOW\",\n  \"evidence\": [{\"signal\": \"\", \"value\": \"\", \"source_passage\": \"\", \"source_item\": \"\"}],\n  \"rubric_criteria_met\": [],\n  \"reasoning\": \"\",\n  \"flags\": [\"going_concern_language_present\", \"negative_operating_cash_flow\", \"covenant_violation\", \"mda_disclosure_inadequate\"]\n}"
   },
   "target_sections": [
     "item_7",
-    "item_8",
-    "footnotes"
+    "item_8"
   ],
   "section_filter_mode": "soft",
   "section_filter_note": "target_sections lists preferred 10-K Items for retrieval scoring/boosting. These are NOT exclusive filters \u2014 all filing sections remain eligible for retrieval. Use target_sections to rank retrieved chunks, not to exclude non-matching chunks."

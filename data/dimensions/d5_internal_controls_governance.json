@@ -64,18 +64,14 @@
     }
   ],
   "retrieval_queries": [
-    "material weakness internal control over financial reporting management assessment effective",
-    "Item 9A controls procedures disclosure controls evaluation conclusion effectiveness",
-    "COSO framework control environment risk assessment control activities monitoring",
-    "segregation of duties user access controls IT general controls financial systems",
-    "remediation material weakness remediated corrective actions complete in progress",
-    "adverse opinion internal control over financial reporting auditor attestation",
-    "cybersecurity Item 106 CISO board oversight risk management strategy governance"
+    "management concluded internal control over financial reporting effective not effective material weakness Item 9A disclosure controls",
+    "auditor opinion internal control over financial reporting AS 2201 adverse unqualified attestation maintained effective",
+    "remediation plan material weakness corrective actions cybersecurity Item 106 board oversight CISO governance"
   ],
   "alternate_queries": [
-    "restatement prior period financial statements error correction misstatement accounting",
     "significant deficiency control deficiency identified communicated audit committee",
-    "SOX Section 404 Sarbanes-Oxley annual assessment management report effectiveness"
+    "IT general controls user access segregation of duties change management financial systems",
+    "restatement prior period error correction misstatement SOX 404 management assessment"
   ],
   "evidence_schema": {
     "primary_signals": [
@@ -182,6 +178,7 @@
   ],
   "filer_category_note": "SOX 404(b) auditor attestation (AS 2201) is required only for large accelerated filers and accelerated filers. Smaller reporting companies only provide the management assessment (404a) \u2014 which reduces external verification. Confirm filer category from the 10-K cover page. Note also that Item 1C (S-K Item 106 cybersecurity) is required for ALL registrants for fiscal years ending on or after December 15, 2023 \u2014 it is not limited to large accelerated filers.",
   "no_evidence_handling": "If Item 9A is not retrieved, search for 'material weakness', 'internal control', and 'effective as of' across all chunks. If explicit management conclusion language is not found, flag INCONCLUSIVE. Do not infer effectiveness without the explicit management conclusion statement.",
+  "no_evidence_rating": "INCONCLUSIVE",
   "ground_truth_labels": {
     "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
     "labels": [
