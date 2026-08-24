@@ -4,7 +4,7 @@ Shared state definition for the LangGraph M&A due diligence pipeline.
 DDState is the TypedDict that flows through all graph nodes.
 """
 
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 
 class FilingChunk(TypedDict):
@@ -25,6 +25,12 @@ class DimensionSpec(TypedDict):
     rubric: dict               # {"HIGH": {...}, "MEDIUM": {...}, "LOW": {...}}
     prompt_template: dict      # {"system": str, "user_template": str}
     target_sections: list[str]
+    mandatory_10k_items: NotRequired[list[dict]]
+    evidence_schema: NotRequired[dict]
+    no_evidence_handling: NotRequired[str]
+    no_evidence_rating: NotRequired[str]   # explicit fallback when no evidence is retrieved
+    rubric_sources: NotRequired[list[str]]
+    confidence_floor: NotRequired[float]
 
 
 class EvidenceCitation(TypedDict):
@@ -37,7 +43,7 @@ class VerdictCard(TypedDict):
     """Structured verdict for a single due diligence dimension."""
     dimension: str             # e.g. "financial_health"
     rating: str                # LOW | MEDIUM | HIGH
-    confidence: float          # 0.0–1.0: max similarity score of top retrieved chunk
+    confidence: float          # 0.0–1.0: mean similarity score of the top 3 retrieved chunks
     reasoning: str             # One-paragraph synthesis
     evidence_citations: list[EvidenceCitation]
     flags: list[str]           # Specific risk signals found
@@ -64,3 +70,11 @@ class DDState(TypedDict):
 
     # Report output
     report: dict  # Final aggregated DD report
+
+    # Scratch fields used during dimension loop (optional)
+    _retrieved_chunks: NotRequired[list[dict]]
+    _retrieval_score: NotRequired[float]
+    _retrieval_attempts: NotRequired[int]
+    _retrieval_audit: NotRequired[dict]          # current dimension only
+    _retrieval_audits: NotRequired[dict]         # dimension_id -> audit, accumulated across the loop
+    _warnings: NotRequired[list[str]]
