@@ -47,20 +47,14 @@
     }
   ],
   "retrieval_queries": [
-    "sole supplier sole manufacturer contract manufacturer outsource depend on third party provider",
-    "single source concentration risk supplier dependency key vendor critical third party",
-    "material adverse effect loss of supplier provider manufacturer operations disruption",
-    "payment processing provider exclusive arrangement financial partner loan purchaser servicer",
-    "logistics provider third-party logistics distribution fulfillment outsourced operations",
-    "license agreement distribution arrangement dependent brand franchise renewal termination",
-    "contract manufacturing offshore sole production facility geographic concentration",
-    "committed forward flow arrangement purchase finance receivables loan sale facility",
-    "floor plan facility inventory financing committed purchase arrangement"
+    "sole supplier single source contract manufacturer third-party dependency concentration risk critical vendor material adverse effect",
+    "named provider exclusive arrangement specific counterparty agreement termination loss of relationship irreplaceable",
+    "payment processing financial partner loan purchaser committed arrangement floor plan forward flow inventory financing"
   ],
   "alternate_queries": [
-    "cloud infrastructure technology provider platform dependency software service agreement",
-    "key customer revenue concentration single customer government customer dependent",
-    "supply chain disruption geographic single country sourcing concentration"
+    "cloud infrastructure technology platform software service dependency provider agreement",
+    "supply chain disruption geographic concentration single country sourcing offshore",
+    "key customer revenue concentration government customer dependent partnership"
   ],
   "evidence_schema": {
     "primary_signals": [
@@ -136,6 +130,7 @@
     "S&P Corporate Methodology Jan 2024 Section D \u2014 scale, scope, and diversity component of competitive position"
   ],
   "no_evidence_handling": "If Item 1 and Item 1A are not retrieved, flag INCONCLUSIVE. Do not infer LOW from absence of chunks.",
+  "no_evidence_rating": "INCONCLUSIVE",
   "ground_truth_labels": {
     "_note": "Evaluation metadata only. Not passed to the agent at inference time.",
     "labels": [
