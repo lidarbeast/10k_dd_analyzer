@@ -270,6 +270,7 @@ def upsert_chunks(chunks: list[dict], namespace: str = "") -> int:
                 "source_document": chunk.get("source_document", ""),
                 "headings": chunk.get("headings", []),
                 "source_page": chunk.get("source_page", 0),
+                "label": chunk.get("label", ""),
                 # Store full text — avg chunks ~1400 chars, max ~3200 chars,
                 # well within Pinecone's 40 KB per-vector metadata limit.
                 "text": chunk["text"],
@@ -348,33 +349,43 @@ def query_index(
     index = init_pinecone()
     query_embedding = get_query_embedding(query)
 
-    # Over-fetch when boosting so we can re-rank
-    fetch_k = top_k * 2 if section_types else top_k
-
     results = index.query(
         vector=query_embedding,
-        top_k=fetch_k,
+        top_k=top_k,
         include_metadata=True,
         namespace=namespace,
     )
 
-    # Parse matching results
+    # Parse and optionally boost section-matched results.
+    # target_sections use underscores (e.g. "item_7"); stored headings use
+    # spaces (e.g. "Item 7: Management's Discussion..."), so normalise before
+    # the substring check.
     parsed = []
     for match in results.get("matches", []):
         meta = match.get("metadata", {})
         score = match["score"]
 
-        # Note: Section-type boosting removed as extraction is deferred
+        if section_types:
+            headings = meta.get("headings", [])
+            section_matched = any(
+                st.lower().replace("_", " ") in h.lower()
+                for st in section_types
+                for h in headings
+            )
+            if section_matched:
+                score = min(1.0, score + config.SECTION_BOOST_WEIGHT)
 
         parsed.append({
+            "id": match.get("id", ""),
             "text": meta.get("text", ""),
             "score": score,
             "headings": meta.get("headings", []),
             "source_document": meta.get("source_document", ""),
             "source_page": meta.get("source_page", 0),
+            "label": meta.get("label", ""),
         })
 
-    # Re-sort by score and trim to top_k
+    # Re-sort by score (boost may have changed order) and trim to top_k.
     parsed.sort(key=lambda x: x["score"], reverse=True)
     return parsed[:top_k]
 

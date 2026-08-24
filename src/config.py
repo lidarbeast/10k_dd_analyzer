@@ -60,8 +60,12 @@ PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "ma-dd-analyzer")
 # ---------------------------------------------------------------------------
 # Retrieval settings
 # ---------------------------------------------------------------------------
-RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "5"))
-CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", "0.75"))
+RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "8"))
+CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", "0.60"))
+# Minimum score any retrieved chunk must meet (after retry) before passing to
+# the LLM.  Below this the retrieval agent signals no-evidence so the Analysis
+# Agent applies the dimension's no_evidence_handling instead of hallucinating.
+RETRIEVAL_HARD_FLOOR = float(os.getenv("RETRIEVAL_HARD_FLOOR", "0.35"))
 MAX_RETRIEVAL_RETRIES = 1
 SECTION_BOOST_WEIGHT = float(os.getenv("SECTION_BOOST_WEIGHT", "0.2"))
 
