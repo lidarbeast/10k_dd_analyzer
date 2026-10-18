@@ -1,0 +1,57 @@
+{
+ "set": "A",
+ "model": "gemini-3.8-flash",
+ "chunk_order": [
+  "rev-20221231_chunk_286",
+  "rev-20221231_chunk_279",
+  "rev-20221231_chunk_464",
+  "rev-20221231_chunk_344",
+  "rev-20221231_chunk_201",
+  "rev-20221231_chunk_153",
+  "rev-20221231_chunk_280",
+  "rev-20221231_chunk_245"
+ ],
+ "meta": {
+  "retrieval_score": 0.7154019673333334,
+  "attempts": 1
+ },
+ "prompt_chars": 21144,
+ "parsed": {
+  "dimension": "going_concern",
+  "verdict": "HIGH",
+  "auditor_report_retrieved": true,
+  "as2415_paragraph_found": true,
+  "as2415_quote": "The accompanying consolidated financial statements have been prepared assuming that the Company will continue as a going concern. As discussed in Note 1 to the consolidated financial statements, the Company has filed a Joint Plan of Reorganization of Revlon, Inc. and Its Debtor Affiliates Pursuant to Chapter 11 of the Bankruptcy Code, which raises substantial doubt about its ability to continue as a going concern. Management's plans in regard to these matters are also described in Note 1. The consolidated financial statements do not include any adjustments that might result from the outcome of this uncertainty.",
+  "management_disclosure": "not_alleviated",
+  "management_disclosure_quote": "As a result of risks and uncertainties related to, among other things, (i) the Company's ability to obtain requisite support for the Plan from various stakeholders, and (ii) the disruptive effects of the Chapter 11 Cases on our business and liquidity making it potentially more difficult to maintain business, financing and operational relationships, substantial doubt exists regarding our ability to continue as a going concern within one year after the date that the financial statements are issued.",
+  "chapter_11_debtor_in_possession": true,
+  "evidence": [
+   {
+    "signal": "as2415_going_concern_paragraph",
+    "value": "Substantial doubt about ability to continue as a going concern due to Chapter 11 filing",
+    "source_passage": "Evidence 7 [Going Concern]",
+    "source_item": "Item 8"
+   },
+   {
+    "signal": "management_substantial_doubt_not_alleviated",
+    "value": "Substantial doubt exists regarding ability to continue as a going concern within one year",
+    "source_passage": "Evidence 5 [Liquidity and Ability to Continue as a Going Concern]",
+    "source_item": "Item 8 / Item 7"
+   },
+   {
+    "signal": "chapter_11_debtor_in_possession",
+    "value": "Financial statements headed Debtor-in-Possession under Chapter 11",
+    "source_passage": "Evidence 3 [COMBINED NOTES TO CONSOLIDATED FINANCIAL STATEMENTS (DEBTOR-IN-POSSESSION)]",
+    "source_item": "Item 8"
+   }
+  ],
+  "rubric_criteria_met": [
+   "HIGH_auditor_as2415_paragraph",
+   "HIGH_management_not_alleviated",
+   "HIGH_chapter_11_debtor_in_possession"
+  ],
+  "reasoning": "Revlon, Inc. meets all three criteria for a HIGH going concern risk rating: (1) the independent auditor's report includes an AS 2415 explanatory paragraph stating that the Chapter 11 filing raises substantial doubt about the company's ability to continue as a going concern; (2) management explicitly concludes under ASC 205-40 that substantial doubt exists regarding the company's ability to continue as a going concern within one year after issuance; and (3) the company operates as a debtor-in-possession under Chapter 11.",
+  "flags": []
+ },
+ "raw": "```json\n{\n  \"dimension\": \"going_concern\",\n  \"verdict\": \"HIGH\",\n  \"auditor_report_retrieved\": true,\n  \"as2415_paragraph_found\": true,\n  \"as2415_quote\": \"The accompanying consolidated financial statements have been prepared assuming that the Company will continue as a going concern. As discussed in Note 1 to the consolidated financial statements, the Company has filed a Joint Plan of Reorganization of Revlon, Inc. and Its Debtor Affiliates Pursuant to Chapter 11 of the Bankruptcy Code, which raises substantial doubt about its ability to continue as a going concern. Management's plans in regard to these matters are also described in Note 1. The consolidated financial statements do not include any adjustments that might result from the outcome of this uncertainty.\",\n  \"management_disclosure\": \"not_alleviated\",\n  \"management_disclosure_quote\": \"As a result of risks and uncertainties related to, among other things, (i) the Company's ability to obtain requisite support for the Plan from various stakeholders, and (ii) the disruptive effects of the Chapter 11 Cases on our business and liquidity making it potentially more difficult to maintain business, financing and operational relationships, substantial doubt exists regarding our ability to continue as a going concern within one year after the date that the financial statements are issued.\",\n  \"chapter_11_debtor_in_possession\": true,\n  \"evidence\": [\n    {\n      \"signal\": \"as2415_going_concern_paragraph\",\n      \"value\": \"Substantial doubt about ability to continue as a going concern due to Chapter 11 filing\",\n      \"source_passage\": \"Evidence 7 [Going Concern]\",\n      \"source_item\": \"Item 8\"\n    },\n    {\n      \"signal\": \"management_substantial_doubt_not_alleviated\",\n      \"value\": \"Substantial doubt exists regarding ability to continue as a going concern within one year\",\n      \"source_passage\": \"Evidence 5 [Liquidity and Ability to Continue as a Going Concern]\",\n      \"source_item\": \"Item 8 / Item 7\"\n    },\n    {\n      \"signal\": \"chapter_11_debtor_in_possession\",\n      \"value\": \"Financial statements headed Debtor-in-Possession under Chapter 11\",\n      \"source_passage\": \"Evidence 3 [COMBINED NOTES TO CONSOLIDATED FINANCIAL STATEMENTS (DEBTOR-IN-POSSESSION)]\",\n      \"source_item\": \"Item 8\"\n    }\n  ],\n  \"rubric_criteria_met\": [\n    \"HIGH_auditor_as2415_paragraph\",\n    \"HIGH_management_not_alleviated\",\n    \"HIGH_chapter_11_debtor_in_possession\"\n  ],\n  \"reasoning\": \"Revlon, Inc. meets all three criteria for a HIGH going concern risk rating: (1) the independent auditor's report includes an AS 2415 explanatory paragraph stating that the Chapter 11 filing raises substantial doubt about the company's ability to continue as a going concern; (2) management explicitly concludes under ASC 205-40 that substantial doubt exists regarding the company's ability to continue as a going concern within one year after issuance; and (3) the company operates as a debtor-in-possession under Chapter 11.\",\n  \"flags\": []\n}\n```"
+}

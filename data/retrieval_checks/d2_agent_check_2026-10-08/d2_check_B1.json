@@ -1,0 +1,43 @@
+{
+ "set": "B1",
+ "model": "gemini-3.8-flash",
+ "chunk_order": [
+  "rev-20221231_chunk_345",
+  "rev-20221231_chunk_281",
+  "rev-20221231_chunk_279",
+  "rev-20221231_chunk_344"
+ ],
+ "meta": {},
+ "prompt_chars": 15702,
+ "parsed": {
+  "dimension": "going_concern",
+  "verdict": "HIGH",
+  "auditor_report_retrieved": true,
+  "as2415_paragraph_found": false,
+  "as2415_quote": "",
+  "management_disclosure": "not_alleviated",
+  "management_disclosure_quote": "As a result of risks and uncertainties related to, among other things, (i) the Company's ability to obtain requisite support for the Plan from various stakeholders, and (ii) the disruptive effects of the Chapter 11 Cases on our business and liquidity making it potentially more difficult to maintain business, financing and operational relationships, substantial doubt exists regarding our ability to continue as a going concern within one year after the date that the financial statements are issued.",
+  "chapter_11_debtor_in_possession": true,
+  "evidence": [
+   {
+    "signal": "management_not_alleviated",
+    "value": "substantial doubt exists regarding our ability to continue as a going concern within one year after the date that the financial statements are issued",
+    "source_passage": "Evidence 1",
+    "source_item": "Item 8 Notes to Consolidated Financial Statements"
+   },
+   {
+    "signal": "chapter_11_debtor_in_possession",
+    "value": "COMBINED NOTES TO CONSOLIDATED FINANCIAL STATEMENTS (DEBTOR-IN-POSSESSION)",
+    "source_passage": "Evidence 1",
+    "source_item": "Item 8 Notes to Consolidated Financial Statements"
+   }
+  ],
+  "rubric_criteria_met": [
+   "management_not_alleviated",
+   "chapter_11_debtor_in_possession"
+  ],
+  "reasoning": "Revlon meets multiple HIGH rubric criteria: (1) management explicitly concluded under ASC 205-40 that substantial doubt exists regarding its ability to continue as a going concern within one year after issuance without stating that the doubt was alleviated, and (2) the company is operating under Chapter 11 bankruptcy as a debtor-in-possession.",
+  "flags": []
+ },
+ "raw": "```json\n{\n  \"dimension\": \"going_concern\",\n  \"verdict\": \"HIGH\",\n  \"auditor_report_retrieved\": true,\n  \"as2415_paragraph_found\": false,\n  \"as2415_quote\": \"\",\n  \"management_disclosure\": \"not_alleviated\",\n  \"management_disclosure_quote\": \"As a result of risks and uncertainties related to, among other things, (i) the Company's ability to obtain requisite support for the Plan from various stakeholders, and (ii) the disruptive effects of the Chapter 11 Cases on our business and liquidity making it potentially more difficult to maintain business, financing and operational relationships, substantial doubt exists regarding our ability to continue as a going concern within one year after the date that the financial statements are issued.\",\n  \"chapter_11_debtor_in_possession\": true,\n  \"evidence\": [\n    {\n      \"signal\": \"management_not_alleviated\",\n      \"value\": \"substantial doubt exists regarding our ability to continue as a going concern within one year after the date that the financial statements are issued\",\n      \"source_passage\": \"Evidence 1\",\n      \"source_item\": \"Item 8 Notes to Consolidated Financial Statements\"\n    },\n    {\n      \"signal\": \"chapter_11_debtor_in_possession\",\n      \"value\": \"COMBINED NOTES TO CONSOLIDATED FINANCIAL STATEMENTS (DEBTOR-IN-POSSESSION)\",\n      \"source_passage\": \"Evidence 1\",\n      \"source_item\": \"Item 8 Notes to Consolidated Financial Statements\"\n    }\n  ],\n  \"rubric_criteria_met\": [\n    \"management_not_alleviated\",\n    \"chapter_11_debtor_in_possession\"\n  ],\n  \"reasoning\": \"Revlon meets multiple HIGH rubric criteria: (1) management explicitly concluded under ASC 205-40 that substantial doubt exists regarding its ability to continue as a going concern within one year after issuance without stating that the doubt was alleviated, and (2) the company is operating under Chapter 11 bankruptcy as a debtor-in-possession.\",\n  \"flags\": []\n}\n```"
+}
