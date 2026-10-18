@@ -1,0 +1,400 @@
+# D3 labeling worksheet — Peloton FY2023
+
+- **Filing:** `data/filings/pton-20230630.pdf` — FY2023 (year ended June 30, 2023)
+- **Filing SHA-256:** `312efc2529e02cfe2fa486b1e9d5eae325e0766367c59ab7903443dbc668cdd3`
+- **Rubric version:** `v1`
+- **Built by:** `python -m src.evaluation.d3_worksheets` — deterministic extraction; no model was used
+
+## How to use this worksheet
+
+1. Read sections A and B below in full. Use section C only as a pointer to other pages worth checking.
+2. Log every legal or regulatory matter you find in the matter log, with its PDF page.
+3. Apply the rubric literally to each matter, then give the overall rating: the highest level any matter reaches.
+4. Rate only what the filing discloses — not news, later events or anything you know from elsewhere.
+5. If the rubric does not give a clear answer, **stop and write it under Ambiguities.** Rubric fixes happen before v1 is frozen, and never after seeing agent output.
+6. Do this before looking at any agent output for D3.
+
+## Reference: 10% of consolidated current assets (criterion M-c)
+
+Balance sheet, PDF p. 126 — units: (in millions, except share and per share amounts)
+
+```text
+Total current assets 1,639.1  2,634.6
+```
+
+Confirm which column is the fiscal year-end being rated, then fill in:
+
+- Total current assets (current year): `________`
+- 10% line: `________`
+
+## D3 rubric (v1)
+
+**HIGH:** One or more of: (a) a named governmental authority is a party to a proceeding disclosed in Item 3 or the contingencies note, with a quantified monetary sanction, penalty or settlement; (b) an active, named federal investigation described with company-specific detail (Item 105 specificity standard), in Item 1A or elsewhere; (c) an accrual (reserve) recorded for a specific, identified legal or regulatory proceeding, with its amount stated (ASC 450-20 'probable'). SCOPE for every criterion: matters pending at fiscal year-end, or resolved during the fiscal year with a sanction, settlement or judgment against the company. A government body acting only as the forum for a private dispute (a court, or the ITC in a private Section 337 complaint) is not a governmental party. Product warranty, return and recall cost reserves are operating estimates, not accruals for legal proceedings, and do not meet (c).
+
+**MEDIUM:** No HIGH condition, AND one or more of: (a) a specific pending legal or regulatory matter (named case, party or proceeding) is described in Item 3 or the contingencies note without an accrual — this is the ASC 450-20-50-3/50-4 disclosure, and it qualifies whether or not the words 'reasonably possible' appear, including when the filing says the loss, its probability or its amount cannot be estimated — unless the filing states that the likelihood of loss is remote; (b) a named governmental authority in connection with an early-stage or informal inquiry, with no formal action and no quantified sanction (an unnamed reference such as 'responding to requests from government agencies' does not qualify); (c) a civil damages proceeding, not accrued, in which the quantified amount claimed exceeds 10% of consolidated current assets (the Item 103(b)(2) line). The HIGH scope rule applies.
+
+**LOW:** No HIGH or MEDIUM condition: Item 3 and the contingencies note describe no specific pending legal or regulatory matter beyond generic ordinary-course language (for example 'no material pending litigation or claims'), and the filing names no government investigation with company-specific detail. Matters resolved before the fiscal year, and matters resolved during it in the company's favour with no loss, do not count.
+
+## Glossary
+
+- **Accrual / "accrued"** (ASC 450-20): the company has recorded an expected loss as a liability because it judges the loss *probable* and can estimate it. Look for "we accrued", "recorded a liability", "an accrual of $X", "included in accrued liabilities".
+- **Probable / reasonably possible / remote** (ASC 450-20): the three likelihood tiers. *Probable* = likely → accrue. *Reasonably possible* = more than slight but less than likely → disclose, no accrual. Look for "a loss is reasonably possible", "estimate of the possible loss or range of loss", "cannot reasonably estimate". *Remote* = slight → no disclosure required.
+- **Governmental authority**: a federal, state or foreign agency or official acting as a party — e.g. SEC, Department of Justice, FTC, CPSC, CFPB, a state attorney general or DMV, a foreign regulator.
+- **Monetary sanction**: a fine, civil penalty, disgorgement or settlement amount payable to a government party.
+- **Formal action vs. informal inquiry**: formal = a filed complaint, subpoena, civil investigative demand (CID), consent order or other compulsory step; informal = a voluntary request for information or an "inquiry" with no compulsory step.
+- **Class action / derivative suit**: a private suit on behalf of a group of shareholders or customers (class action), or by a shareholder on the company's behalf against its officers (derivative). Private, not governmental.
+- **Consolidated current assets**: the balance sheet's "Total current assets". Item 103(b)(2) uses 10% of it as the line below which a damages claim need not be disclosed; the D3 rubric uses it for criterion M-c. Claims raising largely the same issues are added together.
+- **Item 105 company-specific**: a risk factor that names the actual agency and matter ("the CPSC is investigating our Tread+ treadmill"), as opposed to generic language ("we may become subject to investigations").
+
+## Matter log (you fill this in)
+
+| # | Matter (short name) | PDF page(s) | Counterparty | Amount stated | ASC 450-20 | Stage | Criterion |
+|---|---|---|---|---|---|---|---|
+| 1 |  |  |  |  |  |  |  |
+| 2 |  |  |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |  |
+| 4 |  |  |  |  |  |  |  |
+| 5 |  |  |  |  |  |  |  |
+| 6 |  |  |  |  |  |  |  |
+| 7 |  |  |  |  |  |  |  |
+| 8 |  |  |  |  |  |  |  |
+
+| Column | Allowed values |
+|---|---|
+| Counterparty | `GOV: <which authority>` · `PRIVATE` · `BOTH` |
+| Amount stated | `SANCTION $x` · `SETTLEMENT $x` · `ACCRUED $x` · `CLAIMED $x` · `RANGE $x–$y` · `NONE` |
+| ASC 450-20 | `ACCRUED` · `REASONABLY POSSIBLE` · `REMOTE` · `NOT STATED` |
+| Stage | `FORMAL` · `INFORMAL` · `SETTLED` · `DISMISSED` · `UNCLEAR` |
+| Criterion | `H-a` · `H-b` · `H-c` · `M-a` · `M-b` · `M-c` · `none` — letters match the rubric's (a)/(b)/(c) |
+
+## Verdict (you fill this in)
+
+- **Rating:** HIGH / MEDIUM / LOW
+- **Deciding criterion:** 
+- **Deciding passage (verbatim):** 
+- **PDF page:** 
+- **Ambiguities — places the rubric did not give a clear answer:** 
+- **Labeled by / date:** 
+
+## Source A: Item 3 — Legal Proceedings (verbatim)
+
+Heading found: `Item 3. Legal Proceedings` — PDF p. 79
+
+```text
+Item 3. Legal Proceedings
+From time to time, we may be involved in claims and proceedings arising in the ordinary course of our business. The outcome of any
+such
+claims or proceedings, regardless of the merits, is inherently uncertain.
+For a discussion of legal and other proceedings in which we are involved, see Note 13 - Commitments and Contingencies in the Notes
+to Consolidated Financial Statements in Part II, Item 8 of this Annual Report on Form 10-K.
+```
+
+## Source B: Commitments and Contingencies note (verbatim)
+
+Heading found: `13. Commitments and Contingencies` — PDF pp. 162–168
+
+```text
+13. Commitments and Contingencies
+The Company is subject to minimum guarantee royalty payments associated under certain music license agreements.
+The following represents the Company's minimum annual guarantee payments under music license agreements for the next three years
+as of June 30, 2023:
+Future Minimum
+Payments
+Fiscal Year (in millions)
+2024 $ 131.6 
+2025 48.8 
+2026 5.0 
+Total $ 185.5 
+Tread+ and Tread Product Recall Return Reserves and Cost Estimates
+On May 5, 2021, the Company announced separate, voluntary recalls of its Tread+ in collaboration with the U.S. Consumer Product
+Safety Commission ("CPSC") and halted sales of this product to work on product enhancements. On May 18, 2023, the Company and
+the CPSC jointly announced the approval of a rear guard repair for the recalled Tread+. During the fiscal year ended June 30, 2023, the
+Company recognized an accrual for the cost associated with the Tread+ repair.
+The following table details the reduction to Connected Fitness Products revenue for actual and future returns and costs associated with
+Tread+ and Tread product recalls that were recorded in Connected Fitness Products cost of revenue.
+Fiscal Year Ended June 30,
+2023 2022 2021
+(in millions)
+Returns accrual for reduction to Connected Fitness Products revenue $ 14.6  $ 48.9  $ 81.1 
+Costs of product recalls $ 15.7  $ 8.1  $ 15.7 
+Return reserves related to the impacts of the Tread+ recall of $24.4 million and $39.9 million were included within Accounts payable and
+accrued expenses in the Consolidated Balance Sheets as of June 30, 2023 and 2022, respectively. Accruals for costs associated with
+the Tread+ repair of $10.0 million were included within Accounts payable and accrued expenses in the Consolidated Balance Sheet as
+of June 30, 2023. The estimated return reserves are based on historical and expected product returns. The estimated costs associated
+with the Tread+ repair are primarily based on the estimated number of requests for the Tread+ repair and the estimated costs of the
+production, delivery and installation of the remedy.
+Bike Seat Post Recall
+On May 11, 2023, in collaboration with the CPSC, the Company announced a voluntary recall of the original Peloton model Bikes (not
+Bike+) seat posts sold in the U.S. from January 2018 to May 2023, and is offering Members a free replacement seat post as the
+approved repair. As a result of this recall, the Company recognized $48.4 million for the cost to replace the bike seat posts, reflected in
+Connected Fitness Products cost of revenue in the Company’s Consolidated Statements of Operations and Comprehensive Loss for the
+fiscal year ended June 30, 2023. As of June 30, 2023, accruals of $42.2 million were included within Accounts payable and accrued
+expenses in the accompanying Consolidated Balance Sheet. The estimated cost to replace the bike seat posts is primarily based on the
+estimated number of requests for seat posts and the estimated costs of the production and shipment of the replacement parts. For more
+detail on the potential impacts of the recall to our business, see “Risk Factors—Risks Related to Our Connected Fitness Products and
+Members—Our products and services may be affected from time to time
+[PDF p. 163]
+94
+[PDF p. 164]
+by design and manufacturing defects or product safety issues, real or perceived, that could adversely affect our business and result in
+harm to our reputation.”
+Commitments to Suppliers
+The Company utilizes contract manufacturers to build its products and accessories. These contract manufacturers acquire components
+and build products based on demand forecast information the Company supplies, which typically covers a rolling 12-month period.
+Consistent with industry practice, the Company acquires inventories from such manufacturers through blanket purchase orders against
+which orders are applied based on projected demand information and availability of goods. Such purchase commitments typically cover
+the Company’s forecasted product and manufacturing requirements for periods that range a number of months. In certain instances,
+these agreements allow the Company the option to cancel, reschedule, and/or adjust our requirements based on its business needs for
+a period of time before the order is due to be fulfilled. While the Company’s purchase orders are legally cancellable in many situations,
+there are some which are not cancellable in the event of a demand plan change or other circumstances, such as where the supplier has
+procured unique, Peloton-specific designs, and/or specific non-cancellable, non-returnable components based on our provided
+forecasts.
+As of June 30, 2023, the Company’s commitments to contract with third-party manufacturers for their inventory on-hand and component
+purchase commitments related to the manufacture of Peloton products were estimated to be approximately $174.6 million.
+Supplier Settlements
+During the fiscal year ended June 30, 2023, the Company incurred $22.0 million in settlement agreements with various third-party
+suppliers to terminate certain future inventory purchase commitments. The Company paid $268.9 million during the fiscal year ended
+June 30, 2023.
+Legal and Regulatory Proceedings
+The Company is, or may become, a party to legal and regulatory proceedings with respect to a variety of matters.
+For example, in May 2021, we initiated a voluntary recall of our Tread+ product in collaboration with the CPSC. In December 2022, to
+continue our cooperation with the CPSC, we entered into a settlement agreement with the CPSC regarding matters related to the Tread+
+recall. In the settlement, which was publicly announced in January 2023, we agreed to pay a $19.1 million civil penalty, resolving the
+CPSC’s charges that we violated the Consumer Product Safety Act (“CPSA”). On May 18, 2023, the Company and the CPSC jointly
+announced the approval of a rear guard repair for the recalled Tread+. The SEC is also investigating our public disclosures concerning
+the recall, as well as other matters In addition, in 2021, the U.S. Department of Justice (the “DOJ”) and the Department of Homeland
+Security subpoenaed us for documents and other information related to our statutory obligations under the CPSA, and they are
+continuing to investigate. In addition to the regulatory investigations, we are presently subject to class action litigation and private
+personal injury claims related to these perceived defects in the Tread+ and incidents reported to result from its use.
+On May 11, 2023, in collaboration with the CPSC, the Company announced a voluntary recall of the original Peloton model Bikes (not
+Bike+) sold in the U.S. from January 2018 to May 2023. On May 17, 2023, Brandy Miller filed suit against Peloton on behalf of a putative
+nationwide class of Bike purchasers in the U.S. District Court for the District of South Carolina, Case No. 3:23-cv-02101-MGL. Plaintiff
+Miller alleges that, as demonstrated by the seat post recall, the Bike was defective when sold, and she brings claims of unjust
+enrichment, breaches of express and implied warranties, breach of contract, negligence, and design and manufacturing defects. The
+Company moved to compel arbitration and dismiss the complaint on July 31, 2023. On June 9, 2023, Sam Solomon filed suit against
+Peloton and certain of its current or former officers on behalf of a putative class of individuals who purchased or otherwise acquired
+Peloton securities between May 10, 2022 and May 10, 2023, in the U.S. District Court for the Eastern District of New York, Case No.
+1:23-cv-04279-MKB-JRC. Plaintiff Solomon alleges that the defendants made false and/or misleading statements or omissions relating
+to the seat post recall in violation of Sections 10(b) and 20(a) of the Securities Exchange Act of 1934, as amended (the “Exchange Act”),
+and Rule 10b-5 promulgated thereunder.
+Additionally on April 29, 2021, Ashley Wilson filed a putative securities class action lawsuit against the Company and certain of its
+officers, captioned Wilson v. Peloton Interactive, Inc., et al., Case No. 1:21-cv-02369-CBA-PK, in the United States District Court for the
+Eastern District of New York (the "Wilson Action"), and on May 24, 2021, Leigh Drori filed a related putative securities class action
+lawsuit, captioned Drori v. Peloton Interactive, Inc., et al., Case No. 1:21-cv-02925-CBA-PK, also in the United States District Court for
+the Eastern District of New York (the “Drori Action”). On November 16, 2021, the district judge consolidated the Wilson and Drori Actions
+under the caption In re Peloton Interactive, Inc. Securities Litigation, Master File No. 21-cv-02369-CBA-PK, and appointed Richard
+Neswick as lead plaintiff. On January 21, 2022, lead plaintiff filed an amended consolidated complaint in the action purportedly on behalf
+of a class consisting of those individuals who purchased or otherwise acquired our common stock between September 11, 2020 and
+May 5, 2021. Lead plaintiff alleges that the Company and certain of its officers made false or misleading statements in violation of
+Sections 10(b) and 20(a) of the Exchange Act regarding the Company’s Tread and Tread+ products and the safety of those products.
+Defendants served their motion to dismiss the amended consolidated complaint on March 7, 2022, and briefing was complete on April
+26, 2022. A hearing on the motion to dismiss was held on June 8, 2022. On December 15, 2022, the parties reached a settlement-in￾principle, and on December 16, 2022, the court stayed the action in light of that settlement-in-principle. On April 17, 2023, the parties
+entered into a settlement agreement to resolve the action for $14.0 million, for which the Company had previously taken a reserve, and
+[PDF p. 165]
+submitted the agreement to the court for approval. Under the terms of this agreement, defendants continue to deny any liability or
+wrongdoing. The settlement remains subject to court approval.
+On May 20, 2021, Alan Chu filed a verified shareholder derivative action lawsuit purportedly on behalf of the Company against certain of
+the Company’s current and former officers and directors, captioned Chu v. Foley, et al., Case No. 1:21-cv-02862, in the United States
+District Court for the Eastern District of New York (the “Chu Action”). Plaintiff Chu alleges breaches of fiduciary duties, unjust enrichment,
+abuse of control, gross mismanagement, waste, and violations of Section 14(a) of the Exchange Act, as well as a claim for contribution
+under Sections 10(b) and 21D of the Exchange Act. On August 13, 2021 and August 19, 2021, two related verified shareholder
+derivative complaints were filed, captioned Genack v. Foley, et al., Case No. 1:21-cv-04583 and Liu v. Foley, et al., Case No. 1:21-cv￾04687, also purportedly on behalf of the Company, in the United
+95
+[PDF p. 166]
+States District Court for the Eastern District of New York. On October 13, 2021, the parties in the three putative derivative actions filed a
+stipulation seeking to consolidate the actions, and agreeing to a schedule for plaintiffs to file motions to be appointed lead plaintiff. On
+October 26, 2021, the court entered the stipulation consolidating the three actions under the caption In re Peloton Interactive, Inc.
+Derivative Litigation, Master File No. 21-cv-02862-CBA-PK. On November 23, 2021, Anthony Franchi filed a shareholder derivative
+action in the United States District Court for the Eastern District of New York against certain of the Company’s current and former officers
+and directors captioned Franchi v. Blachford, et al., Case No. CV 21-06544 (the “Franchi Action”), which alleges breaches of fiduciary
+duty, unjust enrichment, and violations of Sections 14(a) and 20(a) of the Exchange Act. On January 24, 2022, the court entered a
+stipulation consolidating the Franchi Action into In re Peloton Interactive, Inc. Derivative Litigation (the “EDNY Derivative Action”) and
+appointed each plaintiff a co-lead plaintiff. On February 3, 2022, the parties filed a stipulation to stay the consolidated derivative action,
+which the Court entered on February 11, 2022, and the case remains stayed. On November 18, 2022 and December 8, 2022,
+respectively, stockholders Krikor Arslanian and Michael Smith filed putative verified stockholder derivative actions in the Court of
+Chancery of the State of Delaware purportedly on behalf of the Company against certain of the Company’s executive officers and
+directors (the “Chancery Actions”), captioned Arslanian v. Blachford, et al., Case No. 2022-1051-KSJM and Smith v. Boone, et al., Case
+No. 2022-1138-KSJM, asserting similar allegations to those made in the EDNY Derivative Action. On December 14, 2022, the Chancery
+Actions were consolidated as In re Peloton Interactive, Inc. Stockholder Derivative Litigation and stayed. On December 22, 2022,
+putative shareholder Charles Blackburn filed a putative stockholder derivative action in the United States District Court for the District of
+Delaware, asserting similar allegations to those in the EDNY Derivative Action and the Chancery Actions against certain current and
+former Company officers and directors, captioned Blackburn v. Foley, et al., Case No. 22-cv-01618-GBW.
+On November 18, 2021, the City of Hialeah Employees’ Retirement System filed a putative securities class action lawsuit against the
+Company and certain of its current and former officers in the United States District Court for the Southern District of New York, captioned
+City of Hialeah Employees’ Retirement System v. Peloton Interactive, Inc., Case No. 21-cv-09582-ALC (the “Hialeah Action”), and on
+December 2, 2021, Anastasia Deulina filed a related putative securities class action against the same defendants also in the United
+States District Court for the Southern District of New York captioned Deulina v. Peloton Interactive, Inc., Case No. 21-cv-10266-ALC (the
+“Deulina Action”). On May 5, 2022, the Court consolidated the Hialeah and Deulina Actions and appointed Robeco Capital Growth Funds
+SICAV – Robeco Global Consumer Trends as lead plaintiff. Lead plaintiff filed its amended complaint on June 25, 2022, purportedly on
+behalf of a class of individuals who purchased or otherwise acquired the Company’s common stock between February 5, 2021 and
+January 19, 2022 against the Company and certain of its current and former officers, alleging that the defendants made false and/or
+misleading statements about demand for the Company’s products and the reasons for the Company’s inventory growth, and engaged in
+improper trading in violation of Sections 10(b) and 20A of the Exchange Act. Defendants moved to dismiss, and on March 30, 2023, the
+court granted defendants’ motion to dismiss with leave to amend. Plaintiff filed an amended complaint on May 6, 2023, and defendants
+moved to dismiss the complaint on June 16, 2023. Briefing on defendants’ motion to dismiss the amended complaint was completed on
+August 18, 2023.
+On February 21, 2023 stockholders Allison Manzella and Clark Ovruchesky filed a putative verified stockholder derivative action in the
+Court of Chancery in the State of Delaware on behalf of the Company against certain of the Company’s current and former officers and
+directors, captioned Manzella v. Cortese, et al., C.A. No. 2023-0224-KSJM, alleging the defendants breached their fiduciary duties by
+purportedly making false statements about demand for the Company’s products and engaging in improper trading. On March 20, 2023
+and April 28, 2023, stockholders Daniel Banks and Karen Florentino, respectively, likewise filed putative verified stockholder derivative
+actions in the Court of Chancery in the State of Delaware on behalf of the Company, captioned Banks v. Foley, et al., C.A. No. 2023-
+0340-KSJM, and Florentino v. Cortese, et al., C.A. No. 2023-0468-KSJM, asserting substantially similar allegations. On July 26, 2023,
+the Manzella, Banks, and Florentino actions were consolidated under the caption In re Peloton Interactive, Inc. 2023 Derivative
+Litigation, Consol. Case No. 2023-0224-KSJM.
+In April 2021, DISH Technologies L.L.C., and Sling TV L.L.C. (“DISH”) filed a complaint in the United States District Court for the Eastern
+District of Texas. DISH, and along with DISH DBS Corporation, also filed a complaint in the United States International Trade
+Commission (“ITC”) under Section 337 of the Tariff Act of 1930 against the Company, along with ICON Health & Fitness, Inc. (now iFIT
+Inc. f/k/a Icon Health & Fitness, Inc.), FreeMotion Fitness, Inc., NordicTrack, Inc., lululemon athletica, inc., and Curiouser Products Inc.
+d/b/a MIRROR. The complaints alleged infringement of various patents related to fitness devices containing internet-streaming enabled
+video displays. In the ITC matter, on September 9, 2022, an Initial Determination was issued recommending that the ITC enter an
+exclusion order and a cease and desist order against Peloton’s importation and sale of Bike, Bike+, Tread and Tread+ products (and
+others that operate similarly) on the basis that those products infringed all four asserted patents of DISH. On March 8, 2023, the ITC
+issued an opinion finding that Peloton had imported products which infringe certain claims of the patents asserted by DISH. On the basis
+of that finding, the ITC issued a limited exclusion order and cease and desist order (“remedial orders”). The remedial orders were subject
+to a 60-day Presidential Review Period ending on May 7, 2023. Absent presidential disapproval, after May 7, 2023, the remedial orders
+would have prohibited (i) the sale, distribution, marketing, transferring, or advertising in the United States of products that have the
+infringing functionality installed on them, and (ii) the importation of such products unless and until Customs and Border Protection
+(“CBP”) deems them non-infringing. On May 1, 2023, Peloton executed a Settlement, Patent License, and Release Agreement with
+DISH resolving the ITC matter and the Eastern District of Texas matter, pursuant to which Peloton paid a one time settlement payment of
+$75.0 million to DISH and DISH has terminated the related legal proceedings.
+On August 4, 2022, Mayville Engineering Company, Inc. (“MEC”) filed suit against Peloton in the Supreme Court of the State of New
+York, Index No. 652735/2022, alleging claims for breach of contract, or, in the alternative, breach of the implied duty of good faith and
+fair dealing. MEC alleges that Peloton breached a supply agreement under which MEC agreed to supply certain parts for Peloton
+[PDF p. 167]
+products, and that it is entitled to damages in an amount exceeding $107.0  million, plus pre-judgment interest, fees, and costs. On
+September 23, 2022, Peloton moved to dismiss MEC's complaint. On January 6, 2023, the Court partially granted and partially denied
+Peloton's motion to dismiss, dismissing MEC’s alternative claim for breach of the implied duty of good faith and fair dealing with
+prejudice, but allowing MEC's claim for breach of contract to move forward. The matter is ongoing.
+We dispute the allegations in the above-referenced active matters and intend to defend the matters vigorously. Some of our legal and
+regulatory proceedings, such as the above-referenced matters and litigation that centers around intellectual property claims, may be
+based on complex claims involving substantial uncertainties and unascertainable damages. Accordingly, except where otherwise
+indicated, it is not possible to
+96
+[PDF p. 168]
+determine the probability of loss or estimate damages for any of the above matters, and therefore, the Company has not established
+reserves for any of these proceedings. When the Company determines that a loss is both probable and reasonably estimable, the
+Company records a liability, and, if the liability is material, discloses the amount of the liability reserved. Given that such proceedings are
+subject to uncertainty, there can be no assurance that such legal proceedings, either individually or in the aggregate, will not have a
+material adverse effect on our business, results of operations, financial condition or cash flows.
+```
+
+## Source C: enforcement keyword hits elsewhere in the filing (pointer only)
+
+Sentences anywhere in the filing containing investigation or enforcement terms. **Not exhaustive and not a list of matters:** generic Item 1A risk language matches too. Use it to find pages worth reading, then log matters from the PDF itself.
+
+<details><summary>111 sentences</summary>
+
+- p. 5 — These forward-looking statements are subject to a number of risks, uncertainties, and assumptions and other important factors that could cause actual results to differ materially from those stated, including, but not limited to: • our ability to achieve and maintain future profitability; • our ability to attract and maintain Subscribers; • our ability to accurately forecast consumer demand for our products and services and adequately maintain our inventory; • our ability to execute and achieve the expected benefits of our restructuring initiatives and other cost-saving measures; • our ability to effectively manage our growth and costs; • our ability to anticipate consumer preferences and successfully develop and offer new products and services in a timely manner, or effectively manage the introduction of new or enhanced products and services; • demand for our products and services and growth of the connected fitness products market; • our ability to maintain the value and reputation of the Peloton brand; • our reliance on a limited number of suppliers, contract manufacturers, and logistics partners for our Connected Fitness Products; • our lack of control over suppliers, contract manufacturers and logistics partners for our Connected Fitness Products; • our ability to predict our long-term performance and declines in our revenue growth as our business matures; • the effects of increased competition in our markets and our ability to compete effectively; • any declines in sales of our Bike and Bike+; • the direct and indirect impacts to our business and financial performance from the COVID-19 pandemic; • our dependence on third-party licenses for use of music in our content; • actual or perceived defects in, or safety of, our products, including any impact of product recalls or legal or regulatory claims, proceedings or investigations involving our products; • increases in component costs, long lead times, supply shortages or other supply chain disruptions; • accidents, safety incidents or workforce disruptions; • seasonality or other fluctuations in our quarterly results; • our ability to generate class content;
+- p. 7 — An adverse change to, loss of, or claim that we do not hold necessary licenses may have an adverse effect on our business, operating results, and financial condition. • From time to time, we may be subject to legal proceedings, government inquiries or investigations, or disputes that could cause us to incur significant expenses, divert our management’s attention, and materially harm our business, financial condition, and operating results. 4
+- p. 8 — On May 5, 2021, we issued a voluntary product recall on Tread+, which we conducted in collaboration with the U.S.
+- p. 8 — Consumer Product Safety Commission ("CPSC"); currently, we are seeking to resume sales of the Tread+ in the United States in 2024.
+- p. 25 — For example, product recalls, including the May 2021 voluntary Tread+ recall and May 2023 voluntary original Bike seat post recall, each conducted in collaboration with the CPSC, involved reports of injuries associated with our products.
+- p. 25 — As discussed further in “Risks Related to Our Connected Fitness Products and Members” and “Risks Related to Laws, Regulation, and Legal Proceedings,” the legal proceedings in which we have been named, the regulators’ investigations, and any other claims or proceedings involving us or our products, actions we take to address these matters, and any further publicity regarding any of the foregoing could harm our brand.
+- p. 28 — In addition, in May 2023, in collaboration with the CPSC, we announced a voluntary recall of the original Peloton model Bikes (not Bike+) seat posts sold in the U.S. from January 2018 to May 2023 and we are offering Members a free replacement seat post as the approved repair.
+- p. 28 — This recall may result in negative public perception of our products and may have a material adverse effect on the sales of our Connected Fitness Products.
+- p. 29 — The royalty rates under licenses provided by ASCAP and BMI currently are governed by consent decrees, which were issued by the U.S.
+- p. 29 — Department of Justice (“DOJ”) in an effort to curb anti-competitive conduct.
+- p. 31 — Trade Representative Section 301 Investigation.
+- p. 33 — Our financial condition and operating results in any given quarter can be influenced by numerous factors, many of which we are unable to predict or are outside of our control, including: • the continued market acceptance of, and the growth of the connected fitness and wellness market; • evolving consumer demand and our ability to maintain and attract new Subscribers; • our development and improvement of the quality of the Peloton experience, including, enhancing existing and creating new Connected Fitness Products, services, technology, features, and content; • the continued development and upgrading of our proprietary technology platform; • the timing and success of new product, service, feature, and content introductions by us or our competitors or any other change in the competitive landscape of our market; • pricing pressure as a result of competition or otherwise; • the introduction of the previously announced rear guard to enhance the safety of our Tread+ product, which we announced in collaboration with the CPSC; • delays or disruptions in our supply chain; • errors in our forecasting of the demand for our products and services, which could lead to lower revenue or increased costs, or both; • increases in marketing, sales, and other operating expenses that we may incur to grow and expand our operations and to remain competitive; • short-term expenditures and initiatives we may undertake in furtherance of long-term cost savings, including our restructuring plan announced in February 2022 and related continuing actions; • our reliance on third-party last mile delivery and maintenance services for our Connected Fitness Products; • successful expansion into international markets; • seasonal fluctuations in subscriptions and usage of Connected Fitness Products by our Members, each of which may change as our products and services evolve or as our business grows; • diversification and growth of our revenue sources; • our ability to maintain gross margins and operating margins; • constraints on the availability of consumer financing or increased down payment requirements to finance purchases of our Connected Fitness Products; • system failures or breaches of security or privacy; • adverse litigation judgments, settlements, or other litigation-related costs, including content costs for past use; • changes in the legislative or regulatory environment, including with respect to privacy, consumer product safety, and advertising, or enforcement by government regulators, including fines, orders, or consent decrees; • fluctuations in currency exchange rates and changes in the proportion of our revenue and expenses denominated in foreign currencies; • changes in our effective tax rate, including as a result of potential changes in tax laws proposed by the Biden administration; • changes in accounting standards, policies, guidance, interpretations, or principles; and • changes in business or macroeconomic conditions, including global supply chain issues, lower consumer confidence, inflation, foreign currency exchange rate fluctuations, rising interest rates, recessionary conditions, political instability, volatility in the credit markets, market conditions in our industry, increased unemployment rates, or stagnant or declining wages.
+- p. 35 — Risks we may face in connection with our acquisition of Precor include: • We may not realize the benefits we expect to receive from the transaction, such as anticipated synergies; • We may have difficulties managing Precor’s technologies and lines of business or retaining key personnel from Precor; • The acquisition may not further our business strategy as we expected, there could be unanticipated adverse impacts on Precor’s business, or we may otherwise not realize the expected return on our investments, which could adversely affect our business or operating results; • The acquisition may cause, and additional factors relating to the shift in our strategic focus and to our restructuring initiatives have caused and may continue to cause, impairments to assets that we record as a part of an acquisition, including intangible assets and goodwill; • Our operating results or financial condition may be adversely impacted by (i) claims or liabilities related to Precor’s business, including, among others, claims from government agencies, terminated employees, current or former customers, consumers or business partners, or other third parties;
+- p. 39 — In addition, any such attacks or breaches may negatively impact our Members’ experience, result in negative publicity, adversely affect our brand, impact demand for our products and services, and subject us to litigation (including class actions), regulatory investigations and/or penalties and fines, any or all of which could have an adverse effect on our business, financial condition, and operating results.
+- p. 43 — In addition, limitations or errors with respect to how we measure certain operational and business metrics may affect our understanding of certain details of our business, which could affect our longer-term strategies, and jeopardize our credibility with Members, partners and regulators.
+- p. 45 — If we are unable to further implement and maintain effective internal control over financial reporting or disclosure controls and procedures, our ability to record, process and report financial information accurately, and to prepare financial statements within required time periods could be adversely affected, which could subject us to litigation or investigations requiring management resources and payment of legal and other expenses, negatively affect investor confidence in our financial statements and adversely impact our stock price.
+- p. 45 — If we are unable to assert that our internal control over financial reporting is effective, or if our independent registered public accounting firm is unable to express an unqualified opinion as to the effectiveness of our internal control over financial reporting, investors may lose confidence in the accuracy and completeness of our financial reports, the market price of our Class A common stock could be adversely affected and we could become subject to litigation or investigations by the stock exchange on which our securities are listed, the SEC or other regulatory authorities, which could require additional financial and management resources.
+- p. 49 — Our failure to comply with any applicable rules or regulations or other criticisms of our sustainability disclosures could lead to penalties or claims and other litigation and adversely impact our reputation, customer attraction and retention, access to capital and employee retention.
+- p. 51 — Additionally, in May 2021, we initiated a voluntary recall of our Tread+ product in coordination with the CPSC in response to reports of injuries associated with our Tread+, one of which led to the death of a child.
+- p. 51 — In 2020, we conducted a voluntary recall in coordination with the CPSC of first generation clip-in pedals in our Peloton Bike, our original model bike, due to a risk that the pedal can break during use, causing injuries.
+- p. 51 — In addition, in May 2023, in collaboration with the CPSC, we announced a voluntary recall of the original Peloton model Bikes (not Bike+) seat posts sold in the U.S. from January 2018 to May 2023, and we are offering Members a free replacement seat post as the approved repair.
+- p. 51 — We have incurred, and may continue to incur, incremental expenses or face other challenges in connection with the implementation of the seat post recall beyond what we have currently estimated to be probable and reasonably estimable, including if the number of reported incidents materially increases, which may adversely impact our operating results, brand reputation, demand for our products, and business.
+- p. 51 — In addition to the seat post recall described above, in collaboration with the CPSC, in May 2023 we announced that we will be offering a free rear safety guard to Members in connection with the Tread+ recall.
+- p. 51 — We may face, and have faced, substantial costs associated with the implementation of the above and other recalls including the development of new or additional product features.
+- p. 51 — We are presently subject to class action litigation, private personal injury claims and other regulatory proceedings, government inquiries and investigations related to the Tread+ and Bike recalls and other matters that, regardless of their merits, could harm our reputation, divert management’s attention from our operations, and result in substantial legal fees, judgments, fines, penalties, and other costs.
+- p. 51 — Furthermore, the occurrence of real or perceived defects in any of our products, now or in the future, could result in additional negative publicity, regulatory investigations, recalls, or lawsuits filed against us, particularly if Members or others who use or purchase our Connected Fitness Products are injured.
+- p. 51 — Even if injuries are not the result of any defects, if they are perceived to be, we may incur expenses to defend or settle any claims or government inquiries and our brand and reputation may be harmed.
+- p. 51 — Failure to do so could result in widespread technical and performance issues affecting our products and services and could lead to claims or investigations against us.
+- p. 51 — In addition, we may be exposed to recalls, product replacements or modifications, write-offs of inventory, property and equipment, or intangible assets, and significant warranty and other expenses such as litigation costs and regulatory fines.
+- p. 53 — In addition, we have been, and in the future could be, subject to costs related to product recalls, and we could incur significant costs to correct any defects, warranty claims, or other problems.
+- p. 53 — For example, in connection with our May 2021 Tread+ recall, we are presently, and may in the future be, subject to warranty claims and lawsuits related to injuries sustained by Members or their friends and family members, or others who use or purchase the Tread+ and other Connected Fitness Products that, regardless of their merits, could harm our reputation, divert management’s attention from our operations and result in substantial legal fees and other costs.
+- p. 53 — Our failure to comply with past, present, and future similar laws could result in reduced sales of our products, reputational damage, penalties, and other sanctions, which could have an adverse effect on our business, financial condition, and operating results.
+- p. 53 — Risks Related to Laws, Regulation, and Legal Proceedings From time to time, we may be subject to legal proceedings, government inquiries or investigations, or disputes that could cause us to incur significant expenses, divert our management’s attention, and materially harm our business, financial
+- p. 54 — From time to time, we may be subject to claims, lawsuits, government inquiries or investigations, demands, disputes, and other proceedings involving product safety, product liability, competition and antitrust, intellectual property, privacy, consumer protection, securities, tax, labor and employment, commercial disputes, and other matters that could adversely affect our business operations and financial condition.
+- p. 54 — As we have grown, we have seen a rise in the number and significance of these disputes and inquiries.
+- p. 54 — Injuries sustained by Members or their friends and family members, or others who use or purchase our Connected Fitness Products, have subjected us to, and could in the future subject us to, regulatory proceedings, government inquiries, investigations, and actions, and private litigation that regardless of their merits, could harm our 28
+- p. 55 — Additionally, we have in the past been subject to intense media scrutiny, which exposes us to increasing regulation, government or regulatory investigations, legal actions and penalties.
+- p. 55 — For example, we are presently subject to litigation related to injury claims by Members and other used or purchased the Tread+, and we have reporting obligations to safety regulators in all jurisdictions where we sell Connected Fitness Products, where reporting may trigger further regulatory investigations.
+- p. 55 — See “ — Our products and services may be affected from time to time by design and manufacturing defects or product safety issues, real or perceived, that could adversely affect our business and result in harm to our reputation.” The SEC is also investigating our public disclosures concerning the Tread+ recall, as well as other matters.
+- p. 55 — We have also been named in a putative class action in South Carolina related to the Bike seat post recall by plaintiffs purporting to represent a nationwide class of purchasers of the Bike and alleging that sales of the Bike constituted breaches of warranty, negligence, unjust enrichment, and sale of a defective product.
+- p. 55 — The Company and certain of its current and former officers have also been named in a putative securities class action on behalf of individuals who purchased or otherwise acquired Peloton securities between May 10, 2022 and May 10, 2023, alleging that the defendants made false and/or misleading statements about the safety of the Peloton Bike and likelihood of a recall in violation of Sections 10(b) and 20(a) of the Exchange Act and Rule 10b-5 promulgated thereunder.
+- p. 55 — Additionally, from time to time, we may be, and currently are, subject to inquiries from regulators in which they seek information about us or our practices.
+- p. 55 — Such further inquiries could result in more formal investigations or allegations, which could adversely impact our business, financial condition, and operating results.
+- p. 55 — Litigation, government inquiries or investigations, regulatory proceedings, such as the investigations described above, as well as related personal injury or class action claims and lawsuits, and securities, commercial, consumer and intellectual property infringement matters that we are currently facing or could face, can be protracted and expensive, and have results that are difficult to predict.
+- p. 55 — Adverse outcomes with respect to any of these legal or regulatory proceedings may result in significant settlement costs or judgments, penalties and fines, or require us to modify our products or services, make content unavailable, or require us to stop offering certain products, components, or features, all of which could negatively affect our membership and revenue growth.
+- p. 55 — The results of litigation, investigations, claims, demands, disputes, and regulatory proceedings cannot be predicted with certainty, and determining reserves for pending litigation and other legal and regulatory matters requires significant judgment.
+- p. 55 — These obligations include heightened transparency about data collection, use and sharing practices, new data privacy rights, and rules in respect to cross-border data transfers, which carry significant enforcement penalties for
+- p. 57 — To the extent that the measures we or our third-party business partners have taken prove to be insufficient or inadequate, we may become subject to litigation, breach notification obligations, or regulatory or administrative sanctions, which could result in significant fines, penalties, or damages and harm to our reputation.
+- p. 57 — Furthermore, we may legally be required to disclose personal data pursuant to demands from individuals, privacy advocates, regulators, government agencies, and law enforcement agencies in various jurisdictions with conflicting privacy and security laws.
+- p. 57 — Violations of applicable privacy laws or cybersecurity incidents could impact our business in a number of ways, such as a temporary suspension of some or all of our operating and/or information systems, damage our reputation, our relationships with customers, suppliers, vendors, and service providers and the Peloton brand and could result in lost data, lost sales, increased insurance premiums, substantial breach-notification and other remediation costs and lawsuits, as well as adversely affect results of operations.
+- p. 57 — In addition, we may also face regulatory investigations with corresponding fines, civil claims including representative actions, and other class action type litigation (where individuals have suffered harm), potentially amounting to significant compensation or damages liabilities (including under laws such as in California that provide statutory damage remedies for certain types of breaches), as well as associated costs, diversion of internal resources, and reputational harm.
+- p. 57 — Our failure to comply with these laws and regulations could have negative consequences, including government investigations, penalties, reputational harm and could harm our international and domestic sales and adversely affect our revenue.
+- p. 57 — If we fail to comply with these laws and regulations, the Company may be subject to detention, seizure, and exclusion of imports, as well as penalties, costs, and restrictions on export and import privileges that could have an adverse effect on our business, financial condition, and operating results.
+- p. 57 — Failure to comply with anti-corruption and anti-money laundering laws, including the FCPA and similar laws associated with our activities outside of the United States, could subject us to penalties and other adverse consequences.
+- p. 58 — We operate a global business and may have direct or indirect interactions with public officials and employees of government agencies or state-owned or affiliated entities.
+- p. 59 — Governmental enforcement authorities could seek to impose substantial civil and/or criminal fines and penalties for violations of these laws by any director, officer, employee, or third-party representative, which could have a material adverse effect on our business, reputation, operating results and financial condition.
+- p. 59 — Any violation of the FCPA, other applicable anti-corruption laws, or anti-money laundering laws could result in whistleblower complaints, adverse media coverage, investigations, loss of export privileges, substantial criminal or civil sanctions and suspension or debarment from U.S. government contracts, any of which could have a material adverse effect on our reputation, business, operating results, and prospects.
+- p. 59 — In addition, responding to any enforcement action may result in a significant diversion of management’s attention and resources and significant defense costs and other professional fees.
+- p. 61 — In addition, many countries limit the enforceability of patents against certain third parties, including government agencies or government contractors.
+- p. 63 — If we use content in ways that are found to exceed the scope of such agreements, we could be subject to monetary penalties or claims of infringement, and our rights under such agreements could be terminated.
+- p. 69 — In June 2023, the Company and certain of its current and former officers were also been named in a putative securities class action on behalf of individuals who purchased or otherwise acquired Peloton securities between May 10, 2022 and May 10, 2023, alleging that the defendants made false and/or misleading statements about the safety of Peloton’s Bike and likelihood of a recall in violation of Sections 10(b) and 20(a) of the Exchange Act and Rule 10b-5 promulgated thereunder.
+- p. 85 — Tread+ and Tread Product Recall Return Reserves and Cost Estimates On May 5, 2021, we announced separate, voluntary recalls of each of our Tread+ and Tread products in collaboration with the CPSC and halted sales of these products to work on product enhancements.
+- p. 86 — As a result of these recalls, we recognized a reduction to Connected Fitness Products revenue for actual and estimated future returns of $14.6 million, $48.9 million, and $81.1 million for the fiscal years ended June 30, 2023, 2022 and 2021, respectively, and a return reserve of $24.4 million and $39.9 million is included within Accounts payable and accrued expenses in the accompanying Consolidated Balance Sheets related to the impacts of the recall as of June 30, 2023 and June 30, 2022, respectively.
+- p. 86 — We may continue to incur additional costs beyond what we have currently estimated to be probable and reasonably estimable which could include costs for which we have not accrued or established adequate reserves, including increases to the return reserves, inventory write-downs, logistics costs associated with Member requests to return or move their hardware, subscription waiver variable costs of service, anticipated recall-related hardware development and repair costs, and related legal and advisory fees.
+- p. 86 — Recall charges are based upon estimates associated with our expected and historical consumer response rates.
+- p. 86 — See “Risk Factors—Risks Related to Our Connected Fitness Products and Members—We may be subject to warranty claims that could result in significant direct or indirect costs, or we could experience greater product returns than expected, either of which could have an adverse effect on our business, financial condition, and operating results.” Bike Seat Post Recall In May 2023, in collaboration with the CPSC, we announced a voluntary recall of the original Peloton model Bikes (not Bike+) seat posts sold in the U.S. from January 2018 to May 2023.
+- p. 86 — As a result of this recall, we recognized $48.4 million for the cost to replace the bike seat posts based on an amount that was deemed probable and reasonably estimable, reflected in Connected Fitness Products cost of revenue in our Consolidated Statements of Operations and Comprehensive Loss for the fiscal year ended June 30, 2023.
+- p. 88 — While we historically experience a seasonal increase in the number of paused subscriptions in the three months ended June 30, 2023, we believe a significant portion of this year's outsized increase was related to our seat post recall announced on May 11, 2023, as some Members chose to pause their subscriptions while awaiting the delivery of their replacement seat post.
+- p. 90 — The table below compares how Average Net Monthly Paid Connected Fitness Churn compares to our previous definition: Three Months Ended September 30, 2022 December 31, 2022 March 31, 2023 June 30, 2023 Average Net Monthly Connected Fitness Churn 1.1 % 1.1 % 1.1 % 1.4 % Average Net Monthly Paid Connected Fitness Subscription Churn 1.2 % 1.2 % 1.1 % 1.8 % ______________________________ (1) Legacy reporting metric (2) New reporting metric starting in the first quarter of fiscal 2024 In the three months ended June 30, 2023, our Average Net Monthly Paid Connected Fitness Subscription churn reflects a seasonal increase in the number of paused subscriptions as well as an outsized increase in paused subscriptions related to our seat post recall, as we believe some Members chose to pause their subscriptions while awaiting the delivery of their replacement seat post.
+- p. 101 — Adjusted EBITDA We calculate Adjusted EBITDA as net (loss) income adjusted to exclude: other expense (income), net; income tax expense (benefit); depreciation and amortization expense; stock-based compensation expense; goodwill impairment; impairment expense; product recall related matters; certain litigation and settlement expenses; transaction and integration costs; reorganization, severance, exit, disposal and other costs associated with restructuring plans; supplier settlements; and other adjustment items that arise outside the ordinary course of our business.
+- p. 103 — • Adjusted EBITDA does not reflect costs associated with product recall related matters including adjustments to the return reserves, inventory write-downs, logistics costs associated with Member requests, the cost to move the recalled product for those that elect the option, subscription waiver costs of service, and recall-related hardware development and repair costs; • Adjusted EBITDA does not reflect reorganization, severance, exit, disposal and other costs associated with restructuring plans; • Adjusted EBITDA does not reflect non-recurring supplier settlements; and • The expenses and other items that we exclude in our calculation of Adjusted EBITDA may differ from the expenses and other items, if any, that other companies may exclude from Adjusted EBITDA when they report their operating results and we may, in the future, exclude other significant, unusual expenses or other items from this financial measure.
+- p. 103 — The following table presents a reconciliation of Adjusted EBITDA to Net loss, the most directly comparable financial measure prepared in accordance with GAAP, for each of the periods indicated: Adjusted EBITDA Fiscal Year Ended June 30, 2023 2022 2021 (dollars in millions) Net loss $ (1,261.7) $ (2,827.7) $ (189.0) Adjusted to exclude the following: Total other expense, net 60.9 74.1 10.4 Income tax expense (benefit) 3.7 19.6 (9.2) Depreciation and amortization expense 124.3 142.8 63.8 Stock-based compensation expense 319.9 271.8 194.0 Goodwill impairment — 181.9 — Impairment expense 144.5 390.5 4.5 Restructuring expense 193.0 237.5 — Supplier settlements 22.0 337.6 — Product recall related matters 80.9 62.3 100.0 Litigation and settlement expenses 102.8 118.6 35.8 Other adjustment items 1.0 8.4 43.4 Adjusted EBITDA $ (208.5) $ (982.7) $ 253.7 ______________________ (1) Represents adjustments and charges associated with product recall related matters, as well as accrual adjustments.
+- p. 103 — These include recorded costs in Connected Fitness Products cost of revenue associated with recall related matters of $61.6 million, zero, and zero, adjustments to Connected Fitness Products revenue for actual and estimated future returns of $14.6 million, $48.9 million and $81.1 million, recorded costs in Connected Fitness Products cost of revenue associated with inventory write-downs and logistics costs of $2.5 million, $8.1 million and $15.7 million, and operating expenses of $2.3 million, $5.4 million and $3.2 million associated with recall-related hardware development costs, in each case for the fiscal years ended June 30, 2023, 2022 and 2021, respectively.
+- p. 103 — Includes litigation-related expenses for certain non-recurring patent infringement litigation, consumer arbitration, and product recalls for the fiscal years ended June 30, 2023, 2022 and 2021.
+- p. 107 — Our future capital requirements may vary materially from those currently planned and will depend on many factors, including our rate of revenue growth, timing to adjust our supply chain and cost structures in response to material fluctuations in product demand, timing and amount of spending related to acquisitions, the timing and amount of spending on research and development, the timing and financial impact of product recalls, sales and marketing activities, the timing of new product introductions, market acceptance of our Connected Fitness Products, timing and investments needed for international expansion, and overall economic conditions.
+- p. 115 — As described in Note 13 - Commitments and Contingencies in the Notes to Consolidated Financial Statements in Part II, Item 8 of this Annual Report on Form 10-K, the Company announced voluntary recalls of the Company's Tread+ and Tread products, permitting customers to return the products for a refund.
+- p. 115 — The amount of a refund customers are eligible to receive may differ based on the status of an approved remediation of the issue driving the recall, and the age of the Connected Fitness product being returned.
+- p. 115 — As a result of these recalls, we have recorded return provisions as a reduction to Connected Fitness Products revenue of $14.6 million, $48.9 million, and $81.1 million for the fiscal years ended June 30, 2023, 2022 and 2021, respectively.
+- p. 115 — As of June 30, 2023 and June 30, 2022, our returns reserve related to the impacts of the recalls was $24.4 million and $39.9 million, respectively.
+- p. 115 — Product Recall Related Matters The Company accrues cost of product recalls and potential corrective actions based on management estimate of when it is probable that a liability has been incurred and the amount can be reasonably estimated, which occurs when management commits to a corrective action plan or when required by regulatory requirements.
+- p. 115 — Costs of product recalls and corrective actions are recognized in Connected Fitness Products cost of revenue, which may include the cost of the development of the product being replaced, logistics costs, and other related costs such as product scrap cost, inventory write-down and cancellation of any supplier commitments.
+- p. 115 — During the fiscal year ended June 30, 2023, the Company accrued an additional $64.1 million liability related to its product recall related matters.
+- p. 115 — As of June 30, 2023 and June 30, 2022, accruals related to product recall related matters were $63.4 million and $1.8 million, respectively.
+- p. 119 — Loss Contingencies We are involved in legal proceedings, claims, and regulatory, tax, and government inquiries and investigations that arise in the ordinary course of business.
+- p. 119 — The outcomes of legal proceedings, claims, and regulatory, tax, and government inquiries and investigations are inherently uncertain.
+- p. 123 — Tread+ Returns Reserve Description of the Matter As described in Note 13 of the consolidated financial statements, the Company announced on May 5, 2021 a voluntary recall of its Tread+ product.
+- p. 123 — Return reserves related to the impacts of the Tread+ recall of $24.4 million were included within Accounts payable and accrued expenses in the Consolidated Balance Sheets as of June 30, 2023.
+- p. 123 — Auditing management’s estimate of the reserve related to the Tread+ product recall was especially challenging due to the high degree of estimation in determining the expected rate of returns or claims, which can fluctuate based on factors such as timing of relaunch of the products, customer behavior and other market conditions with uncertain future outcomes.
+- p. 123 — To test the reserve and cost estimates, our audit procedures included, among others, validating that the Company’s estimation methodology agrees with the terms and conditions of the announced Tread+ recall and examining the Company’s key assumptions and judgements.
+- p. 136 — Interest and penalties related to unrecognized tax benefits, which to date have not been material, are recognized within income tax expense.
+- p. 138 — Commitments and Contingencies Liabilities for loss contingencies arising from claims, assessments, litigation, fines and penalties, and other sources are recorded when it is probable that a liability has been incurred and the amount of the assessment can be reasonably estimated.
+- p. 142 — Our rental program allows Members to lease a Bike or Bike+ with a Peloton Rental Membership for a single monthly cost and a one-time delivery fee, and gives the Member the option to purchase the equipment outright or cancel at any time with no penalty.
+- p. 152 — Accounts Payable and Accrued Expenses Accounts payable and accrued expenses consisted of the following: June 30, 2023 2022 (in millions) Accounts payable $ 76.5 $ 93.0 Accrued music licensing royalties 113.1 65.7 Recall related costs 52.3 — Employee-related liabilities 43.3 59.6 Inventory received but not billed 33.9 86.1 Return reserve liability 29.1 48.6 Accrued marketing 23.5 29.3 Accrued settlement costs 22.3 222.3 Accrued professional services 21.4 36.5 Product warranty 9.6 19.5 Other 53.6 136.8 Total accounts payable and accrued expenses $ 478.4 $ 797.4 _________________________ (1) Accrued settlement costs consist primarily of payments made to third-party suppliers to terminate certain future inventory purchase commitments. 11.
+- p. 162 — The following represents the Company's minimum annual guarantee payments under music license agreements for the next three years as of June 30, 2023: Future Minimum Payments Fiscal Year (in millions) 2024 $ 131.6 2025 48.8 2026 5.0 Total $ 185.5 Tread+ and Tread Product Recall Return Reserves and Cost Estimates On May 5, 2021, the Company announced separate, voluntary recalls of its Tread+ in collaboration with the U.S.
+- p. 162 — Consumer Product Safety Commission ("CPSC") and halted sales of this product to work on product enhancements.
+- p. 162 — The following table details the reduction to Connected Fitness Products revenue for actual and future returns and costs associated with Tread+ and Tread product recalls that were recorded in Connected Fitness Products cost of revenue.
+- p. 162 — Fiscal Year Ended June 30, 2023 2022 2021 (in millions) Returns accrual for reduction to Connected Fitness Products revenue $ 14.6 $ 48.9 $ 81.1 Costs of product recalls $ 15.7 $ 8.1 $ 15.7 Return reserves related to the impacts of the Tread+ recall of $24.4 million and $39.9 million were included within Accounts payable and accrued expenses in the Consolidated Balance Sheets as of June 30, 2023 and 2022, respectively.
+- p. 162 — Bike Seat Post Recall On May 11, 2023, in collaboration with the CPSC, the Company announced a voluntary recall of the original Peloton model Bikes (not Bike+) seat posts sold in the U.S. from January 2018 to May 2023, and is offering Members a free replacement seat post as the approved repair.
+- p. 162 — As a result of this recall, the Company recognized $48.4 million for the cost to replace the bike seat posts, reflected in Connected Fitness Products cost of revenue in the Company’s Consolidated Statements of Operations and Comprehensive Loss for the fiscal year ended June 30, 2023.
+- p. 162 — For more detail on the potential impacts of the recall to our business, see “Risk Factors—Risks Related to Our Connected Fitness Products and Members—Our products and services may be affected from time to time
+- p. 164 — For example, in May 2021, we initiated a voluntary recall of our Tread+ product in collaboration with the CPSC.
+- p. 164 — In December 2022, to continue our cooperation with the CPSC, we entered into a settlement agreement with the CPSC regarding matters related to the Tread+ recall.
+- p. 164 — In the settlement, which was publicly announced in January 2023, we agreed to pay a $19.1 million civil penalty, resolving the CPSC’s charges that we violated the Consumer Product Safety Act (“CPSA”).
+- p. 164 — The SEC is also investigating our public disclosures concerning the recall, as well as other matters In addition, in 2021, the U.S.
+- p. 164 — Department of Justice (the “DOJ”) and the Department of Homeland Security subpoenaed us for documents and other information related to our statutory obligations under the CPSA, and they are continuing to investigate.
+- p. 164 — In addition to the regulatory investigations, we are presently subject to class action litigation and private personal injury claims related to these perceived defects in the Tread+ and incidents reported to result from its use.
+- p. 164 — On May 11, 2023, in collaboration with the CPSC, the Company announced a voluntary recall of the original Peloton model Bikes (not Bike+) sold in the U.S. from January 2018 to May 2023.
+- p. 164 — Plaintiff Miller alleges that, as demonstrated by the seat post recall, the Bike was defective when sold, and she brings claims of unjust enrichment, breaches of express and implied warranties, breach of contract, negligence, and design and manufacturing defects.
+- p. 164 — Plaintiff Solomon alleges that the defendants made false and/or misleading statements or omissions relating to the seat post recall in violation of Sections 10(b) and 20(a) of the Securities Exchange Act of 1934, as amended (the “Exchange Act”), and Rule 10b-5 promulgated thereunder.
+- p. 177 — The Company’s policy is to include interest and penalties related to unrecognized tax benefits, if any, within Income tax expense (benefit) in the Consolidated Statements of Operations and Comprehensive Income (Loss).
+- p. 177 — Accordingly, on a continuing basis, the Company cooperates with taxing authorities for the various jurisdictions in which it conducts business to comply with audits and inquiries for tax periods that are open to examination.
+
+</details>
