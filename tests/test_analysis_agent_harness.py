@@ -234,6 +234,46 @@ def test_analysis_error_flagged() -> None:
 
 
 # ---------------------------------------------------------------------------
+# A model answer that is not a rating is flagged, not silently coerced
+# ---------------------------------------------------------------------------
+
+def _answer(verdict: str):
+    payload = json.dumps({"verdict": verdict, "reasoning": "r", "evidence": [], "flags": []})
+    with patched_llm(lambda m: payload):
+        return _analyze(_dimension(), chunks=[_chunk()])
+
+
+def test_inconclusive_answer_flagged() -> None:
+    """The rubrics ask for INCONCLUSIVE when required evidence is missing.
+    It still coerces to MEDIUM, so without a flag it would read as a finding.
+    """
+    from src.graph.build import summarize_flags
+
+    verdict = _answer("INCONCLUSIVE")
+    assert verdict["rating"] == config.RATING_MEDIUM
+    assert "inconclusive" in verdict["flags"]
+    _, degraded = summarize_flags([verdict])
+    assert degraded == {"test_dimension": ["inconclusive"]}
+
+
+def test_unrecognized_answer_flagged() -> None:
+    verdict = _answer("N/A")
+    assert verdict["rating"] == config.RATING_MEDIUM
+    assert "invalid_rating" in verdict["flags"]
+
+
+def test_rating_synonym_not_flagged() -> None:
+    verdict = _answer("moderate")
+    assert verdict["rating"] == config.RATING_MEDIUM
+    assert verdict["flags"] == []
+
+
+def test_no_evidence_not_double_flagged() -> None:
+    verdict = _analyze(_dimension(no_evidence_rating="INCONCLUSIVE"))
+    assert verdict["flags"] == ["no_evidence"]
+
+
+# ---------------------------------------------------------------------------
 # Retry: transient failures must not become verdicts
 # ---------------------------------------------------------------------------
 
@@ -315,6 +355,10 @@ def main() -> int:
         test_valid_json_response,
         test_parse_error_flagged,
         test_analysis_error_flagged,
+        test_inconclusive_answer_flagged,
+        test_unrecognized_answer_flagged,
+        test_rating_synonym_not_flagged,
+        test_no_evidence_not_double_flagged,
         test_retries_then_succeeds,
         test_gives_up_after_max_retries,
         test_loader_rejects_bad_rating,

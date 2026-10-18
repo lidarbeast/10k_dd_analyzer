@@ -14,6 +14,7 @@ import json
 import logging
 from pathlib import Path
 
+from src import config
 from src.agents import analysis_agent, document_agent, retrieval_agent
 from src.state import DDState
 
@@ -62,6 +63,7 @@ def run_agent_chain(
     state["report"] = {
         "company_name": state["company_name"],
         "filing_path": state["filing_path"],
+        "rubric_version": config.RUBRIC_VERSION,
         "dimension_count": len(state["verdicts"]),
         "ratings": {v["dimension"]: v["rating"] for v in state["verdicts"]},
         "flags": flags,

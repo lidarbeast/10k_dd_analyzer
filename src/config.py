@@ -30,7 +30,7 @@ REPORTS_DIR = DATA_DIR / "reports"
 # LLM Configuration (Google Gemini — free tier)
 # ---------------------------------------------------------------------------
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.8-flash")
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.0"))
 
 # Retry/timeout for analysis calls.  A rubric prompt is large and the free tier

@@ -18,6 +18,7 @@ from pathlib import Path
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
+from src import config
 from src.agents import analysis_agent, document_agent, retrieval_agent
 from src.state import DDState
 
@@ -25,9 +26,16 @@ _log = logging.getLogger(__name__)
 
 
 # Flags that mean the verdict is not a finding: the model was never consulted,
-# or its answer could not be used.  A rating carrying one of these must never be
+# its answer could not be used, or it reported that the evidence the rubric
+# requires was not retrieved.  A rating carrying one of these must never be
 # read as analysis.
-DEGRADED_FLAGS = frozenset({"no_evidence", "parse_error", "analysis_error"})
+DEGRADED_FLAGS = frozenset({
+    "no_evidence",
+    "parse_error",
+    "analysis_error",
+    "inconclusive",
+    "invalid_rating",
+})
 
 
 def summarize_flags(verdicts: list) -> tuple[dict, dict]:
@@ -59,6 +67,7 @@ def _build_report(state: DDState) -> DDState:
     state["report"] = {
         "company_name": state["company_name"],
         "filing_path": state["filing_path"],
+        "rubric_version": config.RUBRIC_VERSION,
         "dimension_count": len(verdicts),
         "ratings": {v["dimension"]: v["rating"] for v in verdicts},
         "flags": flags,

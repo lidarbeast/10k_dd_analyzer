@@ -141,6 +141,8 @@ def _build_dimension_guidance(dimension: dict) -> str:
         primary = _coerce_to_text_list(evidence_schema.get("primary_signals"))
         corroborating = _coerce_to_text_list(evidence_schema.get("corroborating_signals"))
         absence = _coerce_to_text_list(evidence_schema.get("absence_signals"))
+        # A guard renders as "guard: explanation"; its "pattern" field is
+        # documentation only, so an explanation must name its own examples.
         guards = _coerce_to_text_list(evidence_schema.get("false_positive_guards"))
         cross_section = _coerce_to_text_list(evidence_schema.get("cross_section_evidence"))
 
@@ -215,20 +217,39 @@ def _build_dimension_guidance(dimension: dict) -> str:
     return "\n".join(lines).strip()
 
 
+# Model answers meaning "the rubric's required evidence was not in the
+# retrieved passages".  The rubrics ask for INCONCLUSIVE in exactly that case,
+# so it must surface as a degraded verdict, not as the MEDIUM it coerces to.
+_INCONCLUSIVE_ANSWERS = frozenset({"INCONCLUSIVE", "UNKNOWN"})
+
+# Synonyms that still name a definite rating.
+_RATING_ALIASES = {
+    "MODERATE": config.RATING_MEDIUM,
+    "SEVERE": config.RATING_HIGH,
+    "MINOR": config.RATING_LOW,
+}
+
+
 def _coerce_rating(raw_rating: str) -> str:
     normalized = (raw_rating or "").strip().upper()
     if normalized in config.VALID_RATINGS:
         return normalized
+    return _RATING_ALIASES.get(normalized, config.RATING_MEDIUM)
 
-    # Common aliases or malformed outputs from model responses.
-    alias_map = {
-        "INCONCLUSIVE": config.RATING_MEDIUM,
-        "UNKNOWN": config.RATING_MEDIUM,
-        "MODERATE": config.RATING_MEDIUM,
-        "SEVERE": config.RATING_HIGH,
-        "MINOR": config.RATING_LOW,
-    }
-    return alias_map.get(normalized, config.RATING_MEDIUM)
+
+def _rating_flag(raw_rating: str) -> str | None:
+    """Flag a model answer that is not a definite rating.
+
+    Returns "inconclusive" for an explicit can't-tell answer, "invalid_rating"
+    for anything else `_coerce_rating` had to replace with its MEDIUM default,
+    and None when the answer named a rating.
+    """
+    normalized = (raw_rating or "").strip().upper()
+    if normalized in config.VALID_RATINGS or normalized in _RATING_ALIASES:
+        return None
+    if normalized in _INCONCLUSIVE_ANSWERS:
+        return "inconclusive"
+    return "invalid_rating"
 
 
 def _build_prompt(dimension: dict, company_name: str, retrieved_chunks: list[dict]) -> tuple[str, str]:
@@ -376,10 +397,19 @@ def analyze_dimension(
                 "flags": ["analysis_error"],
             }
 
+    raw_rating = str(parsed.get("verdict", parsed.get("rating", "")) or "")
+    flags = list(parsed.get("flags") or [])
+    # Only a model answer is checked: the no-evidence path's configured
+    # INCONCLUSIVE is already marked by its own `no_evidence` flag.
+    if "no_evidence" not in flags:
+        rating_flag = _rating_flag(raw_rating)
+        if rating_flag and rating_flag not in flags:
+            flags.append(rating_flag)
+
     # Build VerdictCard
     verdict: VerdictCard = {
         "dimension": dimension["dimension_id"],
-        "rating": _coerce_rating(parsed.get("verdict", parsed.get("rating", ""))),
+        "rating": _coerce_rating(raw_rating),
         "confidence": retrieval_score,
         "reasoning": parsed.get("reasoning", ""),
         "evidence_citations": [
@@ -389,7 +419,7 @@ def analyze_dimension(
             }
             for e in parsed.get("evidence", [])
         ],
-        "flags": parsed.get("flags", []),
+        "flags": flags,
         "retrieval_attempts": retrieval_attempts,
     }
 

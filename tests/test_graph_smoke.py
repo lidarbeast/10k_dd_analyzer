@@ -81,6 +81,9 @@ def validate_graph_run() -> dict[str, Any]:
 
     report = final_state["report"]
     assert report["dimension_count"] == dim_count
+    # Every report names the rubric version it was judged against.
+    from src import config as _config
+    assert report["rubric_version"] == _config.RUBRIC_VERSION
     assert set(report["ratings"].keys()) == {d["dimension_id"] for d in final_state["dimensions"]}
     assert all(rating in {"LOW", "MEDIUM", "HIGH"} for rating in report["ratings"].values())
 
