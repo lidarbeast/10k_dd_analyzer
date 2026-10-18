@@ -25,41 +25,45 @@ DIMENSIONS_DIR = DATA_DIR / "dimensions" / RUBRIC_VERSION
 GROUND_TRUTH_DIR = DATA_DIR / "ground_truth"
 PARSED_DIR = DATA_DIR / "parsed"
 REPORTS_DIR = DATA_DIR / "reports"
+# Every pipeline run: data/runs/<run>/state.json plus the committed ledger.jsonl
+RUNS_DIR = DATA_DIR / "runs"
 
 # ---------------------------------------------------------------------------
-# LLM Configuration (Google Gemini — free tier)
+# LLM Configuration (Anthropic Claude — Analysis Agent)
 # ---------------------------------------------------------------------------
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.8-flash")
-LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.0"))
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+LLM_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-5-5")
+# Thinking depth and token spend (low | medium | high | xhigh | max).  There is
+# no temperature setting: Claude Sonnet 5.5 rejects a non-default temperature,
+# so repeated runs are not guaranteed to agree.
+LLM_EFFORT = os.getenv("LLM_EFFORT", "high")
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "16000"))
 
-# Retry/timeout for analysis calls.  A rubric prompt is large and the free tier
-# rate-limits aggressively, so an unguarded call turns a transient 429 into a
-# MEDIUM verdict that is indistinguishable from a real one.
-LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
+# Retry/timeout for analysis calls.  An unguarded call turns a transient 429
+# into a verdict that reads like a real one.  The timeout covers thinking at
+# high effort over a full evidence block.
+LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "300"))
 LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "3"))
 LLM_RETRY_BASE_SECONDS = float(os.getenv("LLM_RETRY_BASE_SECONDS", "2.0"))
+
+# Google key — needed only when EMBEDDING_PROVIDER=google.
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
 # ---------------------------------------------------------------------------
 # Embedding Configuration
 # ---------------------------------------------------------------------------
-EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "google").lower()
+# Defaults are the setup the index was built with.  Query embeddings must come
+# from the same model as the indexed chunks, or retrieval silently degrades.
+EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "local").lower()
 
-# Google / Gemini embeddings
+# Google / Gemini embeddings (unused while the provider is local)
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001")
 
 # Local embeddings (sentence-transformers)
-# Good defaults:
-# - sentence-transformers/all-MiniLM-L6-v2 (384 dim, fast, CPU-friendly)
-# - intfloat/e5-large-v2 (1024 dim, higher quality, heavier)
-LOCAL_EMBEDDING_MODEL = os.getenv(
-    "LOCAL_EMBEDDING_MODEL",
-    "sentence-transformers/all-MiniLM-L6-v2",
-)
+LOCAL_EMBEDDING_MODEL = os.getenv("LOCAL_EMBEDDING_MODEL", "BAAI/bge-m3")
 
 # Pinecone index dimension must match embedding output dimension.
-# For local models, you typically want to set this to the model's dim.
-EMBEDDING_DIMENSION = int(os.getenv("EMBEDDING_DIMENSION", "3072"))
+EMBEDDING_DIMENSION = int(os.getenv("EMBEDDING_DIMENSION", "1024"))
 
 # ---------------------------------------------------------------------------
 # Pinecone Configuration (serverless free tier)
@@ -83,7 +87,7 @@ SECTION_BOOST_WEIGHT = float(os.getenv("SECTION_BOOST_WEIGHT", "0.2"))
 # ---------------------------------------------------------------------------
 # Chunking settings
 # ---------------------------------------------------------------------------
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "512"))
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "768"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
 SHORT_CHUNK_MIN_CHARS = int(os.getenv("SHORT_CHUNK_MIN_CHARS", "150"))
 
@@ -104,9 +108,16 @@ VALID_RATINGS = {RATING_LOW, RATING_MEDIUM, RATING_HIGH}
 # ---------------------------------------------------------------------------
 # LangSmith tracing
 # ---------------------------------------------------------------------------
-LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2", "true")
+# Tracing sends prompts — including filing text — to smith.langchain.com, so
+# it runs only with a real key.  An empty or placeholder key ("your-...")
+# turns it off here, before LangGraph reads the environment.
 LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY", "")
 LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "ma-dd-analyzer")
+_TRACING_REQUESTED = os.getenv("LANGCHAIN_TRACING_V2", "false").strip().lower() == "true"
+_TRACING_KEY_VALID = bool(LANGCHAIN_API_KEY) and not LANGCHAIN_API_KEY.startswith("your-")
+LANGCHAIN_TRACING_V2 = "true" if (_TRACING_REQUESTED and _TRACING_KEY_VALID) else "false"
+os.environ["LANGCHAIN_TRACING_V2"] = LANGCHAIN_TRACING_V2
+os.environ["LANGSMITH_TRACING"] = LANGCHAIN_TRACING_V2
 
 # ---------------------------------------------------------------------------
 # MLflow experiment tracking
@@ -150,4 +161,17 @@ def validate_config() -> list[str]:
         )
     if not PINECONE_API_KEY:
         errors.append("PINECONE_API_KEY is not set. Sign up at https://www.pinecone.io/")
+    return errors
+
+
+def validate_llm_config() -> list[str]:
+    """Check the Analysis Agent's settings.  Returns a list of errors."""
+    errors = []
+    if not LLM_MODEL.startswith("claude-"):
+        errors.append(
+            f"LLM_MODEL={LLM_MODEL!r} is not a Claude model; the Analysis Agent "
+            "calls the Anthropic API (set LLM_MODEL=claude-sonnet-5-5 in .env)"
+        )
+    if LLM_EFFORT not in {"low", "medium", "high", "xhigh", "max"}:
+        errors.append(f"LLM_EFFORT={LLM_EFFORT!r} must be low|medium|high|xhigh|max")
     return errors

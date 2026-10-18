@@ -3,18 +3,22 @@ Analysis Agent for the M&A Due Diligence Analyzer.
 
 Responsibilities:
   1. Receive retrieved chunks from the Retrieval Agent
-  2. Apply the dimension-specific rubric and prompt template
-  3. Call Gemini LLM to evaluate evidence against S&P thresholds
-  4. Output a structured JSON VerdictCard
-  5. Accumulate verdicts in DDState
+  2. Render them as delimited, identified evidence blocks (E1, E2, ...) under
+     the dimension's rubric and guidance
+  3. Call Claude (Anthropic API) with the dimension's JSON output schema
+  4. Check every quoted passage against the evidence block it cites
+  5. Output a structured VerdictCard and accumulate it in DDState
 """
 
+from dataclasses import dataclass, field
 import json
 import logging
+import re
 import time
+import unicodedata
 from typing import Any
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+import anthropic
 
 from src import config
 from src.state import DDState, VerdictCard
@@ -23,36 +27,62 @@ _log = logging.getLogger(__name__)
 
 # Generous cap on guidance items per category: high enough that no curated
 # signal in a well-formed config is silently dropped, bounded enough to catch a
-# runaway/malformed field.  Token budget is not a constraint here (Gemini's
+# runaway/malformed field.  Token budget is not a constraint here (the model's
 # context window dwarfs the full guidance block), so we do not truncate the
 # per-item text — only bound the item count.
 _MAX_GUIDANCE_ITEMS = 12
 
+# Server-side refusal fallback ("default" routing).  If a safety classifier
+# declines the request, the API re-runs it on Anthropic's recommended model
+# for that refusal category; the verdict then records which model answered.
+_FALLBACK_BETA = "server-side-fallback-2026-07-01"
+
 # Module-level singleton — avoids re-initialising the client on every dimension.
-_llm: ChatGoogleGenerativeAI | None = None
+_client: anthropic.Anthropic | None = None
 
 
-def _get_llm() -> ChatGoogleGenerativeAI:
-    global _llm
-    if _llm is None:
-        _llm = ChatGoogleGenerativeAI(
-            model=config.LLM_MODEL,
-            temperature=config.LLM_TEMPERATURE,
-            google_api_key=config.GOOGLE_API_KEY,
+def _get_client() -> anthropic.Anthropic:
+    global _client
+    if _client is None:
+        errors = config.validate_llm_config()
+        if errors:
+            raise RuntimeError("; ".join(errors))
+        _client = anthropic.Anthropic(
             timeout=config.LLM_TIMEOUT_SECONDS,
             # Retry is handled explicitly in _invoke_with_retry so that each
             # attempt is logged; the client's own retry would be silent.
             max_retries=0,
         )
-    return _llm
+    return _client
 
 
-def _invoke_with_retry(messages: list[dict], dimension_id: str):
+@dataclass
+class ModelReply:
+    """What one analysis call returned, independent of the SDK's types."""
+    text: str
+    stop_reason: str
+    model: str
+    fallback_used: bool = False
+    usage: dict = field(default_factory=dict)
+
+
+def _is_retryable(error: Exception) -> bool:
+    """Rate limits, server errors and network failures are transient; any
+    other API error (bad request, auth, unknown model) will fail again."""
+    if isinstance(error, (anthropic.RateLimitError, anthropic.APIConnectionError)):
+        return True  # APITimeoutError is an APIConnectionError
+    if isinstance(error, anthropic.APIStatusError):
+        return error.status_code >= 500
+    return False
+
+
+def _invoke_with_retry(request: dict, dimension_id: str):
     """Invoke the analysis model with bounded retries and exponential backoff.
 
     Mirrors `_get_embeddings_with_retry` in src/indexing/pinecone_ops.py.  Without
-    this a single transient failure — a rate limit on the free tier, most likely —
-    becomes a MEDIUM verdict that reads exactly like a real one.
+    this a single transient failure — a rate limit, most likely — becomes a
+    verdict that reads exactly like a real one.  Non-retryable errors raise
+    immediately.
     """
     max_retries = max(1, config.LLM_MAX_RETRIES)
     base_delay = max(0.0, config.LLM_RETRY_BASE_SECONDS)
@@ -60,10 +90,10 @@ def _invoke_with_retry(messages: list[dict], dimension_id: str):
 
     for attempt in range(1, max_retries + 1):
         try:
-            return _get_llm().invoke(messages)
+            return _get_client().beta.messages.create(**request)
         except Exception as e:
             last_error = e
-            if attempt == max_retries:
+            if not _is_retryable(e) or attempt == max_retries:
                 break
 
             sleep_seconds = base_delay * (2 ** (attempt - 1))
@@ -78,8 +108,59 @@ def _invoke_with_retry(messages: list[dict], dimension_id: str):
             time.sleep(sleep_seconds)
 
     raise RuntimeError(
-        f"Analysis model call failed for {dimension_id} after {max_retries} attempt(s)."
+        f"Analysis model call failed for {dimension_id} after {attempt} attempt(s): {last_error}"
     ) from last_error
+
+
+def _usage_dict(usage: Any) -> dict:
+    if usage is None:
+        return {}
+    out = {}
+    for name in ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"):
+        value = getattr(usage, name, None)
+        if isinstance(value, int):
+            out[name] = value
+    return out
+
+
+def _call_model(
+    system_prompt: str,
+    user_prompt: str,
+    output_schema: dict | None,
+    dimension_id: str,
+) -> ModelReply:
+    """One analysis request.  The reply's text is the JSON answer; thinking
+    blocks are skipped (their text is empty by default and is not the answer)."""
+    output_config: dict[str, Any] = {"effort": config.LLM_EFFORT}
+    if output_schema:
+        output_config["format"] = {"type": "json_schema", "schema": output_schema}
+
+    request = {
+        "model": config.LLM_MODEL,
+        "max_tokens": config.LLM_MAX_TOKENS,
+        "system": system_prompt,
+        "messages": [{"role": "user", "content": user_prompt}],
+        "output_config": output_config,
+        "betas": [_FALLBACK_BETA],
+        "fallbacks": "default",
+    }
+    response = _invoke_with_retry(request, dimension_id)
+
+    text = "".join(
+        getattr(block, "text", "") or ""
+        for block in (response.content or [])
+        if getattr(block, "type", None) == "text"
+    )
+    usage = getattr(response, "usage", None)
+    iterations = getattr(usage, "iterations", None) or []
+    fallback_used = any(getattr(it, "type", None) == "fallback_message" for it in iterations)
+    return ModelReply(
+        text=text,
+        stop_reason=str(getattr(response, "stop_reason", "") or ""),
+        model=str(getattr(response, "model", "") or ""),
+        fallback_used=fallback_used,
+        usage=_usage_dict(usage),
+    )
 
 
 def _collapse_ws(value: Any) -> str:
@@ -252,6 +333,33 @@ def _rating_flag(raw_rating: str) -> str | None:
     return "invalid_rating"
 
 
+def _evidence_id(i: int) -> str:
+    return f"E{i}"
+
+
+def _escape_attr(value: Any) -> str:
+    return str(value).replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;")
+
+
+def _render_evidence(retrieved_chunks: list[dict]) -> str:
+    """Render chunks as delimited evidence blocks the model cites by ID.
+
+    The delimiters mark where filing text begins and ends; the system prompt
+    says nothing inside them can act as instructions.  A closing tag inside a
+    chunk is defused so a chunk cannot end its own block early.
+    """
+    blocks = []
+    for i, chunk in enumerate(retrieved_chunks, 1):
+        text = str(chunk.get("text", "")).replace("</evidence", "<\\/evidence")
+        blocks.append(
+            f'<evidence id="{_evidence_id(i)}" section="{_escape_attr(_chunk_section_label(chunk))}" '
+            f'page="{_escape_attr(chunk.get("source_page", ""))}" chunk="{_escape_attr(chunk.get("id", ""))}">\n'
+            f"{text}\n"
+            f"</evidence>"
+        )
+    return "\n\n".join(blocks) + ("\n" if blocks else "")
+
+
 def _build_prompt(dimension: dict, company_name: str, retrieved_chunks: list[dict]) -> tuple[str, str]:
     """
     Builds the system and user prompts from the dimension config template.
@@ -267,16 +375,7 @@ def _build_prompt(dimension: dict, company_name: str, retrieved_chunks: list[dic
     template = dimension.get("prompt_template", {})
     system_prompt = template.get("system", "You are a financial due diligence analyst.")
 
-    # Format retrieved chunks as numbered evidence blocks
-    chunks_text = ""
-    for i, chunk in enumerate(retrieved_chunks, 1):
-        section = _chunk_section_label(chunk)
-        score = chunk.get("score", 0.0)
-        text = chunk.get("text", "")
-        chunks_text += (
-            f"### Evidence {i} [{section}] (score: {score:.3f})\n"
-            f"{text}\n\n"
-        )
+    chunks_text = _render_evidence(retrieved_chunks)
 
     user_prompt = template.get("user_template", "Evaluate {company_name}.\n\n{retrieved_chunks}")
     user_prompt = user_prompt.replace("{company_name}", company_name)
@@ -314,19 +413,136 @@ def _parse_verdict(response_text: str, dimension_id: str) -> dict[str, Any]:
 
     try:
         parsed = json.loads(text.strip())
-        return parsed
-    except json.JSONDecodeError: 
-        _log.warning(f"Failed to parse LLM response as JSON for {dimension_id}")
-        # Return a minimal structure from the raw text
-        return {
-            "dimension": dimension_id,
-            "verdict": "MEDIUM",
-            "confidence": 0.0,
-            "reasoning": response_text[:500],
-            "evidence": [],
-            "flags": ["parse_error"],
-        }
+        if isinstance(parsed, dict):
+            return parsed
+    except json.JSONDecodeError:
+        pass
+    _log.warning(f"Failed to parse LLM response as JSON for {dimension_id}")
+    # Return a minimal structure from the raw text
+    return {
+        "dimension": dimension_id,
+        "verdict": "MEDIUM",
+        "confidence": 0.0,
+        "reasoning": response_text[:500],
+        "evidence": [],
+        "flags": ["parse_error"],
+    }
 
+
+# ---------------------------------------------------------------------------
+# Quote verification: every passage the model quotes must be in the evidence
+# ---------------------------------------------------------------------------
+
+_QUOTE_TRANSLATION = str.maketrans({
+    "‘": "'", "’": "'", "‚": "'", "‛": "'",
+    "“": '"', "”": '"', "„": '"',
+    "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "−": "-",
+    " ": " ",
+})
+_ELLIPSIS = re.compile(r"\s*(?:\[(?:\.\.\.|\u2026)\]|\.\.\.|\u2026)\s*")
+# Fragments shorter than this between ellipses carry too little to verify.
+_MIN_FRAGMENT_CHARS = 12
+
+
+def _normalize_for_match(text: str) -> str:
+    text = unicodedata.normalize("NFKC", str(text)).translate(_QUOTE_TRANSLATION)
+    return " ".join(text.split()).casefold()
+
+
+def _quote_in(quote: str, haystack_normalized: str) -> bool:
+    """True when the quote appears in the text, ignoring whitespace, case and
+    typographic quote/dash variants.  An elided quote ("A ... B") must have
+    each fragment present, in order."""
+    fragments = [
+        _normalize_for_match(f).strip(" \"'")
+        for f in _ELLIPSIS.split(str(quote))
+    ]
+    fragments = [f for f in fragments if f]
+    if not fragments:
+        return False
+    position = 0
+    checked_any = False
+    for fragment in fragments:
+        if len(fragment) < _MIN_FRAGMENT_CHARS and len(fragments) > 1:
+            continue
+        found = haystack_normalized.find(fragment, position)
+        if found < 0:
+            return False
+        position = found + len(fragment)
+        checked_any = True
+    return checked_any
+
+
+def _parse_evidence_id(value: Any, n_chunks: int) -> int | None:
+    """'E3', 'e3', '3' or 'Evidence 3' -> index 2; None if absent or out of range."""
+    match = re.search(r"(\d+)", str(value or ""))
+    if not match:
+        return None
+    index = int(match.group(1)) - 1
+    return index if 0 <= index < n_chunks else None
+
+
+def _other_quotes(details: dict) -> list[tuple[str, str]]:
+    """Quoted passages outside `evidence`: the dimension's *_quote fields and
+    `source_passage` inside nested lists (D3 matters, D5 material weaknesses)."""
+    quotes: list[tuple[str, str]] = []
+    for key, value in details.items():
+        if key == "evidence":
+            continue
+        if key.endswith("_quote") and isinstance(value, str) and value.strip():
+            quotes.append((key, value))
+        elif isinstance(value, list):
+            for i, item in enumerate(value):
+                if isinstance(item, dict):
+                    passage = item.get("source_passage")
+                    if isinstance(passage, str) and passage.strip():
+                        quotes.append((f"{key}[{i}].source_passage", passage))
+    return quotes
+
+
+def _check_quotes(details: dict, retrieved_chunks: list[dict]) -> tuple[list[dict], dict]:
+    """Build evidence citations and check every quote against the evidence.
+
+    An evidence item's quote must be in the block its evidence_id names; any
+    other quote must be in some retrieved block.  Returns the citations and a
+    summary {checked, verified, failed}.
+    """
+    normalized = [_normalize_for_match(c.get("text", "")) for c in retrieved_chunks]
+    corpus = "\n".join(normalized)
+    citations: list[dict] = []
+    failed: list[str] = []
+    checked = 0
+
+    for n, item in enumerate(details.get("evidence") or []):
+        if not isinstance(item, dict):
+            continue
+        quote = str(item.get("source_passage") or item.get("text") or "")
+        index = _parse_evidence_id(item.get("evidence_id"), len(retrieved_chunks))
+        citation: dict = {"text": quote, "source_page": item.get("source_page", 0)}
+        if index is not None:
+            chunk = retrieved_chunks[index]
+            citation["evidence_id"] = _evidence_id(index + 1)
+            citation["chunk_id"] = str(chunk.get("id", ""))
+            citation["source_page"] = chunk.get("source_page", citation["source_page"])
+        if quote.strip():
+            checked += 1
+            ok = index is not None and _quote_in(quote, normalized[index])
+            citation["verified"] = ok
+            if not ok:
+                failed.append(f"evidence[{n}]")
+        citations.append(citation)
+
+    for label, quote in _other_quotes(details):
+        checked += 1
+        if not _quote_in(quote, corpus):
+            failed.append(label)
+
+    return citations, {"checked": checked, "verified": checked - len(failed), "failed": failed}
+
+
+# ---------------------------------------------------------------------------
+# Analysis
+# ---------------------------------------------------------------------------
 
 def analyze_dimension(
     dimension: dict,
@@ -349,8 +565,14 @@ def analyze_dimension(
         VerdictCard with structured verdict.
     """
     system_prompt, user_prompt = _build_prompt(dimension, company_name, retrieved_chunks)
+    dimension_id = dimension["dimension_id"]
 
     _log.info(f"Analysis Agent: evaluating {dimension['name']} for {company_name}")
+
+    reply: ModelReply | None = None
+    # True only when the model returned an answer we could read; only then is
+    # its rating checked and its quotes verified.
+    model_answered = False
 
     if not retrieved_chunks:
         no_evidence_inst = dimension.get("no_evidence_handling", "")
@@ -368,7 +590,7 @@ def analyze_dimension(
         if no_evidence_inst:
             reasoning += f" Config guidance: {no_evidence_inst}"
         parsed = {
-            "dimension": dimension["dimension_id"],
+            "dimension": dimension_id,
             "verdict": raw_rating,
             "reasoning": reasoning,
             "evidence": [],
@@ -376,56 +598,76 @@ def analyze_dimension(
         }
     else:
         try:
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "human", "content": user_prompt},
-            ]
-            response = _invoke_with_retry(messages, dimension["dimension_id"])
-            response_text = response.content
-            parsed = _parse_verdict(str(response_text), dimension["dimension_id"])
-        except Exception as e:
-            _log.warning(
-                "Analysis model call failed for %s: %s",
-                dimension["dimension_id"],
-                e,
+            reply = _call_model(
+                system_prompt,
+                user_prompt,
+                dimension.get("output_schema"),
+                dimension_id,
             )
+        except Exception as e:
+            _log.warning("Analysis model call failed for %s: %s", dimension_id, e)
             parsed = {
-                "dimension": dimension["dimension_id"],
+                "dimension": dimension_id,
                 "verdict": "MEDIUM",
                 "reasoning": f"Analysis model call failed: {e}",
                 "evidence": [],
                 "flags": ["analysis_error"],
             }
+        else:
+            if reply.stop_reason == "refusal":
+                parsed = {
+                    "dimension": dimension_id,
+                    "verdict": "MEDIUM",
+                    "reasoning": "The model declined the request (stop_reason=refusal); no finding.",
+                    "evidence": [],
+                    "flags": ["refusal"],
+                }
+            elif reply.stop_reason == "max_tokens":
+                parsed = {
+                    "dimension": dimension_id,
+                    "verdict": "MEDIUM",
+                    "reasoning": "The answer was cut off at max_tokens; no finding.",
+                    "evidence": [],
+                    "flags": ["truncated"],
+                }
+            else:
+                parsed = _parse_verdict(reply.text, dimension_id)
+                model_answered = "parse_error" not in (parsed.get("flags") or [])
 
     raw_rating = str(parsed.get("verdict", parsed.get("rating", "")) or "")
-    flags = list(parsed.get("flags") or [])
-    # Only a model answer is checked: the no-evidence path's configured
-    # INCONCLUSIVE is already marked by its own `no_evidence` flag.
-    if "no_evidence" not in flags:
+    flags = [str(f) for f in (parsed.get("flags") or [])]
+    if model_answered:
         rating_flag = _rating_flag(raw_rating)
         if rating_flag and rating_flag not in flags:
             flags.append(rating_flag)
+    if reply is not None and reply.fallback_used and "model_fallback" not in flags:
+        flags.append("model_fallback")
 
-    # Build VerdictCard
+    citations, quote_check = _check_quotes(parsed, retrieved_chunks) if model_answered else ([], None)
+    if quote_check and quote_check["failed"] and "unverified_quote" not in flags:
+        flags.append("unverified_quote")
+
     verdict: VerdictCard = {
-        "dimension": dimension["dimension_id"],
+        "dimension": dimension_id,
         "rating": _coerce_rating(raw_rating),
         "confidence": retrieval_score,
         "reasoning": parsed.get("reasoning", ""),
-        "evidence_citations": [
-            {
-                "text": e.get("source_passage", e.get("text", "")),
-                "source_page": e.get("source_page", 0),
-            }
-            for e in parsed.get("evidence", [])
-        ],
+        "evidence_citations": citations,
         "flags": flags,
         "retrieval_attempts": retrieval_attempts,
+        "raw_verdict": raw_rating,
+        "details": parsed,
+        "retrieved_chunk_ids": [str(c.get("id", "")) for c in retrieved_chunks],
     }
+    if reply is not None:
+        verdict["served_model"] = reply.model
+        verdict["usage"] = reply.usage
+    if quote_check is not None:
+        verdict["quote_check"] = quote_check
 
     _log.info(
-        f"  Verdict: {verdict['rating']} "
-        f"(confidence={verdict['confidence']:.3f}, "
+        f"  Verdict: {verdict['rating']} (raw={raw_rating!r}, "
+        f"confidence={verdict['confidence']:.3f}, "
         f"flags={verdict['flags']})"
     )
     return verdict

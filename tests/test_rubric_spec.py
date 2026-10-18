@@ -159,3 +159,32 @@ def test_d5_guidance_rates_only_the_fiscal_year() -> None:
     assert "about an earlier year" in guards
     assert "never establishes" in guards or "does not show that controls were effective" in guards
     assert "does not indicate a current material weakness" not in json.dumps(spec["evidence_schema"]).lower()
+
+
+def test_output_format_has_single_source() -> None:
+    """The output schema is passed to the model as the response format.  A
+    field list also written into the template would drift from it."""
+    for name, spec in _raw_configs().items():
+        template = spec["prompt_template"]["user_template"]
+        assert "## Output Format" not in template, f"{name} template hard-codes an output format"
+        assert '"verdict":' not in template, f"{name} template carries an output field list"
+        schema = spec["output_schema"]
+        assert schema["properties"]["verdict"]["enum"] == ["HIGH", "MEDIUM", "LOW", "INCONCLUSIVE"], name
+        evidence_item = schema["properties"]["evidence"]["items"]
+        assert "evidence_id" in evidence_item["required"], f"{name} evidence items must cite an evidence block"
+
+
+def test_output_schemas_are_strict() -> None:
+    """Every object in a schema lists all its properties as required and
+    allows no others, so the model cannot omit a field or invent one."""
+    def walk(node: dict, where: str) -> None:
+        if node.get("type") == "object":
+            assert node.get("additionalProperties") is False, where
+            assert set(node.get("required", [])) == set(node.get("properties", {})), where
+            for key, child in node.get("properties", {}).items():
+                walk(child, f"{where}.{key}")
+        elif node.get("type") == "array":
+            walk(node["items"], f"{where}[]")
+
+    for name, spec in _raw_configs().items():
+        walk(spec["output_schema"], name)

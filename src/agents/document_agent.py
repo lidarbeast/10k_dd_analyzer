@@ -5,6 +5,9 @@ Responsibilities:
   1. Initialize DDState for an analysis run
   2. Load dimension specs from data/dimensions in configured order
   3. Validate minimum schema for each dimension config
+  4. Confirm the filing is indexed: its Pinecone namespace (the filing stem)
+     must hold vectors, so a missing index fails here instead of producing
+     one zero-results verdict per dimension
 """
 
 from __future__ import annotations
@@ -15,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from src import config
+from src.indexing.pinecone_ops import namespace_vector_count
 from src.state import DDState, DimensionSpec
 
 _log = logging.getLogger(__name__)
@@ -133,6 +137,19 @@ def _validate_dimension(spec: dict[str, Any], source_path: Path) -> DimensionSpe
 	if isinstance(confidence_floor, (int, float)):
 		dim["confidence_floor"] = float(confidence_floor)
 
+	# JSON schema the Analysis Agent passes to the model as the output format.
+	# Its verdict enum must allow INCONCLUSIVE, which the rubrics ask for when
+	# the required evidence was not retrieved.
+	output_schema = spec.get("output_schema")
+	if output_schema is not None:
+		verdict_enum = (
+			output_schema.get("properties", {}).get("verdict", {}).get("enum")
+			if isinstance(output_schema, dict) else None
+		)
+		if not isinstance(verdict_enum, list) or "INCONCLUSIVE" not in verdict_enum:
+			raise ValueError(f"{source_path.name} output_schema must define a verdict enum including INCONCLUSIVE")
+		dim["output_schema"] = output_schema
+
 	return dim
 
 
@@ -163,6 +180,32 @@ def load_dimensions(dimensions_dir: Path | None = None) -> list[DimensionSpec]:
 	return loaded
 
 
+def _check_index(namespace: str) -> int:
+	"""Return the namespace's vector count, failing if the filing is not indexed.
+
+	A count that differs from the filing's processed-chunk file is logged, not
+	fatal: retrieval still works, but chunk IDs no longer map to that file.
+	"""
+	count = namespace_vector_count(namespace)
+	if count == 0:
+		raise RuntimeError(
+			f"Pinecone namespace '{namespace}' is empty or missing. Index the filing first: "
+			f"python -m src.indexing.run_pipeline data/filings/{namespace}.pdf"
+		)
+	processed = config.PARSED_DIR / f"{namespace}_processed.json"
+	if processed.exists():
+		with processed.open("r", encoding="utf-8") as f:
+			expected = len(json.load(f))
+		if expected != count:
+			_log.warning(
+				"Namespace '%s' holds %s vectors but %s lists %s chunks; re-index the filing",
+				namespace, count, processed.name, expected,
+			)
+	else:
+		_log.warning("No processed-chunk file for '%s'; chunk IDs cannot be checked", namespace)
+	return count
+
+
 def run(state: DDState) -> DDState:
 	"""
 	Document Agent node function.
@@ -177,7 +220,11 @@ def run(state: DDState) -> DDState:
 		raise ValueError("DDState.filing_path is required")
 
 	dimensions = load_dimensions()
+	namespace = Path(filing_path).stem
+	indexed_chunk_count = _check_index(namespace)
 
+	state["namespace"] = namespace
+	state["indexed_chunk_count"] = indexed_chunk_count
 	state["dimensions"] = dimensions
 	state["current_dim_index"] = 0
 	state["verdicts"] = []
@@ -193,8 +240,10 @@ def run(state: DDState) -> DDState:
 	state["_warnings"] = []
 
 	_log.info(
-		"Document Agent initialized run for %s with %s dimensions",
+		"Document Agent initialized run for %s with %s dimensions (namespace '%s', %s vectors)",
 		company,
 		len(dimensions),
+		namespace,
+		indexed_chunk_count,
 	)
 	return state

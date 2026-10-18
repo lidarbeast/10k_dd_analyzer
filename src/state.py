@@ -31,23 +31,33 @@ class DimensionSpec(TypedDict):
     no_evidence_rating: NotRequired[str]   # explicit fallback when no evidence is retrieved
     rubric_sources: NotRequired[list[str]]
     confidence_floor: NotRequired[float]
+    output_schema: NotRequired[dict]       # JSON schema for the model's answer (output_config.format)
 
 
 class EvidenceCitation(TypedDict):
     """A single piece of evidence backing a verdict."""
     text: str
     source_page: int
+    evidence_id: NotRequired[str]   # "E3": the prompt's evidence block the quote came from
+    chunk_id: NotRequired[str]      # Pinecone ID of that block, e.g. "rev-20221231_chunk_280"
+    verified: NotRequired[bool]     # quote found verbatim (whitespace-normalised) in that chunk
 
 
 class VerdictCard(TypedDict):
     """Structured verdict for a single due diligence dimension."""
     dimension: str             # e.g. "financial_health"
-    rating: str                # LOW | MEDIUM | HIGH
+    rating: str                # LOW | MEDIUM | HIGH (INCONCLUSIVE coerces to MEDIUM; see raw_verdict)
     confidence: float          # 0.0–1.0: mean similarity score of the top 3 retrieved chunks
     reasoning: str             # One-paragraph synthesis
     evidence_citations: list[EvidenceCitation]
-    flags: list[str]           # Specific risk signals found
+    flags: list[str]           # Model flags plus pipeline flags (degraded and diagnostic)
     retrieval_attempts: int    # 1 if first retrieval sufficient, 2 if retry triggered
+    raw_verdict: NotRequired[str]                # the model's answer before coercion, e.g. "INCONCLUSIVE"
+    details: NotRequired[dict]                   # the model's full structured answer
+    retrieved_chunk_ids: NotRequired[list[str]]  # in prompt order: E1 is the first
+    served_model: NotRequired[str]               # the model that actually answered
+    usage: NotRequired[dict]                     # token counts for the call
+    quote_check: NotRequired[dict]               # {checked, verified, failed}: quotes found in the evidence
 
 
 class DDState(TypedDict):
@@ -56,8 +66,11 @@ class DDState(TypedDict):
     company_name: str
     filing_path: str
 
-    # Document Agent output
+    # Document Agent output.  `filing_chunks` is not populated: chunks live in
+    # Pinecone (namespace = filing stem) and in data/parsed/{stem}_processed.json.
     filing_chunks: list[FilingChunk]
+    namespace: NotRequired[str]
+    indexed_chunk_count: NotRequired[int]
 
     # Dimension loop state
     dimensions: list[DimensionSpec]

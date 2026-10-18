@@ -1,6 +1,10 @@
 """D2 agent check on the held-out filing.  Uses the agent's own prompt
-builder, model call and parser; only the content-block extraction is done
-here (the deferred str(response.content) bug)."""
+builder, model call and parser.
+
+A and B1 ran on gemini-3.8-flash on 2026-10-08 (d2_check_A.json,
+d2_check_B1.json; the content-block extraction was done here then).  Since
+2026-10-18 the agent calls Claude through `_call_model`, and results are
+written to d2_check_<set>.<model>.json so the Gemini results are kept."""
 import json, random, sys, logging
 logging.disable(logging.WARNING)
 from src import config
@@ -44,13 +48,13 @@ else:
     meta = {}
 
 system, user = aa._build_prompt(spec, "Revlon, Inc.", chunks)
-resp = aa._invoke_with_retry([{"role": "system", "content": system}, {"role": "human", "content": user}], spec["dimension_id"])
-content = resp.content
-text = "".join(b.get("text", "") for b in content if isinstance(b, dict)) if isinstance(content, list) else str(content)
+reply = aa._call_model(system, user, spec.get("output_schema"), spec["dimension_id"])
+text = reply.text
 parsed = aa._parse_verdict(text, spec["dimension_id"])
-record = {"set": name, "model": config.LLM_MODEL, "chunk_order": [c["id"] + (" (cut)" if c["id"].endswith("344") and name != "A" and "344c" in SETS.get(name, []) else "") for c in chunks],
+record = {"set": name, "model": config.LLM_MODEL, "served_model": reply.model, "stop_reason": reply.stop_reason,
+          "usage": reply.usage, "chunk_order": [c["id"] + (" (cut)" if c["id"].endswith("344") and name != "A" and "344c" in SETS.get(name, []) else "") for c in chunks],
           "meta": meta, "prompt_chars": len(system) + len(user), "parsed": parsed, "raw": text}
-json.dump(record, open(f"{SP}/d2_check_{name}.json", "w"), ensure_ascii=False, indent=1)
+json.dump(record, open(f"{SP}/d2_check_{name}.{config.LLM_MODEL}.json", "w"), ensure_ascii=False, indent=1)
 print(name, "verdict:", parsed.get("verdict"), "| flags:", parsed.get("flags"), "| order:", record["chunk_order"])
 print("criteria:", parsed.get("rubric_criteria_met"), "| aud_retrieved:", parsed.get("auditor_report_retrieved"),
       "| as2415:", parsed.get("as2415_paragraph_found"), "| mgmt:", parsed.get("management_disclosure"), "| ch11:", parsed.get("chapter_11_debtor_in_possession"))

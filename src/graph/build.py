@@ -20,6 +20,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from src import config
 from src.agents import analysis_agent, document_agent, retrieval_agent
+from src.run_record import run_provenance, write_run
 from src.state import DDState
 
 _log = logging.getLogger(__name__)
@@ -35,6 +36,8 @@ DEGRADED_FLAGS = frozenset({
     "analysis_error",
     "inconclusive",
     "invalid_rating",
+    "refusal",     # the model declined the request
+    "truncated",   # the answer was cut off at max_tokens
 })
 
 
@@ -54,7 +57,9 @@ def summarize_flags(verdicts: list) -> tuple[dict, dict]:
     return flags, degraded
 
 
-def _build_report(state: DDState) -> DDState:
+def build_report(state: DDState) -> dict:
+    """Assemble the run report.  Shared by the graph and the local runner so
+    both report degradation, provenance and audits identically."""
     verdicts = state["verdicts"]
     flags, degraded = summarize_flags(verdicts)
 
@@ -64,18 +69,33 @@ def _build_report(state: DDState) -> DDState:
             len(degraded), len(verdicts), degraded,
         )
 
-    state["report"] = {
+    usage_total: dict[str, int] = {}
+    for v in verdicts:
+        for name, count in (v.get("usage") or {}).items():
+            usage_total[name] = usage_total.get(name, 0) + int(count)
+
+    return {
         "company_name": state["company_name"],
         "filing_path": state["filing_path"],
-        "rubric_version": config.RUBRIC_VERSION,
+        "namespace": state.get("namespace"),
+        "indexed_chunk_count": state.get("indexed_chunk_count"),
+        **run_provenance(),
         "dimension_count": len(verdicts),
         "ratings": {v["dimension"]: v["rating"] for v in verdicts},
+        "raw_verdicts": {v["dimension"]: v.get("raw_verdict") for v in verdicts},
+        "served_models": {v["dimension"]: v.get("served_model") for v in verdicts if v.get("served_model")},
         "flags": flags,
         "degraded_dimensions": degraded,
         "trustworthy": not degraded,
+        "quote_checks": {v["dimension"]: v["quote_check"] for v in verdicts if v.get("quote_check")},
+        "usage_total": usage_total,
         "retrieval_audits": state.get("_retrieval_audits", {}),
         "warnings": state.get("_warnings", []),
     }
+
+
+def _build_report(state: DDState) -> DDState:
+    state["report"] = build_report(state)
     return state
 
 
@@ -137,16 +157,18 @@ def main() -> None:
         "--out",
         type=str,
         default="",
-        help="Optional output JSON path for full final state",
+        help="Optional extra copy of the full final state (every run is also saved under data/runs/)",
     )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
 
     final_state = run_graph(company_name=args.company, filing_path=args.filing)
+    run_dir = write_run(final_state)
 
     print("=== Graph Run Summary ===")
     print(json.dumps(final_state["report"], indent=2))
+    _log.info("Run recorded in %s (ledger: %s)", run_dir, config.RUNS_DIR / "ledger.jsonl")
 
     if args.out:
         out_path = Path(args.out)

@@ -50,6 +50,20 @@ def _set_audit(state: DDState, dimension_id: str, audit: dict) -> None:
     audits[dimension_id] = audit
 
 
+def _retrieved_summary(chunks: list[dict]) -> list[dict]:
+    """The final evidence list as the audit records it, in prompt order."""
+    return [
+        {
+            "rank": rank,
+            "id": c.get("id", ""),
+            "source_page": c.get("source_page"),
+            "score": round(float(c.get("score", 0.0)), 4),
+            "query": c.get("query"),
+        }
+        for rank, c in enumerate(chunks, 1)
+    ]
+
+
 def _chunk_key(chunk: dict) -> str:
     vid = chunk.get("id")
     if vid:
@@ -213,13 +227,8 @@ def run(state: DDState) -> DDState:
     dimension = dimensions[dim_index]
     company = state["company_name"]
 
-    # Prefer source_document from indexed chunks (guaranteed to match the
-    # Pinecone namespace); fall back to the filing path stem.
-    filing_chunks = state.get("filing_chunks") or []
-    if filing_chunks:
-        filing_stem = filing_chunks[0].get("source_document") or Path(state["filing_path"]).stem
-    else:
-        filing_stem = Path(state["filing_path"]).stem
+    # The Document Agent confirmed this namespace holds the filing's vectors.
+    filing_stem = state.get("namespace") or Path(state["filing_path"]).stem
     _log.info("Retrieval Agent: namespace='%s' for %s / %s", filing_stem, company, dimension["name"])
 
     # First retrieval pass with primary queries
@@ -311,6 +320,7 @@ def run(state: DDState) -> DDState:
         "per_query": merged_query_stats,
         "confidence": {"score": retry_score, "max": max_score},
         "outcome": "ok",
+        "retrieved": _retrieved_summary(results),
     })
     state["_retrieved_chunks"] = results
     state["_retrieval_score"] = retry_score

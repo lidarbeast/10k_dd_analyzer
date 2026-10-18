@@ -53,25 +53,12 @@ def run_agent_chain(
         state = retrieval_agent.run(state)
         state = analysis_agent.run(state)
 
-    # Reuse the graph's flag summary so both runners report degradation
-    # identically — a verdict that is really an API failure must not look like
-    # analysis in either path.
-    from src.graph.build import summarize_flags
+    # The graph's report builder, so both runners report degradation and
+    # provenance identically — a verdict that is really an API failure must
+    # not look like analysis in either path.
+    from src.graph.build import build_report
 
-    flags, degraded = summarize_flags(state["verdicts"])
-
-    state["report"] = {
-        "company_name": state["company_name"],
-        "filing_path": state["filing_path"],
-        "rubric_version": config.RUBRIC_VERSION,
-        "dimension_count": len(state["verdicts"]),
-        "ratings": {v["dimension"]: v["rating"] for v in state["verdicts"]},
-        "flags": flags,
-        "degraded_dimensions": degraded,
-        "trustworthy": not degraded,
-        "retrieval_audits": state.get("_retrieval_audits", {}),
-        "warnings": state.get("_warnings", []),
-    }
+    state["report"] = build_report(state)
     return state
 
 
@@ -89,7 +76,7 @@ def main() -> None:
         "--out",
         type=str,
         default="",
-        help="Optional output JSON path for full final state",
+        help="Optional extra copy of the full final state (every run is also saved under data/runs/)",
     )
     args = parser.parse_args()
 
@@ -101,8 +88,13 @@ def main() -> None:
         max_dimensions=args.max_dimensions,
     )
 
+    from src.run_record import write_run
+
+    run_dir = write_run(final_state)
+
     print("=== Agent Verification Summary ===")
     print(json.dumps(final_state["report"], indent=2))
+    _log.info("Run recorded in %s (ledger: %s)", run_dir, config.RUNS_DIR / "ledger.jsonl")
 
     if args.out:
         out_path = Path(args.out)

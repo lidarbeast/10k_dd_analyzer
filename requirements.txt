@@ -1,7 +1,7 @@
 # ── Core Pipeline ──────────────────────────────────────────────
 langgraph>=0.2.0
-langchain-google-genai>=2.0.0
-google-genai>=1.0.0
+anthropic>=1.15.0
+google-genai>=1.0.0          # only for EMBEDDING_PROVIDER=google
 sentence-transformers>=2.7.0
 
 # ── PDF Parsing ───────────────────────────────────────────────

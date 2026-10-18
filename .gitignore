@@ -35,6 +35,9 @@ data/bank_reports/*.pdf
 data/filings/*.pdf
 data/*.pdf
 data/parsed/
+# Pipeline runs: keep the ledger, not the per-run state dumps
+data/runs/*
+!data/runs/ledger.jsonl
 src/indexing/logs/*.jsonl
 
 # Docker

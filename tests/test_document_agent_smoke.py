@@ -21,6 +21,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import contextlib
+
+from src.agents import document_agent
 from src.agents.document_agent import load_dimensions, run
 
 
@@ -84,7 +87,8 @@ def validate_dimension_loading() -> list[dict[str, Any]]:
 def validate_document_agent_run(company_name: str, filing_path: str) -> dict[str, Any]:
     """Run the Document Agent and verify it initializes state correctly."""
     state = build_state(company_name=company_name, filing_path=filing_path)
-    state = run(state)
+    with _index_count(352):
+        state = run(state)
 
     print("\nDocument Agent state after run:")
     print(f"  current_dim_index: {state['current_dim_index']}")
@@ -106,8 +110,21 @@ def validate_document_agent_run(company_name: str, filing_path: str) -> dict[str
     assert state.get("_retrieval_score") == 0.0, "Document Agent should initialize _retrieval_score"
     assert state.get("_retrieval_attempts") == 1, "Document Agent should initialize _retrieval_attempts"
     assert state.get("_warnings") == [], "Document Agent should initialize _warnings"
+    assert state["namespace"] == Path(filing_path).stem, "Namespace is the filing stem"
+    assert state["indexed_chunk_count"] == 352
 
     return state
+
+
+@contextlib.contextmanager
+def _index_count(count: int):
+    """Stand in for the Pinecone stats call, restoring the real one afterwards."""
+    original = document_agent.namespace_vector_count
+    document_agent.namespace_vector_count = lambda namespace: count
+    try:
+        yield
+    finally:
+        document_agent.namespace_vector_count = original
 
 
 def main() -> int:
@@ -119,8 +136,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--filing-path",
-        default="data/parsed/shop-20251231.json",
-        help="Filing path to use in the DDState (default: data/parsed/shop-20251231.json)",
+        default="data/filings/shop-20251231.pdf",
+        help="Filing path to use in the DDState (default: data/filings/shop-20251231.pdf)",
     )
     args = parser.parse_args()
 
@@ -143,7 +160,19 @@ def test_load_dimensions_preserves_required_and_guidance_fields() -> None:
 
 
 def test_document_agent_initializes_state() -> None:
-    validate_document_agent_run("Shopify", "data/parsed/shop-20251231.json")
+    validate_document_agent_run("Shopify", "data/filings/shop-20251231.pdf")
+
+
+def test_unindexed_filing_fails_before_any_dimension() -> None:
+    """An empty namespace must stop the run, not yield one zero-results verdict per dimension."""
+    state = build_state(company_name="Nobody", filing_path="data/filings/none-20991231.pdf")
+    with _index_count(0):
+        try:
+            run(state)
+        except RuntimeError as e:
+            assert "none-20991231" in str(e)
+            return
+    raise AssertionError("Document Agent must fail when the filing is not indexed")
 
 
 if __name__ == "__main__":

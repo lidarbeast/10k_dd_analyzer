@@ -4,8 +4,8 @@ This file is both:
 - a runnable script: `python tests/test_graph_smoke.py`
 - a pytest test module: `pytest tests/test_graph_smoke.py`
 
-Mocks Pinecone retrieval and the Gemini LLM call so the full graph
-(document_agent -> retrieval_agent -> analysis_agent loop -> build_report)
+Mocks the Pinecone index check, retrieval and the Anthropic call so the full
+graph (document_agent -> retrieval_agent -> analysis_agent loop -> build_report)
 can be exercised without live API calls or credentials.
 """
 
@@ -19,7 +19,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.agents import analysis_agent, retrieval_agent
+import contextlib
+from types import SimpleNamespace
+
+from src.agents import analysis_agent, document_agent, retrieval_agent
 from src.graph.build import build_graph, _new_state
 
 
@@ -28,7 +31,7 @@ def _mock_query_index(query: str, top_k: int | None = None, section_types=None, 
         top_k = 5
     return [
         {
-            "id": f"{namespace}-{i}",
+            "id": f"{namespace}_chunk_{i}",
             "text": "mock evidence text",
             "score": 0.85,
             "headings": ["Item 7"],
@@ -39,26 +42,42 @@ def _mock_query_index(query: str, top_k: int | None = None, section_types=None, 
     ]
 
 
-class _FakeResponse:
-    content = (
-        '{"dimension": "d", "verdict": "LOW", "reasoning": "mock", '
-        '"evidence": [], "flags": []}'
-    )
+class _FakeMessages:
+    def __init__(self, fail: bool) -> None:
+        self.fail = fail
+
+    def create(self, **request):
+        if self.fail:
+            raise RuntimeError("503 model overloaded")
+        text = '{"verdict": "LOW", "reasoning": "mock", "evidence": [], "flags": []}'
+        return SimpleNamespace(
+            content=[SimpleNamespace(type="text", text=text)],
+            stop_reason="end_turn",
+            model=request["model"],
+            usage=SimpleNamespace(input_tokens=10, output_tokens=5, iterations=None),
+        )
 
 
-class _FakeLLM:
-    def invoke(self, messages: list[dict[str, str]]) -> _FakeResponse:
-        return _FakeResponse()
-
-
-def run_mocked_graph(company_name: str = "Shopify", filing_path: str = "data/parsed/shop-20251231.json") -> dict[str, Any]:
-    """Run the compiled graph end-to-end with retrieval/LLM calls mocked out."""
+@contextlib.contextmanager
+def _mocked(fail: bool = False):
+    """Install the fakes, restoring the real functions afterwards."""
+    originals = (retrieval_agent.query_index, analysis_agent._get_client, document_agent.namespace_vector_count)
+    client = SimpleNamespace(beta=SimpleNamespace(messages=_FakeMessages(fail)))
     retrieval_agent.query_index = _mock_query_index
-    analysis_agent._llm = _FakeLLM()
+    analysis_agent._get_client = lambda: client
+    document_agent.namespace_vector_count = lambda namespace: 352
+    try:
+        yield
+    finally:
+        retrieval_agent.query_index, analysis_agent._get_client, document_agent.namespace_vector_count = originals
 
-    compiled = build_graph()
-    state = _new_state(company_name, filing_path)
-    return compiled.invoke(state, config={"recursion_limit": 50})
+
+def run_mocked_graph(company_name: str = "Shopify", filing_path: str = "data/filings/shop-20251231.pdf") -> dict[str, Any]:
+    """Run the compiled graph end-to-end with index, retrieval and LLM calls mocked out."""
+    with _mocked():
+        compiled = build_graph()
+        state = _new_state(company_name, filing_path)
+        return compiled.invoke(state, config={"recursion_limit": 50})
 
 
 def validate_graph_run() -> dict[str, Any]:
@@ -87,6 +106,16 @@ def validate_graph_run() -> dict[str, Any]:
     assert set(report["ratings"].keys()) == {d["dimension_id"] for d in final_state["dimensions"]}
     assert all(rating in {"LOW", "MEDIUM", "HIGH"} for rating in report["ratings"].values())
 
+    # The report says which index and configuration produced it.
+    assert report["namespace"] == "shop-20251231"
+    assert report["indexed_chunk_count"] == 352
+    assert report["model"] == _config.LLM_MODEL
+    assert len(report["rubric_hash"]) == 12
+    assert report["usage_total"] == {"input_tokens": 10 * dim_count, "output_tokens": 5 * dim_count}
+    # Each verdict records the chunks it was shown, in prompt order.
+    for v in final_state["verdicts"]:
+        assert v["retrieved_chunk_ids"][0].startswith("shop-20251231_chunk_")
+
     # A healthy run carries no degraded dimensions and is marked trustworthy.
     assert report["degraded_dimensions"] == {}, report["degraded_dimensions"]
     assert report["trustworthy"] is True
@@ -100,21 +129,16 @@ def validate_degraded_run() -> dict[str, Any]:
     Without flag reporting this produces four MEDIUM verdicts that look exactly
     like real analysis — the failure mode the report must make visible.
     """
-    class _FailingLLM:
-        def invoke(self, messages):
-            raise RuntimeError("503 model overloaded")
-
     from src import config as _config
     orig_delay = _config.LLM_RETRY_BASE_SECONDS
     _config.LLM_RETRY_BASE_SECONDS = 0.0
     try:
-        retrieval_agent.query_index = _mock_query_index
-        analysis_agent._llm = _FailingLLM()
-        compiled = build_graph()
-        final_state = compiled.invoke(
-            _new_state("Shopify", "data/parsed/shop-20251231.json"),
-            config={"recursion_limit": 50},
-        )
+        with _mocked(fail=True):
+            compiled = build_graph()
+            final_state = compiled.invoke(
+                _new_state("Shopify", "data/filings/shop-20251231.pdf"),
+                config={"recursion_limit": 50},
+            )
     finally:
         _config.LLM_RETRY_BASE_SECONDS = orig_delay
 
