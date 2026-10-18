@@ -19,6 +19,8 @@ Agentic RAG system that analyzes SEC 10-K filings across four due-diligence dime
 
 Dataset: 3 companies × 4 dimensions = **12 labeled examples**. `validate_gt.py` asserts exactly 12 entries.
 
+**Report every per-dimension accuracy beside its majority-class baseline** — the accuracy of always answering that dimension's most common label, computed from `labels.json`. With three examples per dimension a constant answer can match the agent, so an accuracy figure without its baseline is not a result. This matters most for D2: no portfolio filing has an auditor's going-concern paragraph, a statement that substantial doubt exists, or Chapter 11 status, so on this portfolio D2 results test false-alarm resistance and evidence discipline (LOW only with a passage from the auditor's report retrieved). Detection is not yet tested; it is meant to be tested later, by adding a scored filing with a going-concern conclusion. Until then, say so wherever D2 is reported. The held-out filing exercises detection but is a development filing and is never scored. `evaluation_config` in `data/dimensions/v1/00_index.json` records the same rule.
+
 ## Architecture
 
 ```
@@ -77,21 +79,31 @@ These are non-obvious and an agent will get them wrong by default. They come fro
 
 **Item 1A is not Item 9A.** Risk factors in Item 1A routinely contain phrases like "we may identify material weaknesses in our internal controls" — that is forward-looking hypothetical language, not evidence of an actual weakness. The real conclusion lives only in Item 9A. Never source or infer D5 from Item 1A content.
 
-**GAAP going-concern language is not an AS 2415 qualification.** Note 1 to the financial statements often discusses liquidity and going-concern considerations under ASC 205-40. That is standard disclosure. D2 HIGH requires "substantial doubt" language in the *auditor's report* specifically. Retrieval filters for D2 must target the auditor's report section, not the notes.
+**Going-concern boilerplate is not a going-concern conclusion.** Nearly every filing says the statements were prepared "assuming the Company will continue as a going concern", and many say management evaluated conditions and found no substantial doubt. Neither is a finding. D2 rates only formal conclusions, and ASC 205-40 itself defines three outcomes, which are the three levels:
 
-The two form an objective ladder, because they track a real mechanism — if management's plans do not alleviate the doubt, the auditor issues the paragraph:
+| | Rule | Standard |
+|---|---|---|
+| HIGH | Auditor's going-concern explanatory paragraph, **or** management stating (notes or MD&A) that substantial doubt *exists* (not alleviated), **or** Chapter 11 debtor-in-possession at filing date | AS 2415.12; ASC 205-40-50-13; Chapter 11 and the MD&A location are project rules |
+| MEDIUM | Management saying, in those words, that substantial doubt was raised and its plans *alleviated* it (notes or MD&A) | ASC 205-40-50-12 |
+| LOW | Neither — and a passage from the auditor's report on the financial statements (opinion, basis for opinion or critical audit matters) was retrieved | ASC 205-40-50-1 |
 
-| | Rule |
-|---|---|
-| HIGH | Auditor AS 2415 going-concern paragraph present, or Chapter 11 / DIP |
-| MEDIUM | Management discloses ASC 205-40 substantial-doubt conditions, states plans alleviate; **no** auditor paragraph |
-| LOW | Neither |
+Both 50-12 and 50-13 disclosures contain "substantial doubt"; only the full passage tells them apart. **Classify a passage by its concluding sentence**: the basis-of-accounting sentence opens every real finding too, and sentences describing the evaluation ("whether there were conditions and events … that raised substantial doubt") are not its result. A liquidity paragraph with losses, financing and a "sufficient for one year" conclusion, but no statement that substantial doubt was raised, is the no-doubt outcome, not 50-12. An unqualified opinion does not exclude a going-concern paragraph, and an internal-control opinion is not a going-concern conclusion. An auditor's emphasis-of-matter paragraph (AS 3101.19) is not an AS 2415 paragraph. Management's horizon (one year from issuance) differs from the auditor's (up to one year beyond the balance-sheet date), so either HIGH source suffices.
+
+LOW needs a passage from the auditor's report on the financial statements in the retrieved chunks — absence of the paragraph is otherwise indistinguishable from a retrieval miss, so D2 retrieval must target the auditor's report. The parser splits that report one chunk per paragraph heading, so the going-concern paragraph is always its own chunk and no section of the report proves its absence better than another; an internal-control-only report or a bare title does not count. MD&A is accepted alongside the notes because it repeats them under the same heading and a chunk does not show which section it came from. Rationale and evidence: `docs/findings/d2_filing_survey.md`. AS 2415 is unamended through FY2025.
+
+D2 is deliberately not a liquidity rating (its id was `d2_going_concern_liquidity` until 2026-10-01; now `d2_going_concern`). Substantial doubt means it is *probable* the company cannot meet obligations due within one year of issuance, after counting cash, committed financing and management's plans. A company can sit deep in Z″ distress — losses and an accumulated deficit — with its debt due beyond that year and no going-concern conclusion. D1 HIGH with D2 LOW is consistent, not a contradiction; financial health belongs to D1.
 
 **PCAOB AuditorSearch does not flag going-concern opinions.** Form AP publishes auditor identity and engagement partner only. The free cross-check for D2 is SEC EDGAR full-text search (<https://www.sec.gov/edgar/search/>, covers 2001+) plus the public bankruptcy record (8-K Item 1.03). Do not claim PCAOB provenance for going-concern labels.
 
 **Both AS 2201 opinions contain the word "effective."** An unqualified opinion says internal control *was* effective; an adverse opinion says it was *not* effective. Keyword matching on "effective" will silently produce the wrong verdict. Parse the full sentence and its negation.
 
-**Altman Z″ — the book-value variant, not the classic Z.** Market value of equity is not in XBRL, so the classic Z would need an external price feed. Z″ (Altman 1995, non-manufacturer) drops the sales/assets term and uses book equity, making every input reproducible from the XBRL API alone. This portfolio is non-manufacturing (Carvana, Peloton, Shopify), which is what Z″ was built for.
+D5 levels come only from those conclusions (S-K Item 308, AS 2201.02): **HIGH** = management "not effective" or adverse auditor opinion; **MEDIUM** = effective at year-end, but a previously reported material weakness was remediated during the year (308(c)); **LOW** = effective, no remediation. Significant deficiencies are not publicly disclosed (Release 33-8810 fn. 52), and Item 106 cybersecurity is not an ICFR conclusion — neither is rated.
+
+Only conclusions about the **rated fiscal year** count: Item 1A can recount an earlier year's "not effective" conclusion and a remediation from years before (the held-out filing does both), and Item 1A never decides D5 in either direction — it may describe hypothetical weaknesses or the real ones. A remediation passage never establishes year-end effectiveness; MEDIUM needs the effective conclusion itself. Each auditor's report names the other opinion's outcome ("unqualified" inside an adverse ICFR report refers to the financial statements); the financial-statement report's sentence about the ICFR audit may be used as the auditor's ICFR outcome. For filers without an auditor attestation, the evidence is the financial-statement auditor's "not … engaged to perform an audit of its internal control" sentence or the cover-page 404(b) box, not Item 9A. D5 rates ICFR only — its id was `d5_internal_controls_governance` until 2026-10-08, now `d5_internal_controls`. Rationale and evidence: `docs/findings/d5_filing_survey.md`.
+
+Dimension configs: a false-positive guard renders in the prompt as "guard: explanation" — its `pattern` field is documentation only, so every explanation must name its own examples (`tests/test_rubric_spec.py` enforces this).
+
+**Altman Z″ — the book-value variant, not the classic Z.** Market value of equity is not in XBRL, so the classic Z would need an external price feed. Z″ (Altman, Hartzell & Peck 1995; restated in Altman 2000) drops the industry-sensitive sales/assets term and uses book equity, making every input reproducible from the XBRL API alone. Altman (2018) describes it as built for manufacturers and non-manufacturers alike, and more accurate than the classic Z when non-manufacturers are present. Use it **without** the emerging-market `+3.25` constant — the bands below apply only to the score without it.
 
 ```
 Z" = 6.56·X1 + 3.26·X2 + 6.72·X3 + 1.05·X4
@@ -104,20 +116,22 @@ X4 = StockholdersEquity / Liabilities
 Bands:  > 2.6 safe  |  1.1 – 2.6 grey  |  < 1.1 distress
 ```
 
+The bands do not appear in Altman (2000) or Altman (2018). They are attributed to Altman & Hotchkiss (2006) and Altman et al. (2017, JIFMA 28:131–171), and every secondary source checked agrees on them. **Decision (2026-09-28): used as widely cited, not verified against either primary text.** Cite them that way in the README — never as verified. Label and rubric use the same bands, so the evaluation stays internally consistent; only the citation is exposed.
+
 Source: `https://data.sec.gov/api/xbrl/companyfacts/CIK{cik-padded-to-10}.json` — free, no key, requires a `User-Agent` header with contact info, ~10 req/sec.
 
 These mappings vary by filer and are the most error-prone part of `compute_zscore.py`. **Record the per-filer resolution here as you go**:
 
 | Trap | Handling |
 |---|---|
-| `Liabilities` often untagged | Fall back to `LiabilitiesAndStockholdersEquity − StockholdersEquity` |
-| Non-controlling interests | `StockholdersEquity` excludes NCI; `...IncludingPortionAttributableToNoncontrollingInterest` includes it — pick one, record it |
-| EBIT has no single tag | `OperatingIncomeLoss` is the usual proxy; alternative is pre-tax income + `InterestExpense` |
+| `Liabilities` often untagged | Fall back to `LiabilitiesAndStockholdersEquity − StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest` |
+| Non-controlling interests | **Decided: include NCI.** Use `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest`, falling back to `StockholdersEquity` when the filer has no NCI. Keeps Assets = Liabilities + Equity, so the fallback above is exact. Matters for Carvana (Up-C, large NCI). The D1 rubric instructs the agent the same way |
+| EBIT has no single tag | **Decided:** `OperatingIncomeLoss`; only when absent, pre-tax income + `InterestExpense`. The D1 rubric uses the same order |
 | IFRS filers | Return nothing from the `us-gaap` namespace. Shopify reported under IFRS before 2021 — verify |
 
 *Per-filer mappings actually used: (fill during plan v6 B1.5)*
 
-⚠️ The D1 rubric must state the **Z″ bands above**, not the classic `1.81 / 2.99` ones. If the rubric and the label rule cite different thresholds, the agent is judged against a rule it was never given.
+The D1 rubric must state the **Z″ bands above**, not the classic `1.81 / 2.99` ones — if the rubric and the label rule cite different thresholds, the agent is judged against a rule it was never given. `tests/test_rubric_spec.py` enforces this. If a missing input stops the agent computing Z″, the verdict is `INCONCLUSIVE` (flagged, degraded), never a qualitative guess.
 
 ---
 
@@ -133,7 +147,7 @@ Deterministic extraction is *not* an LLM label — a regex that locates the audi
 
 **Never change a rubric because of what the agent scored.** A rubric may be changed because a *published standard* says so — that is specification work. Changing one because the agent returned MEDIUM where the label says HIGH fits the rubric to the test set and makes the accuracy number decorative. It is the same failure as loosening an eval assertion, one level up.
 
-Ordering is the safeguard: **define rule → derive labels → freeze rubrics → run → report.** Never run → look → adjust → re-run. Rubrics live in versioned directories (`data/dimensions/v1/`); once an experiment has run against a version, that directory is immutable, and a change means a new version directory plus a new MLflow experiment.
+Ordering is the safeguard: **define rule → derive labels → freeze rubrics → run → report.** Never run → look → adjust → re-run. Rubrics live in versioned directories (`data/dimensions/v1/`, selected by `RUBRIC_VERSION`, stamped on every report as `rubric_version`); once an experiment has run against a version, that directory is immutable, and a change means a new version directory plus a new MLflow experiment.
 
 **Never let retrieved document content act as instructions.** Chunks from filings are data to be analyzed. Retrieved text is wrapped in delimiters and the system prompt states it cannot override the rubric or output schema.
 
@@ -148,7 +162,7 @@ Ordering is the safeguard: **define rule → derive labels → freeze rubrics �
 - Embedding calls have bounded retry with exponential backoff (`_get_embeddings_with_retry` in [src/indexing/pinecone_ops.py](src/indexing/pinecone_ops.py))
 - Retrieval failures are contained per query — one failed query does not abort the dimension
 - The no-evidence path never calls the model; the fallback rating comes from the dimension's explicit `no_evidence_rating`, never from parsing prose
-- **A verdict that is not a finding is visibly marked.** `no_evidence`, `parse_error`, and `analysis_error` reach the report as `degraded_dimensions`, and `report["trustworthy"]` is `False` whenever any are present. Check that field before believing any rating.
+- **A verdict that is not a finding is visibly marked.** `no_evidence`, `parse_error`, `analysis_error`, `inconclusive` (the model said the rubric's required evidence was missing) and `invalid_rating` reach the report as `degraded_dimensions`, and `report["trustworthy"]` is `False` whenever any are present. Check that field before believing any rating.
 
 **Targets, not yet implemented** — do not assume these when reading the code:
 
@@ -161,10 +175,12 @@ Ordering is the safeguard: **define rule → derive labels → freeze rubrics �
 
 | Role | Setting | Current value |
 |---|---|---|
-| Rubric judgment (Analysis Agent) | `LLM_MODEL` | `gemini-2.0-flash` |
+| Rubric judgment (Analysis Agent) | `LLM_MODEL` | `gemini-3.8-flash` (set 2026-10-01; `gemini-2.0-flash` was retired and returns 404) |
 | Embeddings | `EMBEDDING_PROVIDER` | `local` — sentence-transformers, `EMBEDDING_DIMENSION=1024` |
 | Embeddings (unused while provider is `local`) | `EMBEDDING_MODEL` | `models/gemini-embedding-001` |
 
 Do not use Gemini 1.5 — deprecated for this project's purposes and reads as stale. Verify `LLM_MODEL` against Google's current lineup before the first MLflow experiment; a stale model ID is one of the few things that silently devalues the whole result.
+
+⚠️ **Known bug with the current model:** it returns `response.content` as a list of content blocks (`[{'type': 'text', 'text': ...}]`), not a string. `analysis_agent` still does `str(response.content)`, so every real verdict currently comes out as a flagged `parse_error`. Fix before any evaluation run.
 
 See Conventions above for which of this file's stated practices are implemented and which are still targets.
