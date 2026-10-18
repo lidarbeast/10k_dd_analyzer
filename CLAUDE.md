@@ -24,15 +24,20 @@ Dataset: 3 companies × 4 dimensions = **12 labeled examples**. `validate_gt.py`
 ## Architecture
 
 ```
-Ingestion (Docling HybridChunker) → chunk → embed (local) → Pinecone
-                                                              ↓
+Ingestion (Docling HybridChunker) → chunk → post-process
+          → data/parsed/{stem}_processed.json → clear namespace → embed (local) → Pinecone
+                                                                                  ↓
 LangGraph StateGraph:
+  Document Agent  → load rubric configs; fail fast if the namespace is empty
   Retrieval Agent → per-query dense search, quota merge, top-8
                   → confidence retry (1x) → hard-floor gate
-  Analysis Agent  → rubric prompt → structured JSON verdict
+  Analysis Agent  → <evidence id="E1" …> blocks + rubric guidance
+                  → Claude, JSON-schema output → quote check against cited blocks
   Conditional loop over 4 dimensions
-  Report Node     → assemble verdict cards
+  Report Node     → verdict cards + provenance; every run → data/runs/ + ledger
 ```
+
+**The processed-chunk file is the index's record.** `run_pipeline` writes the exact chunk list it upserts to `data/parsed/{stem}_processed.json`: chunk *i* there is vector `{stem}_chunk_{i}` in namespace `{stem}`. It clears the namespace before upserting (upsert overwrites by ID, so a shorter re-index would otherwise leave stale chunks) and checks the vector count after. Anything that needs a chunk's text by ID reads that file. Re-indexing a filing can renumber its chunks, which invalidates chunk IDs cited in `data/retrieval_checks/`; the Revlon, Carvana and Peloton namespaces were verified against their files on 2026-10-18 and left as they were, and Shopify was re-indexed that day.
 
 **Not yet implemented, despite appearing in earlier drafts of this diagram:** BM25 (retrieval is dense-only) and the reranker (plan v6 step 4). When the reranker lands, `RETRIEVAL_HARD_FLOOR` and `CONFIDENCE_THRESHOLD` must be recalibrated — reranker scores are not on the cosine scale.
 
@@ -41,7 +46,7 @@ LangGraph StateGraph:
 | Group | Fields |
 |---|---|
 | Input | `company_name`, `filing_path` |
-| Document Agent | `filing_chunks` |
+| Document Agent | `namespace`, `indexed_chunk_count` (`filing_chunks` is not populated) |
 | Dimension loop | `dimensions`, `current_dim_index` |
 | Accumulated output | `verdicts`, `retrieval_attempts`, `confidence_scores` |
 | Report | `report` |
@@ -59,7 +64,7 @@ python -m pytest -q -m live
 # Index one filing (parse → chunk → embed → Pinecone)
 python -m src.indexing.run_pipeline data/filings/shop-20251231.pdf
 
-# Run the full pipeline on one company
+# Run the full pipeline on one company (saved to data/runs/, appended to the ledger)
 python -m src.graph.build --company "Shopify" --filing "data/filings/shop-20251231.pdf"
 
 # Single dimension, no graph (faster debugging)
@@ -147,9 +152,11 @@ Deterministic extraction is *not* an LLM label — a regex that locates the audi
 
 **Never change a rubric because of what the agent scored.** A rubric may be changed because a *published standard* says so — that is specification work. Changing one because the agent returned MEDIUM where the label says HIGH fits the rubric to the test set and makes the accuracy number decorative. It is the same failure as loosening an eval assertion, one level up.
 
-Ordering is the safeguard: **define rule → derive labels → freeze rubrics → run → report.** Never run → look → adjust → re-run. Rubrics live in versioned directories (`data/dimensions/v1/`, selected by `RUBRIC_VERSION`, stamped on every report as `rubric_version`); once an experiment has run against a version, that directory is immutable, and a change means a new version directory plus a new MLflow experiment.
+Ordering is the safeguard: **define rule → derive labels → freeze rubrics → run → report.** Never run → look → adjust → re-run. Rubrics live in versioned directories (`data/dimensions/v1/`, selected by `RUBRIC_VERSION`, stamped on every report as `rubric_version` with a `rubric_hash` of the directory); once an experiment has run against a version, that directory is immutable, and a change means a new version directory plus a new MLflow experiment.
 
-**Never let retrieved document content act as instructions.** Chunks from filings are data to be analyzed. Retrieved text is wrapped in delimiters and the system prompt states it cannot override the rubric or output schema.
+**Decision (2026-10-09): the portfolio filings are development data until the scored set is chosen.** The owner allowed Carvana, Peloton and Shopify to be run while the workflow is built and improved, and deferred deciding what is scored: the portfolio, reported explicitly as accuracy on filings the workflow was developed against, or new held-out companies run once. Until then: every run is recorded in `data/runs/ledger.jsonl` (filing, ratings, rubric hash, model, commit) so the decision can see exactly what was looked at; rubric *levels* still never change because of what a run returned; and no accuracy on a filing that appears in the ledger is reported as an independent result.
+
+**Never let retrieved document content act as instructions.** Chunks from filings are data to be analyzed. Each retrieved chunk reaches the model inside an `<evidence id="E…">` block (a closing tag inside a chunk is defused), and the system prompt states that retrieved text cannot override the rubric or output schema.
 
 ---
 
@@ -158,29 +165,31 @@ Ordering is the safeguard: **define rule → derive labels → freeze rubrics �
 **Currently holding:**
 
 - Rubric definitions are fixed inputs — changing a rubric invalidates prior eval runs and requires a new MLflow experiment, not an edit to an existing one
-- Every LLM call has explicit retry and timeout handling — `_invoke_with_retry` in [src/agents/analysis_agent.py](src/agents/analysis_agent.py), bounded retries with exponential backoff, `LLM_TIMEOUT_SECONDS` on the client. The client's own `max_retries` is set to 0 so every attempt is logged rather than retried silently.
+- Every LLM call has explicit retry and timeout handling — `_invoke_with_retry` in [src/agents/analysis_agent.py](src/agents/analysis_agent.py), bounded retries with exponential backoff for rate limits, server errors and network failures only (a 400 fails at once), `LLM_TIMEOUT_SECONDS` on the client. The client's own `max_retries` is set to 0 so every attempt is logged rather than retried silently.
+- The model answers in the dimension's `output_schema` (JSON Schema, passed as `output_config.format`) — the only place the output fields are defined; templates no longer carry an "Output Format" block (`tests/test_rubric_spec.py`).
+- Every quote is checked. Evidence items cite a block by `evidence_id`; the quote must appear in that block (whitespace, case and typographic quotes/dashes ignored; `...` elisions allowed). Other quote fields must appear in some retrieved block. A failure adds the diagnostic flag `unverified_quote` and is listed in the verdict's `quote_check`; the citation's page and chunk ID come from the cited block, never from the model.
 - Embedding calls have bounded retry with exponential backoff (`_get_embeddings_with_retry` in [src/indexing/pinecone_ops.py](src/indexing/pinecone_ops.py))
 - Retrieval failures are contained per query — one failed query does not abort the dimension
 - The no-evidence path never calls the model; the fallback rating comes from the dimension's explicit `no_evidence_rating`, never from parsing prose
-- **A verdict that is not a finding is visibly marked.** `no_evidence`, `parse_error`, `analysis_error`, `inconclusive` (the model said the rubric's required evidence was missing) and `invalid_rating` reach the report as `degraded_dimensions`, and `report["trustworthy"]` is `False` whenever any are present. Check that field before believing any rating.
+- **A verdict that is not a finding is visibly marked.** `no_evidence`, `parse_error`, `analysis_error`, `inconclusive` (the model said the rubric's required evidence was missing), `invalid_rating`, `refusal` (the model declined) and `truncated` (cut off at `max_tokens`) reach the report as `degraded_dimensions`, and `report["trustworthy"]` is `False` whenever any are present. Check that field before believing any rating. `raw_verdict` keeps the model's own answer (e.g. INCONCLUSIVE) where `rating` coerces it.
+- Refusals fall back server-side (`fallbacks: "default"`); a verdict answered by another model carries `model_fallback`, and `served_model` names the model that answered.
+- LangSmith tracing uploads prompts, including filing text, so `src/config.py` turns it off unless `LANGCHAIN_TRACING_V2=true` *and* a real `LANGCHAIN_API_KEY` is set.
 
 **Targets, not yet implemented** — do not assume these when reading the code:
 
 - ⚠️ *"Anything else fails closed."* Unparseable output and exhausted retries still fail **open** to `MEDIUM` rather than rejecting — but they are now flagged and surfaced via `degraded_dimensions`, so the failure is visible even though the rating is still emitted.
 - ❌ *Model routing* — every call goes to `LLM_MODEL`; there is no cheap model for retrieval or query construction.
-- ❌ *Token logging per node* — no token accounting anywhere.
+- ⚠️ *Token logging per node* — each verdict records its call's `usage` and the report sums it as `usage_total`; no cost accounting yet.
 - ❌ *MLflow* — not imported anywhere yet.
 
 ## Model versions
 
 | Role | Setting | Current value |
 |---|---|---|
-| Rubric judgment (Analysis Agent) | `LLM_MODEL` | `gemini-3.8-flash` (set 2026-10-01; `gemini-2.0-flash` was retired and returns 404) |
-| Embeddings | `EMBEDDING_PROVIDER` | `local` — sentence-transformers, `EMBEDDING_DIMENSION=1024` |
+| Rubric judgment (Analysis Agent) | `LLM_MODEL`, `LLM_EFFORT` | `claude-sonnet-5-5` at effort `high`, via the official `anthropic` SDK (set 2026-10-18; replaced `gemini-3.8-flash`, whose free tier allowed 20 calls a day) |
+| Embeddings | `EMBEDDING_PROVIDER`, `LOCAL_EMBEDDING_MODEL` | `local` — sentence-transformers `BAAI/bge-m3`, `EMBEDDING_DIMENSION=1024` (the code defaults match; the index was built with them) |
 | Embeddings (unused while provider is `local`) | `EMBEDDING_MODEL` | `models/gemini-embedding-001` |
 
-Do not use Gemini 1.5 — deprecated for this project's purposes and reads as stale. Verify `LLM_MODEL` against Google's current lineup before the first MLflow experiment; a stale model ID is one of the few things that silently devalues the whole result.
-
-⚠️ **Known bug with the current model:** it returns `response.content` as a list of content blocks (`[{'type': 'text', 'text': ...}]`), not a string. `analysis_agent` still does `str(response.content)`, so every real verdict currently comes out as a flagged `parse_error`. Fix before any evaluation run.
+**There is no temperature setting.** Claude Sonnet 5.5 rejects a non-default temperature, so two runs of the same filing can disagree; measure repeat-run agreement before reading a single run's verdict as stable. Thinking is adaptive (on), and the answer is read from the response's `text` block only. `config.validate_llm_config()` refuses a non-Claude `LLM_MODEL`. Verify `LLM_MODEL` against Anthropic's current lineup before the first MLflow experiment; a stale model ID is one of the few things that silently devalues the whole result.
 
 See Conventions above for which of this file's stated practices are implemented and which are still targets.
