@@ -2,9 +2,14 @@
 End-to-end indexing pipeline runner.
 
 Runs, per filing:
-  parser.py (Docling) -> chunker.py (HybridChunker) -> post_process.py -> pinecone_ops.py
+  parser.py (Docling) -> chunker.py (HybridChunker) -> post_process.py
+  -> data/parsed/{stem}_processed.json -> pinecone_ops.py
 
-Runs fully in-memory and only writes per-run JSONL status logs.
+The processed-chunk file is the exact list that is upserted: chunk i in it is
+vector `{stem}_chunk_{i}`.  Anything that needs a chunk's text by ID (quote
+checks, golden chunks) reads that file, so it must always describe the index.
+The namespace is cleared before upserting and the vector count is checked
+after.  A per-run JSONL status log is written under logs/.
 """
 
 from __future__ import annotations
@@ -22,7 +27,11 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from src import config  # noqa: E402
 from src.indexing.chunker import chunk_document  # noqa: E402
 from src.indexing.parser import parse_pdf  # noqa: E402
-from src.indexing.pinecone_ops import upsert_chunks  # noqa: E402
+from src.indexing.pinecone_ops import (  # noqa: E402
+    clear_namespace,
+    upsert_chunks,
+    wait_for_vector_count,
+)
 from src.indexing.post_process import post_process  # noqa: E402
 
 _log = logging.getLogger(__name__)
@@ -38,6 +47,8 @@ def _new_run_record(source_document: str, pdf_path: Path) -> dict:
         "status": "unknown",
         "upserted": 0,
         "processed_chunks": 0,
+        "index_vector_count": None,
+        "processed_path": None,
         "failed_step": None,
         "error": None,
         "error_type": None,
@@ -106,6 +117,21 @@ def _append_run_log_record(log_path: Path, record: dict) -> None:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def processed_chunks_path(source_document: str) -> Path:
+    """Where the chunks indexed for a filing are kept."""
+    return config.PARSED_DIR / f"{source_document}_processed.json"
+
+
+def _persist_processed_chunks(chunks: list[dict], source_document: str) -> Path:
+    """Write the chunk list about to be upserted, atomically."""
+    out_path = processed_chunks_path(source_document)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = out_path.with_suffix(".json.tmp")
+    tmp_path.write_text(json.dumps(chunks, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp_path.replace(out_path)
+    return out_path
+
+
 def _validate_chunks(chunks: list[dict], source_document: str, stage: str) -> None:
     """Validate minimal chunk schema before downstream processing/upsert."""
     for idx, chunk in enumerate(chunks):
@@ -150,6 +176,12 @@ def run_for_filing(
         processed = post_process(raw_chunks, min_chars=min_chars)
         processed_count = len(processed)
 
+        step_name = "persist"
+        rec["processed_path"] = str(_persist_processed_chunks(processed, source_document))
+
+        step_name = "clear_namespace"
+        clear_namespace(namespace)
+
         step_name = "upsert"
         _log.info(
             "Upserting %s (%s chunks) to namespace '%s'",
@@ -173,6 +205,21 @@ def run_for_filing(
             upserted=upserted,
             processed_chunks=processed_count,
         )
+
+        # The upsert acknowledgement counts what was sent; the index count is
+        # what retrieval will actually search.
+        step_name = "verify"
+        index_count = wait_for_vector_count(namespace, processed_count)
+        rec["index_vector_count"] = index_count
+        if index_count != processed_count:
+            rec["status"] = "mismatch"
+            _log.warning(
+                "%s: namespace '%s' holds %s vectors, expected %s",
+                source_document,
+                namespace,
+                index_count,
+                processed_count,
+            )
         return rec
     except Exception as e:
         rec["status"] = "failed"

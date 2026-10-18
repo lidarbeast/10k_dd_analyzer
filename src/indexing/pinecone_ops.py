@@ -1,8 +1,9 @@
 """
 Pinecone operations for the M&A Due Diligence Analyzer.
 
-Uses Google text-embedding-004 (768-dim) for dense embeddings and
-Pinecone serverless for vector storage with heading-based metadata.
+Dense embeddings come from the configured provider (local sentence-transformers
+by default, or the Gemini embedding API) and are stored in Pinecone serverless,
+one namespace per filing, with heading and page metadata.
 """
 
 import json
@@ -17,6 +18,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from google import genai                  # noqa: E402
 from pinecone import Pinecone, ServerlessSpec  # noqa: E402
+from pinecone.exceptions import NotFoundException  # noqa: E402
 
 from src import config                    # noqa: E402
 
@@ -55,7 +57,15 @@ def _get_local_embedder():
                 "Install dependencies (pip install -r requirements.txt) "
                 "or set EMBEDDING_PROVIDER=google."
             ) from e
-        _local_embedder = SentenceTransformer(config.LOCAL_EMBEDDING_MODEL)
+        embedder = SentenceTransformer(config.LOCAL_EMBEDDING_MODEL)
+        model_dim = embedder.get_sentence_embedding_dimension()
+        if model_dim is not None and int(model_dim) != _embedding_dimension():
+            raise RuntimeError(
+                f"LOCAL_EMBEDDING_MODEL={config.LOCAL_EMBEDDING_MODEL!r} produces "
+                f"{model_dim}-dim vectors, but EMBEDDING_DIMENSION="
+                f"{config.EMBEDDING_DIMENSION}. They must match the index."
+            )
+        _local_embedder = embedder
     return _local_embedder
 
 
@@ -219,6 +229,43 @@ def init_pinecone():
             _log.debug("Could not validate existing Pinecone index dimension.")
 
     return _pinecone_client.Index(index_name)
+
+
+def namespace_vector_count(namespace: str) -> int:
+    """Number of vectors Pinecone reports for a namespace (0 if it doesn't exist)."""
+    stats = init_pinecone().describe_index_stats()
+    summary = (stats.namespaces or {}).get(namespace)
+    return int(summary.vector_count) if summary is not None else 0
+
+
+def clear_namespace(namespace: str) -> None:
+    """Delete every vector in a namespace before it is re-indexed.
+
+    Upsert overwrites by ID, so re-indexing a filing that now yields fewer
+    chunks would otherwise leave the old higher-numbered chunks in place,
+    still retrievable but matching nothing on disk.
+    """
+    if not namespace:
+        raise ValueError("Refusing to clear the default (empty) namespace")
+    try:
+        init_pinecone().delete(delete_all=True, namespace=namespace)
+        _log.info("Cleared namespace '%s'", namespace)
+    except NotFoundException:
+        _log.info("Namespace '%s' did not exist; nothing to clear", namespace)
+
+
+def wait_for_vector_count(namespace: str, expected: int, timeout_seconds: float = 90.0) -> int:
+    """Poll until the namespace reports `expected` vectors or the timeout passes.
+
+    Serverless index stats are eventually consistent, so a count read
+    straight after an upsert can lag.  Returns the last count seen.
+    """
+    deadline = time.monotonic() + timeout_seconds
+    count = namespace_vector_count(namespace)
+    while count != expected and time.monotonic() < deadline:
+        time.sleep(3.0)
+        count = namespace_vector_count(namespace)
+    return count
 
 
 # ── Upsert ───────────────────────────────────────────────────
@@ -427,7 +474,11 @@ def build_index(input_path: Path | None = None) -> None:
 
         source_doc = chunks[0].get("source_document", path.stem.replace("_processed", ""))
         _log.info(f"  {source_doc}: {len(chunks)} chunks → upserting to namespace '{source_doc}'")
+        clear_namespace(source_doc)
         upsert_chunks(chunks, namespace=source_doc)
+        count = wait_for_vector_count(source_doc, len(chunks))
+        if count != len(chunks):
+            _log.warning(f"  {source_doc}: namespace holds {count} vectors, expected {len(chunks)}")
 
     _log.info("Index build complete.")
 
