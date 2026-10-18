@@ -17,7 +17,11 @@ load_dotenv()
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 FILINGS_DIR = DATA_DIR / "filings"
-DIMENSIONS_DIR = DATA_DIR / "dimensions"
+# Rubrics are versioned by directory.  Once an experiment has run against a
+# version, that directory is frozen; a rubric change means a new directory
+# (and a new MLflow experiment), never an edit in place.
+RUBRIC_VERSION = os.getenv("RUBRIC_VERSION", "v1")
+DIMENSIONS_DIR = DATA_DIR / "dimensions" / RUBRIC_VERSION
 GROUND_TRUTH_DIR = DATA_DIR / "ground_truth"
 PARSED_DIR = DATA_DIR / "parsed"
 REPORTS_DIR = DATA_DIR / "reports"

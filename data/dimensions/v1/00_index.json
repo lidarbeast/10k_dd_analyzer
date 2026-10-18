@@ -1,0 +1,133 @@
+{
+  "project": "M&A Due Diligence Analyzer",
+  "version": "4.0",
+  "last_updated": "2026-10-08",
+  "plan_version": "v6 — four dimensions (D1, D2, D3, D5); D4 retired to archive/",
+  "design_principles": {
+    "agent_configs": "Dimension config files are general-purpose. They encode regulatory frameworks, evidence logic, and rubric thresholds. They contain NO company-specific content — no named entities, no example companies, no ground truth labels. They are loaded by the Analysis Agent and must work on any 10-K.",
+    "ground_truth": "labels.json is used ONLY by the evaluation harness. It must never be passed to the Analysis Agent as context. It contains the labeled examples (3 companies x 4 dimensions = 12, or 16 if a fourth company is added), key evidence descriptions, and evaluation notes.",
+    "separation_rationale": "Mixing ground truth into agent configs would bias the agent toward the test companies and produce inflated accuracy scores that do not generalize."
+  },
+  "agent_facing_files": [
+    {
+      "file": "d1_financial_health.json",
+      "name": "Financial Health",
+      "primary_source": "Altman Z″ (Altman, Hartzell & Peck 1995; restated Altman 2000)",
+      "mandatory_items": [
+        "Item 8 Balance Sheet",
+        "Item 8 Statement of Operations"
+      ],
+      "retrieval_queries_count": 3,
+      "alternate_queries_count": 3,
+      "key_design_note": "Verdict is the Z″ zone only: HIGH < 1.10, MEDIUM 1.10–2.60, LOW > 2.60. Same rule as the D1 label computed from XBRL. Inputs come from the registrant's primary statements only and are identified by position, not caption; derivations limited to three identities (uncaptioned subtotal, total liabilities = total L&E − equity, EBIT fallbacks); balance-sheet check required. Missing inputs, unclassified balance sheet or failed check give INCONCLUSIVE."
+    },
+    {
+      "file": "d2_going_concern.json",
+      "name": "Going Concern",
+      "primary_source": "PCAOB AS 2415 + FASB ASC 205-40 (ASU 2014-15)",
+      "mandatory_items": [
+        "Auditor's Report on the financial statements",
+        "Item 8 Note 1 / going concern note, or its MD&A repetition"
+      ],
+      "retrieval_queries_count": 3,
+      "alternate_queries_count": 3,
+      "key_design_note": "Three levels follow ASC 205-40's three outcomes: HIGH = substantial doubt exists (AS 2415 paragraph, or management's 50-13 statement in the notes or MD&A) or Chapter 11 DIP at the filing date; MEDIUM = management says doubt was raised and alleviated (50-12), in those words; LOW = neither, with a passage from the auditor's report on the financial statements retrieved. Passages are classified by their concluding sentence. Liquidity is not rated here."
+    },
+    {
+      "file": "d3_legal_regulatory_exposure.json",
+      "name": "Legal & Regulatory Exposure",
+      "sp_framework": "Business Risk Profile — regulatory and litigation subfactor",
+      "primary_source": "17 CFR §229.103 (Reg S-K Item 103) as amended Nov 9 2020 + FASB ASC 450-20",
+      "mandatory_items": [
+        "Item 8 Commitments and Contingencies note (legal / litigation section)",
+        "Item 3",
+        "Item 1A (named investigations)"
+      ],
+      "retrieval_queries_count": 3,
+      "alternate_queries_count": 3,
+      "key_design_note": "Matters are listed in the contingencies note; Item 3 usually only refers to it. HIGH = named government party with a sanction, named federal investigation, or accrual for a specific legal proceeding; MEDIUM = specific unaccrued matter (ASC 450-20-50-3/50-4), named informal inquiry, or unaccrued claim > 10% of current assets; LOW = no specific matter, with the note's legal section retrieved; else INCONCLUSIVE. Scope: pending at year-end or resolved in-year with a loss."
+    },
+    {
+      "file": "d5_internal_controls.json",
+      "name": "Internal Controls",
+      "primary_source": "SEC S-K Item 308 + PCAOB AS 2201",
+      "mandatory_items": [
+        "Item 9A",
+        "Auditor's Report on ICFR"
+      ],
+      "retrieval_queries_count": 3,
+      "alternate_queries_count": 3,
+      "key_design_note": "HIGH = management 'not effective' or adverse AS 2201 opinion; MEDIUM = effective at year-end after remediating a previously reported material weakness during the year; LOW = effective, no remediation. Never sourced from Item 1A; Item 106 cybersecurity is not rated."
+    }
+  ],
+  "evaluator_facing_files": [
+    {
+      "file": "labels.json",
+      "description": "Labeled test set (3 companies x 4 dimensions = 12; 16 if a fourth company is added) with key evidence descriptions, verbatim source passages with page numbers, hardest verdict annotations, false positive trap warnings, and EDGAR XBRL URLs for Z-Score computation. NEVER passed to the Analysis Agent."
+    }
+  ],
+  "retrieval_config": {
+    "embedding_provider": "local (sentence-transformers), configurable via EMBEDDING_PROVIDER",
+    "embedding_model": "set by LOCAL_EMBEDDING_MODEL; EMBEDDING_DIMENSION=1024",
+    "vector_store": "Pinecone serverless free tier",
+    "chunk_strategy": "Docling HybridChunker, tokenizer aligned to the local embedding model",
+    "confidence_threshold": 0.6,
+    "confidence_threshold_note": "Global default from CONFIDENCE_THRESHOLD. Individual dimensions may override via an optional confidence_floor field; none currently set.",
+    "retrieval_hard_floor": 0.35,
+    "retrieval_hard_floor_note": "Below this max score after retry, the Retrieval Agent returns no chunks and the Analysis Agent applies no_evidence_rating instead of calling the model.",
+    "retry_on_low_confidence": true,
+    "reranker": "NOT IMPLEMENTED — planned (plan v6 step 4). When added, hard floor and confidence threshold must be recalibrated: reranker scores are not on the cosine scale.",
+    "section_type_filter": false,
+    "section_types": [
+      "item_1",
+      "item_1a",
+      "item_3",
+      "item_7",
+      "item_8",
+      "item_9a",
+      "auditor_report",
+      "footnotes"
+    ],
+    "section_filter_mode": "soft",
+    "section_filter_note": "Retrieval is section-aware but not section-exclusive. Each dimension config specifies target_sections as preferred retrieval anchors for Pinecone metadata scoring/boosting, but all sections of the filing remain eligible for retrieval. This is necessary because: (1) EDGAR HTML-rendered PDFs have imprecise section boundaries and chunks may be mis-labeled; (2) material evidence for a dimension often appears outside its primary Item (e.g. D3 civil penalty accruals in Item 8 footnotes; D5 ICFR auditor opinion embedded in Item 8 rather than Item 9A; D2 management going-concern disclosure in Item 8 notes). Section metadata should be used to RANK retrieved chunks, not to EXCLUDE them.",
+    "section_boost_weight": 0.2,
+    "section_boost_note": "Apply a +0.2 score boost to chunks whose section metadata matches the dimension's target_sections list. Do not apply a penalty or exclusion to non-matching chunks.",
+    "section_boost_status": "INERT — target_sections are matched against chunk headings, but Docling emits only local headings (e.g. 'Business Overview', 'Stock-Based Compensation') with no section ancestry, so almost no chunk ever matches and the boost effectively never fires. Costs D2 most: auditor_report and footnotes never boost. Fix requires a derived 'sections' field computed in post_process.py. Deferred.",
+    "retrieval_mode": "dense only. CLAUDE.md's architecture describes hybrid dense + BM25; BM25 is not implemented."
+  },
+  "evaluation_config": {
+    "primary_metric": "rating_accuracy",
+    "target_accuracy": 0.75,
+    "secondary_metrics": [
+      "evidence_recall",
+      "retrieval_retry_rate",
+      "avg_retrieval_confidence"
+    ],
+    "target_evidence_recall": 0.7,
+    "target_retry_rate_below": 0.2,
+    "target_avg_confidence_above": 0.8,
+    "tracking": "MLflow local server",
+    "baseline": "majority_class_accuracy",
+    "baseline_note": "Report each dimension's rating_accuracy beside its majority-class baseline: the accuracy of always answering that dimension's most common label, computed from labels.json. With three examples per dimension a constant answer can match the agent, so an accuracy figure without its baseline is not interpretable.",
+    "dimension_reporting_notes": {
+      "d2_going_concern": "No portfolio filing has an auditor's going-concern paragraph, a statement that substantial doubt exists, or Chapter 11 status, so D2 on this portfolio has no HIGH case. Until a scored filing with a going-concern conclusion is added, report D2 results as testing false-alarm resistance and evidence discipline (LOW only when a passage from the auditor's report on the financial statements was retrieved; otherwise INCONCLUSIVE); detection is not yet tested, and is meant to be tested later. The held-out development filing exercises detection but cannot be scored. See docs/findings/d2_filing_survey.md."
+    }
+  },
+  "sources_index": {
+    "FASB ASU 2014-15 (ASC 205-40)": "https://storage.fasb.org/ASU%202014-15.pdf",
+    "KPMG Going Concern Handbook 2024": "https://kpmg.com/kpmg-us/content/dam/kpmg/frv/pdf/2024/handbook-going-concern.pdf",
+    "SEC S-K Modernization Adopting Release (Items 101 and 103)": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+    "SEC S-K Compliance Guide": "https://www.sec.gov/resources-small-businesses/small-business-compliance-guides/modernization-regulation-s-k-items-101-103-105-small-entity-compliance-guide",
+    "PCAOB AS 2201": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2201",
+    "SOX Section 404 adopting release": "https://www.sec.gov/rules/final/2003/33-8238.pdf",
+    "SEC FR-72 (Release 33-8350, 2003)": "https://www.sec.gov/rules-regulations/2003/12/commission-guidance-regarding-managements-discussion-analysis-financial-condition-results-operations",
+    "SEC S-K Item 105 (Release 33-10825, 2020)": "https://www.sec.gov/files/rules/final/2020/33-10825.pdf",
+    "PCAOB AS 2415 Going Concern": "https://pcaobus.org/oversight/standards/auditing-standards/details/AS2415",
+    "Altman (2000) Z-score and ZETA revisited": "http://web.archive.org/web/20240808125843/https://pages.stern.nyu.edu/~ealtman/PredFnclDistr.pdf",
+    "Altman (2018) Z-score retrospective": "https://mebfaber.com/wp-content/uploads/2020/11/Altman_Z_score_models_final.pdf",
+    "SEC S-K Item 103": "https://www.law.cornell.edu/cfr/text/17/229.103",
+    "SEC S-K Item 308": "https://www.law.cornell.edu/cfr/text/17/229.308"
+  },
+  "rubric_version": "v1",
+  "versioning": "This directory is rubric version v1. Freeze it when the first MLflow experiment runs against it; after that, any rubric change goes in a new version directory with a new experiment."
+}
