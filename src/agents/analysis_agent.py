@@ -253,6 +253,26 @@ def _build_dimension_guidance(dimension: dict) -> str:
             lines.append("### Cross-Section Evidence Checks")
             lines.extend(cross_section)
 
+        # A boilerplate entry's quoted wording is its point, so unlike a guard
+        # its "pattern" field is rendered.
+        boilerplate = [
+            f'- "{_collapse_ws(item["pattern"])}": {_collapse_ws(item["classification"])}. '
+            f'{_collapse_ws(item["explanation"])}'
+            for item in (evidence_schema.get("boilerplate_low_patterns") or [])[:_MAX_GUIDANCE_ITEMS]
+        ]
+        if boilerplate:
+            if not lines:
+                lines.append("## Dimension Guidance")
+            lines.append("### Boilerplate Language")
+            lines.extend(boilerplate)
+
+        temporal_scope_note = evidence_schema.get("temporal_scope_note")
+        if isinstance(temporal_scope_note, str) and temporal_scope_note.strip():
+            if not lines:
+                lines.append("## Dimension Guidance")
+            lines.append("### Temporal Scope")
+            lines.append(f"- {_collapse_ws(temporal_scope_note)}")
+
         # String-valued note (not a list) — helps the model recognise how the
         # evidence actually names things (e.g. "Senior Notes"/"Term Loan" rather
         # than "long-term debt"), so it must reach analysis, not just retrieval.

@@ -24,6 +24,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src import config
+from src.agents import analysis_agent
 
 PORTFOLIO_COMPANIES = ("carvana", "peloton", "shopify", "revlon")
 
@@ -188,3 +189,23 @@ def test_output_schemas_are_strict() -> None:
 
     for name, spec in _raw_configs().items():
         walk(spec["output_schema"], name)
+
+
+def test_every_evidence_schema_field_reaches_the_prompt() -> None:
+    """A field `_build_dimension_guidance` has no case for is silently dropped:
+    D3's boilerplate patterns and temporal note were, until 2026-11-10."""
+    rendered = {
+        "primary_signals", "corroborating_signals", "absence_signals", "false_positive_guards",
+        "cross_section_evidence", "terminology_note", "debt_terminology_note",
+        "boilerplate_low_patterns", "temporal_scope_note",
+    }
+    for name, spec in _raw_configs().items():
+        unrendered = set(spec["evidence_schema"]) - rendered
+        assert not unrendered, f"{name}: {sorted(unrendered)} never reach the prompt"
+
+
+def test_d3_boilerplate_and_temporal_guidance_rendered() -> None:
+    spec = _raw_configs()["d3_legal_regulatory_exposure.json"]
+    guidance = analysis_agent._build_dimension_guidance(spec)
+    assert "From time to time, we may be subject to legal proceedings" in guidance
+    assert "Do not import knowledge from outside the filing text" in guidance
