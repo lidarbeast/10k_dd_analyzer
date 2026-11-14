@@ -25,12 +25,34 @@ HEADING = "REPORT OF INDEPENDENT REGISTERED PUBLIC ACCOUNTING FIRM"
 
 
 def _fs_report(tenure_first: bool = True) -> str:
-    end = (["/s/ AUDITOR LLP", "We have served as the Company's auditor since 2015.", "Springfield, Ohio", "March 1, 2024"]
-           if tenure_first else
-           ["/s/ AUDITOR LLP", "Springfield, Ohio", "March 1, 2024", "We have served as the Company's auditor since 2011."])
-    return "\n".join([HEADING, "Opinion on the Financial Statements", "In our opinion...", "Going Concern",
-                      "These conditions raise substantial doubt about its ability to continue as a going concern.",
-                      "Basis for Opinion", "..."] + end + ["77"])
+    end = (
+        [
+            "/s/ AUDITOR LLP",
+            "We have served as the Company's auditor since 2015.",
+            "Springfield, Ohio",
+            "March 1, 2024",
+        ]
+        if tenure_first
+        else [
+            "/s/ AUDITOR LLP",
+            "Springfield, Ohio",
+            "March 1, 2024",
+            "We have served as the Company's auditor since 2011.",
+        ]
+    )
+    return "\n".join(
+        [
+            HEADING,
+            "Opinion on the Financial Statements",
+            "In our opinion...",
+            "Going Concern",
+            "These conditions raise substantial doubt about its ability to continue as a going concern.",
+            "Basis for Opinion",
+            "...",
+        ]
+        + end
+        + ["77"]
+    )
 
 
 def test_report_runs_from_heading_to_tenure_and_date() -> None:
@@ -52,17 +74,30 @@ def test_report_ending_with_tenure_line_after_date() -> None:
 
 
 def test_icfr_report_and_reference_only_heading_are_separated() -> None:
-    icfr = "\n".join([HEADING, "Opinion on Internal Control Over Financial Reporting", "...",
-                      "We have served as the Company's auditor since 2015."])
-    reference = f"{HEADING}\nOur auditor has issued a report on internal control, included in Item 8."
+    icfr = "\n".join(
+        [
+            HEADING,
+            "Opinion on Internal Control Over Financial Reporting",
+            "...",
+            "We have served as the Company's auditor since 2015.",
+        ]
+    )
+    reference = (
+        f"{HEADING}\nOur auditor has issued a report on internal control, included in Item 8."
+    )
     reports, skipped = d2.find_auditor_reports(join_pages([_fs_report(), icfr, reference]))
-    assert [(r.covers_financial_statements, r.covers_icfr) for r in reports] == [(True, False), (False, True)]
+    assert [(r.covers_financial_statements, r.covers_icfr) for r in reports] == [
+        (True, False),
+        (False, True),
+    ]
     assert skipped == [3]
 
 
 def test_going_concern_terms_skip_ongoing_concern() -> None:
-    pages = ["This is an ongoing concern for management.",
-             "The statements contemplate continuation as a going concern. Conditions raise substantial doubt."]
+    pages = [
+        "This is an ongoing concern for management.",
+        "The statements contemplate continuation as a going concern. Conditions raise substantial doubt.",
+    ]
     hits = d2.going_concern_sentences(pages)
     assert [p for p, _ in hits] == [2, 2]
 
@@ -72,7 +107,10 @@ def test_notes_subsection_stops_at_next_note_across_a_page_break() -> None:
     notes_page2 = "ACME CORP AND SUBSIDIARIES\nNOTES TO CONSOLIDATED FINANCIAL STATEMENTS\n(Continued)\nStill basis text.\n2. Summary of Significant Accounting Policies\nCash."
     text = join_pages([_fs_report(), notes_page1, notes_page2])
     reports, _ = d2.find_auditor_reports(text)
-    spans = [(text.index(r.section.text), text.index(r.section.text) + len(r.section.text)) for r in reports]
+    spans = [
+        (text.index(r.section.text), text.index(r.section.text) + len(r.section.text))
+        for r in reports
+    ]
     notes = d2.find_notes_subsections(text, spans[0][0], spans)
     assert len(notes) == 1
     assert "Still basis text." in notes[0].text
@@ -82,7 +120,10 @@ def test_notes_subsection_stops_at_next_note_across_a_page_break() -> None:
 def test_going_concern_heading_inside_report_is_not_a_notes_subsection() -> None:
     text = join_pages([_fs_report()])
     reports, _ = d2.find_auditor_reports(text)
-    spans = [(text.index(r.section.text), text.index(r.section.text) + len(r.section.text)) for r in reports]
+    spans = [
+        (text.index(r.section.text), text.index(r.section.text) + len(r.section.text))
+        for r in reports
+    ]
     assert d2.find_notes_subsections(text, 0, spans) == []
 
 
@@ -132,6 +173,7 @@ def test_held_out_filing_going_concern_paragraphs_are_captured() -> None:
 def test_builders_refuse_to_overwrite_a_worksheet(builder, tmp_path, monkeypatch) -> None:
     """A worksheet on disk may hold a human's labels; rebuilding must not erase it silently."""
     from src.evaluation import d3_worksheets as d3
+
     mod = {"d2": d2, "d3": d3}[builder]
     company = sorted(mod.PORTFOLIO)[0]
     if not (config.FILINGS_DIR / mod.PORTFOLIO[company]["filing"]).exists():

@@ -27,7 +27,7 @@ def _joined(*pages: str) -> str:
 
 def test_item3_skips_table_of_contents_and_stops_at_item4() -> None:
     text = _joined(
-        "Item 3. Legal Proceedings\nItem 4. Mine Safety Disclosures",   # table of contents
+        "Item 3. Legal Proceedings\nItem 4. Mine Safety Disclosures",  # table of contents
         "Item 3. Legal Proceedings\nWe are party to X v. Co.",
         "continued text\nItem 4. Mine Safety Disclosures\nNot applicable.",
     )
@@ -39,7 +39,11 @@ def test_item3_skips_table_of_contents_and_stops_at_item4() -> None:
 
 
 def test_item3_heading_variants() -> None:
-    for heading in ("ITEM 3. LEGAL PROCEEDINGS.", "Item 3: Legal Proceedings", "Item 3. Legal Proceedings"):
+    for heading in (
+        "ITEM 3. LEGAL PROCEEDINGS.",
+        "Item 3: Legal Proceedings",
+        "Item 3. Legal Proceedings",
+    ):
         assert ws.find_item3(_joined(f"{heading}\nbody\nItem 4. Mine Safety")) is not None
 
 
@@ -55,7 +59,9 @@ def test_contingencies_note_stops_at_next_note_number() -> None:
 
 
 def test_contingencies_note_em_dash_heading_and_item9_fallback() -> None:
-    text = _joined("NOTE 21 — COMMITMENTS AND CONTINGENCIES\nLast note.\nITEM 9. CHANGES IN AND DISAGREEMENTS")
+    text = _joined(
+        "NOTE 21 — COMMITMENTS AND CONTINGENCIES\nLast note.\nITEM 9. CHANGES IN AND DISAGREEMENTS"
+    )
     section = ws.find_contingencies_note(text)
     assert section is not None and "Last note." in section.text and "CHANGES IN" not in section.text
 
@@ -69,14 +75,20 @@ def test_missing_sections_are_reported_not_guessed() -> None:
 def test_current_assets_labeled_line() -> None:
     page = "Consolidated Balance Sheets\n(In millions)\nCash 10 9\nTotal current assets 4,594 4,892\nTotal assets 9 9"
     found = ws.find_current_assets(["cover", page])
-    assert found == {"page": 2, "line": "Total current assets 4,594 4,892",
-                     "units": "(In millions)", "unlabeled_subtotal": False}
+    assert found == {
+        "page": 2,
+        "line": "Total current assets 4,594 4,892",
+        "units": "(In millions)",
+        "unlabeled_subtotal": False,
+    }
 
 
 def test_current_assets_unlabeled_subtotal() -> None:
-    page = ("Consolidated Balance Sheets\n(In US $ millions, except share amounts)\nAssets\nCurrent assets\n"
-            "Cash and cash equivalents 1,545 1,498\nOther current assets 234 209\n8,296 7,254\n"
-            "Long-term assets\nTotal assets 15,189 13,924")
+    page = (
+        "Consolidated Balance Sheets\n(In US $ millions, except share amounts)\nAssets\nCurrent assets\n"
+        "Cash and cash equivalents 1,545 1,498\nOther current assets 234 209\n8,296 7,254\n"
+        "Long-term assets\nTotal assets 15,189 13,924"
+    )
     found = ws.find_current_assets([page])
     assert found is not None and found["unlabeled_subtotal"] is True
     assert found["line"].splitlines()[-1] == "8,296 7,254"

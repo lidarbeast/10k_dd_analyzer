@@ -23,15 +23,25 @@ from src import config
 from src.agents import analysis_agent
 
 
-def _response(text: str = "", *, finish: str = "STOP", block: str | None = None, thought: str | None = None):
+def _response(
+    text: str = "", *, finish: str = "STOP", block: str | None = None, thought: str | None = None
+):
     parts = []
     if thought is not None:
         parts.append(SimpleNamespace(text=thought, thought=True))
     parts.append(SimpleNamespace(text=text, thought=None))
     return SimpleNamespace(
-        candidates=[SimpleNamespace(content=SimpleNamespace(parts=parts), finish_reason=SimpleNamespace(name=finish))],
-        prompt_feedback=SimpleNamespace(block_reason=SimpleNamespace(name=block)) if block else None,
-        usage_metadata=SimpleNamespace(prompt_token_count=900, candidates_token_count=200, thoughts_token_count=50),
+        candidates=[
+            SimpleNamespace(
+                content=SimpleNamespace(parts=parts), finish_reason=SimpleNamespace(name=finish)
+            )
+        ],
+        prompt_feedback=SimpleNamespace(block_reason=SimpleNamespace(name=block))
+        if block
+        else None,
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=900, candidates_token_count=200, thoughts_token_count=50
+        ),
         model_version="gemini-3.8-flash-001",
     )
 
@@ -52,20 +62,37 @@ class _FakeModels:
 @contextlib.contextmanager
 def _patched(responder, *, max_retries: int = 1):
     models = _FakeModels(responder)
-    saved = (analysis_agent._get_gemini_client, config.LLM_MODEL, config.LLM_MAX_RETRIES, config.LLM_RETRY_BASE_SECONDS)
+    saved = (
+        analysis_agent._get_gemini_client,
+        config.LLM_MODEL,
+        config.LLM_MAX_RETRIES,
+        config.LLM_RETRY_BASE_SECONDS,
+    )
     analysis_agent._get_gemini_client = lambda: SimpleNamespace(models=models)
-    config.LLM_MODEL, config.LLM_MAX_RETRIES, config.LLM_RETRY_BASE_SECONDS = "gemini-3.8-flash", max_retries, 0.0
+    config.LLM_MODEL, config.LLM_MAX_RETRIES, config.LLM_RETRY_BASE_SECONDS = (
+        "gemini-3.8-flash",
+        max_retries,
+        0.0,
+    )
     try:
         yield models
     finally:
-        analysis_agent._get_gemini_client, config.LLM_MODEL, config.LLM_MAX_RETRIES, config.LLM_RETRY_BASE_SECONDS = saved
+        (
+            analysis_agent._get_gemini_client,
+            config.LLM_MODEL,
+            config.LLM_MAX_RETRIES,
+            config.LLM_RETRY_BASE_SECONDS,
+        ) = saved
 
 
 def _dimension(**overrides) -> dict:
     return {
         "dimension_id": "test_dimension",
         "name": "Test",
-        "prompt_template": {"system": "sys", "user_template": "Evaluate {company_name}.\n{retrieved_chunks}"},
+        "prompt_template": {
+            "system": "sys",
+            "user_template": "Evaluate {company_name}.\n{retrieved_chunks}",
+        },
         **overrides,
     }
 
@@ -74,7 +101,15 @@ def _analyze(dim=None):
     return analysis_agent.analyze_dimension(
         dimension=dim or _dimension(),
         company_name="TestCo",
-        retrieved_chunks=[{"id": "x_chunk_1", "text": "net loss of $1.2B", "headings": ["Item 7"], "source_page": 5, "score": 0.8}],
+        retrieved_chunks=[
+            {
+                "id": "x_chunk_1",
+                "text": "net loss of $1.2B",
+                "headings": ["Item 7"],
+                "source_page": 5,
+                "score": 0.8,
+            }
+        ],
         retrieval_score=0.8,
         retrieval_attempts=1,
     )
@@ -99,7 +134,7 @@ def test_request_carries_schema_system_and_temperature() -> None:
     assert request["config"]["temperature"] == config.LLM_TEMPERATURE
     assert request["config"]["response_mime_type"] == "application/json"
     assert request["config"]["response_json_schema"] == schema
-    assert "<evidence id=\"E1\"" in request["contents"]
+    assert '<evidence id="E1"' in request["contents"]
 
 
 def test_answer_skips_thought_parts_and_records_usage() -> None:
@@ -134,7 +169,11 @@ def test_per_minute_rate_limit_is_retried() -> None:
 
     def flaky(request):
         calls["n"] += 1
-        return _error(429, "GenerateRequestsPerMinutePerProjectPerModel-FreeTier") if calls["n"] == 1 else _payload()
+        return (
+            _error(429, "GenerateRequestsPerMinutePerProjectPerModel-FreeTier")
+            if calls["n"] == 1
+            else _payload()
+        )
 
     with _patched(flaky, max_retries=3) as models:
         verdict = _analyze()
@@ -149,7 +188,11 @@ def test_retry_waits_as_long_as_the_server_asks(monkeypatch) -> None:
 
     def flaky(request):
         calls["n"] += 1
-        return _error(429, "per minute limit. Please retry in 25.8s.") if calls["n"] == 1 else _payload()
+        return (
+            _error(429, "per minute limit. Please retry in 25.8s.")
+            if calls["n"] == 1
+            else _payload()
+        )
 
     with _patched(flaky, max_retries=3):
         _analyze()
@@ -157,7 +200,9 @@ def test_retry_waits_as_long_as_the_server_asks(monkeypatch) -> None:
 
 
 def test_daily_quota_is_not_retried() -> None:
-    with _patched(lambda r: _error(429, "GenerateRequestsPerDayPerProjectPerModel-FreeTier"), max_retries=3) as models:
+    with _patched(
+        lambda r: _error(429, "GenerateRequestsPerDayPerProjectPerModel-FreeTier"), max_retries=3
+    ) as models:
         verdict = _analyze()
     assert len(models.calls) == 1, "A daily quota will not clear within the backoff"
     assert "analysis_error" in verdict["flags"]

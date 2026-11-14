@@ -97,7 +97,9 @@ def validate_doc_retrieval_connection() -> dict[str, Any]:
 
     # document_agent ran: dimensions populated, loop index initialised at 0
     assert len(dimensions) > 0, "document_agent did not populate dimensions"
-    assert final_state.get("current_dim_index") == 0, "current_dim_index should be 0 after document_agent"
+    assert final_state.get("current_dim_index") == 0, (
+        "current_dim_index should be 0 after document_agent"
+    )
 
     # retrieval_agent ran on the handed-off state and produced real evidence
     assert outcome != "zero_results", (

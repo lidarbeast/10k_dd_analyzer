@@ -65,7 +65,9 @@ def run_agent_chain(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run agent chain locally without LangGraph.")
     parser.add_argument("--company", required=True, help="Company name")
-    parser.add_argument("--filing", required=True, help="Path to filing PDF (or logical filing path)")
+    parser.add_argument(
+        "--filing", required=True, help="Path to filing PDF (or logical filing path)"
+    )
     parser.add_argument(
         "--max-dimensions",
         type=int,

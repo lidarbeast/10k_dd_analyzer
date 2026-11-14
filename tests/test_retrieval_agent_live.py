@@ -34,6 +34,7 @@ from src import config
 # Skip guard — checked before any Pinecone/Google calls
 # ---------------------------------------------------------------------------
 
+
 def _missing_keys() -> list[str]:
     missing = []
     if not config.PINECONE_API_KEY:
@@ -50,6 +51,7 @@ _FILING_PATH = "data/filings/shop-20251231.pdf"
 # ---------------------------------------------------------------------------
 # Core assertion helper
 # ---------------------------------------------------------------------------
+
 
 def _assert_dimension(dim_index: int, *, verbose: bool = True) -> dict:
     """
@@ -138,6 +140,7 @@ def _assert_dimension(dim_index: int, *, verbose: bool = True) -> dict:
 # Runners (script-mode helpers; not pytest-collected — see entry-points below)
 # ---------------------------------------------------------------------------
 
+
 def run_all_dimensions_live(verbose: bool = True) -> list[dict]:
     """Run every configured dimension and assert none returns zero_results."""
     missing = _missing_keys()
@@ -207,6 +210,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Live integration test for the Retrieval Agent")

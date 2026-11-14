@@ -40,9 +40,15 @@ _log = logging.getLogger(__name__)
 OUTPUT_DIR = config.GROUND_TRUTH_DIR / "d3_worksheets"
 
 PORTFOLIO = {
-    "Carvana": {"filing": "cvna-20221231.pdf", "fiscal_year": "FY2022 (year ended December 31, 2022)"},
+    "Carvana": {
+        "filing": "cvna-20221231.pdf",
+        "fiscal_year": "FY2022 (year ended December 31, 2022)",
+    },
     "Peloton": {"filing": "pton-20230630.pdf", "fiscal_year": "FY2023 (year ended June 30, 2023)"},
-    "Shopify": {"filing": "shop-20251231.pdf", "fiscal_year": "FY2025 (year ended December 31, 2025)"},
+    "Shopify": {
+        "filing": "shop-20251231.pdf",
+        "fiscal_year": "FY2025 (year ended December 31, 2025)",
+    },
 }
 
 # Browser print artefacts in PDFs saved from EDGAR HTML (timestamp header,
@@ -78,7 +84,7 @@ _SENTENCE_SPLIT = re.compile(r"(?<=[.;])\s+(?=[A-Z“\"(])")
 @dataclass
 class Section:
     heading: str
-    text: str          # verbatim, with [PDF p. N] markers at page boundaries
+    text: str  # verbatim, with [PDF p. N] markers at page boundaries
     first_page: int
     last_page: int
 
@@ -134,9 +140,7 @@ def find_contingencies_note(text: str) -> Section | None:
         return None
     start = starts[-1]
     number = int(start.group(1))
-    next_note = re.compile(
-        rf"^[ \t]*(?:note\s+)?{number + 1}[ \t]*[.:—–-]+[ \t]*\S", re.I | re.M
-    )
+    next_note = re.compile(rf"^[ \t]*(?:note\s+)?{number + 1}[ \t]*[.:—–-]+[ \t]*\S", re.I | re.M)
     end = next_note.search(text, start.end()) or _ITEM9.search(text, start.end())
     if end is None:
         return None
@@ -162,16 +166,26 @@ def find_current_assets(pages: list[str]) -> dict | None:
         units = _UNITS.search(page)
         units_text = units.group(0) if units else None
 
-        total = next((ln.strip() for ln in lines if re.match(r"\s*total\s+current\s+assets\b", ln, re.I)), None)
+        total = next(
+            (ln.strip() for ln in lines if re.match(r"\s*total\s+current\s+assets\b", ln, re.I)),
+            None,
+        )
         if total is not None:
             return {"page": i, "line": total, "units": units_text, "unlabeled_subtotal": False}
 
-        heading = next((k for k, ln in enumerate(lines) if re.fullmatch(r"\s*current\s+assets:?\s*", ln, re.I)), None)
+        heading = next(
+            (
+                k
+                for k, ln in enumerate(lines)
+                if re.fullmatch(r"\s*current\s+assets:?\s*", ln, re.I)
+            ),
+            None,
+        )
         if heading is None or not any(re.match(r"\s*total\s+assets\b", ln, re.I) for ln in lines):
             continue
         for k in range(heading + 1, len(lines)):
             if _NUMBERS_ONLY.match(lines[k]) and re.search(r"\d", lines[k]):
-                block = "\n".join(ln.strip() for ln in lines[heading:k + 1])
+                block = "\n".join(ln.strip() for ln in lines[heading : k + 1])
                 return {"page": i, "line": block, "units": units_text, "unlabeled_subtotal": True}
     return None
 
@@ -241,36 +255,54 @@ def render_worksheet(
     out.append(f"- **Filing:** `data/filings/{pdf_path.name}` — {meta['fiscal_year']}")
     out.append(f"- **Filing SHA-256:** `{sha256}`")
     out.append(f"- **Rubric version:** `{config.RUBRIC_VERSION}`")
-    out.append("- **Built by:** `python -m src.evaluation.d3_worksheets` — deterministic extraction; no model was used")
+    out.append(
+        "- **Built by:** `python -m src.evaluation.d3_worksheets` — deterministic extraction; no model was used"
+    )
     out.append("")
     out.append("## How to use this worksheet")
     out.append("")
-    out.append("1. Read sections A and B below in full. Use section C only as a pointer to other pages worth checking.")
-    out.append("2. Log every legal or regulatory matter you find in the matter log, with its PDF page.")
-    out.append("3. Apply the rubric literally to each matter, then give the overall rating: the highest level any matter reaches.")
-    out.append("4. Rate only what the filing discloses — not news, later events or anything you know from elsewhere.")
-    out.append("5. If the rubric does not give a clear answer, **stop and write it under Ambiguities.** Rubric fixes happen before v1 is frozen, and never after seeing agent output.")
+    out.append(
+        "1. Read sections A and B below in full. Use section C only as a pointer to other pages worth checking."
+    )
+    out.append(
+        "2. Log every legal or regulatory matter you find in the matter log, with its PDF page."
+    )
+    out.append(
+        "3. Apply the rubric literally to each matter, then give the overall rating: the highest level any matter reaches."
+    )
+    out.append(
+        "4. Rate only what the filing discloses — not news, later events or anything you know from elsewhere."
+    )
+    out.append(
+        "5. If the rubric does not give a clear answer, **stop and write it under Ambiguities.** Rubric fixes happen before v1 is frozen, and never after seeing agent output."
+    )
     out.append("6. Do this before looking at any agent output for D3.")
     out.append("")
     out.append("## Reference: 10% of consolidated current assets (criterion M-c)")
     out.append("")
     if current_assets:
-        out.append(f"Balance sheet, PDF p. {current_assets['page']} — units: {current_assets['units'] or '**not found — check the statement header**'}")
+        out.append(
+            f"Balance sheet, PDF p. {current_assets['page']} — units: {current_assets['units'] or '**not found — check the statement header**'}"
+        )
         out.append("")
         out.append("```text")
         out.append(current_assets["line"])
         out.append("```")
         out.append("")
         if current_assets.get("unlabeled_subtotal"):
-            out.append("**This balance sheet prints the current-assets subtotal without a label** — it is the last line above. "
-                       "Confirm it equals the sum of the lines above it.")
+            out.append(
+                "**This balance sheet prints the current-assets subtotal without a label** — it is the last line above. "
+                "Confirm it equals the sum of the lines above it."
+            )
             out.append("")
         out.append("Confirm which column is the fiscal year-end being rated, then fill in:")
         out.append("")
         out.append("- Total current assets (current year): `________`")
         out.append("- 10% line: `________`")
     else:
-        out.append("**Not located automatically.** Find \"Total current assets\" on the consolidated balance sheet and fill in:")
+        out.append(
+            '**Not located automatically.** Find "Total current assets" on the consolidated balance sheet and fill in:'
+        )
         out.append("")
         out.append("- Total current assets (current year, PDF p. ___): `________`")
         out.append("- 10% line: `________`")
@@ -286,7 +318,9 @@ def render_worksheet(
     out.append("")
     out.append("## Matter log (you fill this in)")
     out.append("")
-    out.append("| # | Matter (short name) | PDF page(s) | Counterparty | Amount stated | ASC 450-20 | Stage | Criterion |")
+    out.append(
+        "| # | Matter (short name) | PDF page(s) | Counterparty | Amount stated | ASC 450-20 | Stage | Criterion |"
+    )
     out.append("|---|---|---|---|---|---|---|---|")
     for n in range(1, 9):
         out.append(f"| {n} |  |  |  |  |  |  |  |")
@@ -303,15 +337,22 @@ def render_worksheet(
     out.append("- **Labeled by / date:** ")
     out.append("")
 
-    for letter, title, section in (("A", "Item 3 — Legal Proceedings", item3),
-                                   ("B", "Commitments and Contingencies note", note)):
+    for letter, title, section in (
+        ("A", "Item 3 — Legal Proceedings", item3),
+        ("B", "Commitments and Contingencies note", note),
+    ):
         out.append(f"## Source {letter}: {title} (verbatim)")
         out.append("")
         if section is None:
-            out.append(f"**Not located automatically.** Find the {title} in the PDF and read it there.")
+            out.append(
+                f"**Not located automatically.** Find the {title} in the PDF and read it there."
+            )
         else:
-            pages = (f"PDF p. {section.first_page}" if section.first_page == section.last_page
-                     else f"PDF pp. {section.first_page}–{section.last_page}")
+            pages = (
+                f"PDF p. {section.first_page}"
+                if section.first_page == section.last_page
+                else f"PDF pp. {section.first_page}–{section.last_page}"
+            )
             out.append(f"Heading found: `{section.heading}` — {pages}")
             out.append("")
             out.append("```text")
@@ -321,8 +362,10 @@ def render_worksheet(
 
     out.append("## Source C: enforcement keyword hits elsewhere in the filing (pointer only)")
     out.append("")
-    out.append("Sentences anywhere in the filing containing investigation or enforcement terms. **Not exhaustive and not a list of matters:** "
-               "generic Item 1A risk language matches too. Use it to find pages worth reading, then log matters from the PDF itself.")
+    out.append(
+        "Sentences anywhere in the filing containing investigation or enforcement terms. **Not exhaustive and not a list of matters:** "
+        "generic Item 1A risk language matches too. Use it to find pages worth reading, then log matters from the PDF itself."
+    )
     out.append("")
     out.append(f"<details><summary>{len(hits)} sentences</summary>")
     out.append("")
@@ -334,7 +377,9 @@ def render_worksheet(
     return "\n".join(out)
 
 
-def build_worksheet(company: str, filings_dir: Path = config.FILINGS_DIR, force: bool = False) -> tuple[Path, dict]:
+def build_worksheet(
+    company: str, filings_dir: Path = config.FILINGS_DIR, force: bool = False
+) -> tuple[Path, dict]:
     meta = PORTFOLIO[company]
     pdf_path = filings_dir / meta["filing"]
     pages = read_pages(pdf_path)
@@ -346,13 +391,23 @@ def build_worksheet(company: str, filings_dir: Path = config.FILINGS_DIR, force:
     hits = enforcement_keyword_hits(pages)
 
     worksheet = render_worksheet(
-        company, meta, pdf_path, _sha256(pdf_path), item3, note, current_assets, hits, _load_d3_rubric()
+        company,
+        meta,
+        pdf_path,
+        _sha256(pdf_path),
+        item3,
+        note,
+        current_assets,
+        hits,
+        _load_d3_rubric(),
     )
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out_path = OUTPUT_DIR / f"{company.lower()}.md"
     if out_path.exists() and not force:
         # A worksheet on disk may hold a human's answers; regenerating would erase them.
-        raise FileExistsError(f"{out_path} exists and may hold filled-in answers; pass --force to overwrite it")
+        raise FileExistsError(
+            f"{out_path} exists and may hold filled-in answers; pass --force to overwrite it"
+        )
     out_path.write_text(worksheet, encoding="utf-8")
 
     summary = {
@@ -366,10 +421,17 @@ def build_worksheet(company: str, filings_dir: Path = config.FILINGS_DIR, force:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build D3 human-labeling worksheets.")
-    parser.add_argument("--company", choices=sorted(PORTFOLIO), action="append",
-                        help="Company to build (repeatable). Default: all.")
-    parser.add_argument("--force", action="store_true",
-                        help="Overwrite existing worksheets, erasing any answers filled in.")
+    parser.add_argument(
+        "--company",
+        choices=sorted(PORTFOLIO),
+        action="append",
+        help="Company to build (repeatable). Default: all.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing worksheets, erasing any answers filled in.",
+    )
     args = parser.parse_args()
 
     for company in args.company or sorted(PORTFOLIO):

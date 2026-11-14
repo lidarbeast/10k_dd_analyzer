@@ -290,10 +290,7 @@ if __name__ == "__main__":
         "--min-chars",
         type=int,
         default=config.SHORT_CHUNK_MIN_CHARS,
-        help=(
-            "Short-chunk merge threshold "
-            f"(default: {config.SHORT_CHUNK_MIN_CHARS})."
-        ),
+        help=(f"Short-chunk merge threshold (default: {config.SHORT_CHUNK_MIN_CHARS})."),
     )
     args = parser.parse_args()
 

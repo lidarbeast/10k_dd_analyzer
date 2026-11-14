@@ -49,10 +49,17 @@ from src.evaluation.d3_worksheets import (
 
 OUTPUT_DIR = config.GROUND_TRUTH_DIR / "d2_worksheets"
 
-_MONTH = r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
-_REPORT = re.compile(r"^[ \t]*report\s+of\s+independent\s+registered\s+public\s+accounting\s+firm[ \t]*$", re.I | re.M)
+_MONTH = (
+    r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
+)
+_REPORT = re.compile(
+    r"^[ \t]*report\s+of\s+independent\s+registered\s+public\s+accounting\s+firm[ \t]*$",
+    re.I | re.M,
+)
 _OPINION = re.compile(r"^[ \t]*opinions?\s+on\s+[^\n]*$", re.I | re.M)
-_SERVED = re.compile(r"^[ \t]*we\s+have\s+served\s+as\s+the\s+company\S{0,2}\s+auditor[^\n]*$", re.I | re.M)
+_SERVED = re.compile(
+    r"^[ \t]*we\s+have\s+served\s+as\s+the\s+company\S{0,2}\s+auditor[^\n]*$", re.I | re.M
+)
 _DATE_LINE = re.compile(rf"^[ \t]*{_MONTH}\s+\d{{1,2}},\s+\d{{4}}[ \t]*$", re.M)
 _SIGNED = re.compile(r"^[ \t]*/s/[^\n]*$", re.M)
 # Paragraph headings an auditor's report can contain.  Listed for the reviewer
@@ -67,7 +74,9 @@ _MAX_REPORT_PAGES = 6
 
 # \bgoing: "ongoing concern" must not match.
 _GC_TERMS = re.compile(r"substantial\s+doubt|\bgoing\s+concern\b", re.I)
-_CH11_TERMS = re.compile(r"chapter\s+11|debtor[\s-]+in[\s-]+possession|bankruptcy\s+code|voluntary\s+petitions?", re.I)
+_CH11_TERMS = re.compile(
+    r"chapter\s+11|debtor[\s-]+in[\s-]+possession|bankruptcy\s+code|voluntary\s+petitions?", re.I
+)
 _NOTES_HEADING = re.compile(
     r"^[ \t]*((?:note\s+)?(?:\d{1,2}\s*[.:—–-]+\s*)?[A-Za-z ,&'’()-]{0,40}"
     r"(?:liquidity|going\s+concern|basis\s+of\s+presentation)[A-Za-z ,&'’()-]{0,60})[ \t]*$",
@@ -112,7 +121,7 @@ def find_auditor_reports(text: str) -> tuple[list[AuditorReport], list[int]]:
         cap = _page_offset(text, page + _MAX_REPORT_PAGES)
         if cap is not None:
             limit = min(limit, cap)
-        window = text[m.start():limit]
+        window = text[m.start() : limit]
         opinions = [o.group(0).strip() for o in _OPINION.finditer(window)]
         if not opinions:
             skipped.append(page)
@@ -137,15 +146,17 @@ def find_auditor_reports(text: str) -> tuple[list[AuditorReport], list[int]]:
         opinion_text = " ".join(opinions).lower()
         signed = _SIGNED.search(body)
         report_date = _DATE_LINE.search(body[-400:])
-        reports.append(AuditorReport(
-            section=section,
-            covers_financial_statements="financial statements" in opinion_text,
-            covers_icfr="internal control" in opinion_text,
-            headings=[h.group(1).strip() for h in _REPORT_HEADINGS.finditer(body)],
-            signed=signed.group(0).strip() if signed else None,
-            report_date=report_date.group(0).strip() if report_date else None,
-            complete=complete,
-        ))
+        reports.append(
+            AuditorReport(
+                section=section,
+                covers_financial_statements="financial statements" in opinion_text,
+                covers_icfr="internal control" in opinion_text,
+                headings=[h.group(1).strip() for h in _REPORT_HEADINGS.finditer(body)],
+                signed=signed.group(0).strip() if signed else None,
+                report_date=report_date.group(0).strip() if report_date else None,
+                complete=complete,
+            )
+        )
     return reports, skipped
 
 
@@ -172,7 +183,8 @@ def chapter11_sentences(pages: list[str]) -> list[tuple[int, str]]:
 
 _NUMBERED_NOTE = re.compile(r"^\s*(?:note\s+)?\d{1,2}\s*[.:—–-]+\s*[A-Z]")
 _PAGE_HEADER = re.compile(
-    r"\(continued\)|table\s+of\s+contents|notes\s+to\s+(?:the\s+)?(?:consolidated\s+)?financial\s+statements", re.I
+    r"\(continued\)|table\s+of\s+contents|notes\s+to\s+(?:the\s+)?(?:consolidated\s+)?financial\s+statements",
+    re.I,
 )
 
 
@@ -187,8 +199,13 @@ def _looks_like_heading(line: str) -> bool:
     s = line.strip()
     if _NUMBERED_NOTE.match(s):
         return True
-    return (0 < len(s) <= 70 and s[0].isupper() and s[-1] not in ".,;:" and len(s.split()) <= 10
-            and not re.fullmatch(r"[\d$(),.\s—-]+", s))
+    return (
+        0 < len(s) <= 70
+        and s[0].isupper()
+        and s[-1] not in ".,;:"
+        and len(s.split()) <= 10
+        and not re.fullmatch(r"[\d$(),.\s—-]+", s)
+    )
 
 
 def find_notes_subsections(text: str, after: int, exclude: list[tuple[int, int]]) -> list[Section]:
@@ -203,7 +220,7 @@ def find_notes_subsections(text: str, after: int, exclude: list[tuple[int, int]]
     for m in _NOTES_HEADING.finditer(text, after):
         if any(a <= m.start() < b for a, b in exclude):
             continue
-        lines = text[m.end():].split("\n")[1:]
+        lines = text[m.end() :].split("\n")[1:]
         offset = m.end() + 1
         since_page_break = 99
         taken = 0
@@ -212,7 +229,11 @@ def find_notes_subsections(text: str, after: int, exclude: list[tuple[int, int]]
                 since_page_break = 0
             else:
                 since_page_break += 1
-                if taken > 0 and not _is_page_header(line, since_page_break) and _looks_like_heading(line):
+                if (
+                    taken > 0
+                    and not _is_page_header(line, since_page_break)
+                    and _looks_like_heading(line)
+                ):
                     break
             offset += len(line) + 1
             taken += 1
@@ -243,7 +264,9 @@ def signature_date(pages: list[str]) -> tuple[int, str] | None:
     for i in last:
         page = pages[i - 1]
         if re.search(r"signature\s+title\s+date", page, re.I):
-            dates = [" ".join(d.split()) for d in re.findall(rf"{_MONTH}\s+\d{{1,2}},\s+\d{{4}}", page)]
+            dates = [
+                " ".join(d.split()) for d in re.findall(rf"{_MONTH}\s+\d{{1,2}},\s+\d{{4}}", page)
+            ]
             if dates:
                 return i, max(set(dates), key=dates.count)
     return None
@@ -258,8 +281,10 @@ def edgar_search_link(cik: str | None, fye: dt.date | None) -> str | None:
     if not cik or not fye:
         return None
     end = fye + dt.timedelta(days=183)
-    return ("https://www.sec.gov/edgar/search/#/q=%22substantial%20doubt%22&dateRange=custom"
-            f"&ciks={int(cik):010d}&startdt={fye.isoformat()}&enddt={end.isoformat()}&forms=10-K")
+    return (
+        "https://www.sec.gov/edgar/search/#/q=%22substantial%20doubt%22&dateRange=custom"
+        f"&ciks={int(cik):010d}&startdt={fye.isoformat()}&enddt={end.isoformat()}&forms=10-K"
+    )
 
 
 def _load_d2_rubric() -> dict:
@@ -285,17 +310,33 @@ _GLOSSARY = """\
 
 def _report_block(r: AuditorReport) -> list[str]:
     s = r.section
-    pages = f"PDF p. {s.first_page}" if s.first_page == s.last_page else f"PDF pp. {s.first_page}–{s.last_page}"
-    covers = " and ".join(x for x, ok in (("the financial statements", r.covers_financial_statements),
-                                           ("internal control over financial reporting", r.covers_icfr)) if ok)
-    out = [f"**Report at {pages}** — opinion(s) on {covers}. Signed: `{r.signed or 'not found'}`; "
-           f"report date: `{r.report_date or 'not found'}`."]
+    pages = (
+        f"PDF p. {s.first_page}"
+        if s.first_page == s.last_page
+        else f"PDF pp. {s.first_page}–{s.last_page}"
+    )
+    covers = " and ".join(
+        x
+        for x, ok in (
+            ("the financial statements", r.covers_financial_statements),
+            ("internal control over financial reporting", r.covers_icfr),
+        )
+        if ok
+    )
+    out = [
+        f"**Report at {pages}** — opinion(s) on {covers}. Signed: `{r.signed or 'not found'}`; "
+        f"report date: `{r.report_date or 'not found'}`."
+    ]
     if not r.complete:
         out.append("")
-        out.append("⚠️ The report's end (auditor-tenure line) was not found; the text below stops at the next report or a page cap. Check the PDF.")
+        out.append(
+            "⚠️ The report's end (auditor-tenure line) was not found; the text below stops at the next report or a page cap. Check the PDF."
+        )
     out.append("")
-    out.append("Paragraph headings found in this report (a map only, not a finding): "
-               + (", ".join(f"`{h}`" for h in r.headings) if r.headings else "none found"))
+    out.append(
+        "Paragraph headings found in this report (a map only, not a finding): "
+        + (", ".join(f"`{h}`" for h in r.headings) if r.headings else "none found")
+    )
     out.append("")
     out.append("```text")
     out.append(s.text)
@@ -303,7 +344,9 @@ def _report_block(r: AuditorReport) -> list[str]:
     return out
 
 
-def _pointer_list(title: str, note: str, hits: list[tuple[int, str]], collapse_over: int = 12) -> list[str]:
+def _pointer_list(
+    title: str, note: str, hits: list[tuple[int, str]], collapse_over: int = 12
+) -> list[str]:
     out = [title, "", note, ""]
     if not hits:
         out.append("**None found.**")
@@ -322,16 +365,28 @@ def _pointer_list(title: str, note: str, hits: list[tuple[int, str]], collapse_o
     return out
 
 
-def render_worksheet(company: str, meta: dict, pdf_path: Path, sha256: str, cik: str | None,
-                     reports: list[AuditorReport], skipped: list[int], gc_hits: list[tuple[int, str]],
-                     notes: list[Section], ch11_hits: list[tuple[int, str]], signed: tuple[int, str] | None,
-                     rubric: dict) -> str:
+def render_worksheet(
+    company: str,
+    meta: dict,
+    pdf_path: Path,
+    sha256: str,
+    cik: str | None,
+    reports: list[AuditorReport],
+    skipped: list[int],
+    gc_hits: list[tuple[int, str]],
+    notes: list[Section],
+    ch11_hits: list[tuple[int, str]],
+    signed: tuple[int, str] | None,
+    rubric: dict,
+) -> str:
     fs_reports = [r for r in reports if r.covers_financial_statements]
     other = [r for r in reports if not r.covers_financial_statements]
     report_pages = [(r.section.first_page, r.section.last_page) for r in fs_reports]
 
     def where(page: int) -> str:
-        return " *(in the auditor's report)*" if any(a <= page <= b for a, b in report_pages) else ""
+        return (
+            " *(in the auditor's report)*" if any(a <= page <= b for a, b in report_pages) else ""
+        )
 
     link = edgar_search_link(cik, _fiscal_year_end(meta))
     fye = _fiscal_year_end(meta)
@@ -341,19 +396,37 @@ def render_worksheet(company: str, meta: dict, pdf_path: Path, sha256: str, cik:
     out.append(f"- **Filing:** `data/filings/{pdf_path.name}` — {meta['fiscal_year']}")
     out.append(f"- **Filing SHA-256:** `{sha256}`")
     out.append(f"- **SEC CIK:** `{cik or 'not found'}`")
-    out.append("- **10-K signature date:** " + (f"{signed[1]} (PDF p. {signed[0]})" if signed else
-                                                 "not found automatically — see the signature page; the auditor's report date is shown in Source A"))
+    out.append(
+        "- **10-K signature date:** "
+        + (
+            f"{signed[1]} (PDF p. {signed[0]})"
+            if signed
+            else "not found automatically — see the signature page; the auditor's report date is shown in Source A"
+        )
+    )
     out.append(f"- **Rubric version:** `{config.RUBRIC_VERSION}`")
-    out.append("- **Built by:** `python -m src.evaluation.d2_worksheets` — deterministic extraction; no model was used")
+    out.append(
+        "- **Built by:** `python -m src.evaluation.d2_worksheets` — deterministic extraction; no model was used"
+    )
     out.append("")
     out.append("## How to use this worksheet")
     out.append("")
-    out.append("1. Read **Source A** (the auditor's report on the financial statements) in full. Look for a paragraph after the opinion that states substantial doubt exists — usually titled \"Going Concern\" or \"Substantial Doubt…\". The heading map under each report helps you find it, but read the text.")
-    out.append("2. Read **Source C** (notes subsections) and the entries in **Source B**, which include MD&A. Decide whether management's disclosure — in the notes or MD&A — says doubt exists (not alleviated), says in words that doubt was raised and alleviated, or neither. Judge each passage by its concluding sentence (see the glossary). If Source C is empty, read Note 1 in the PDF.")
-    out.append("3. Use **Source D** to decide whether the company was a Chapter 11 debtor-in-possession on the 10-K's signature date.")
+    out.append(
+        '1. Read **Source A** (the auditor\'s report on the financial statements) in full. Look for a paragraph after the opinion that states substantial doubt exists — usually titled "Going Concern" or "Substantial Doubt…". The heading map under each report helps you find it, but read the text.'
+    )
+    out.append(
+        "2. Read **Source C** (notes subsections) and the entries in **Source B**, which include MD&A. Decide whether management's disclosure — in the notes or MD&A — says doubt exists (not alleviated), says in words that doubt was raised and alleviated, or neither. Judge each passage by its concluding sentence (see the glossary). If Source C is empty, read Note 1 in the PDF."
+    )
+    out.append(
+        "3. Use **Source D** to decide whether the company was a Chapter 11 debtor-in-possession on the 10-K's signature date."
+    )
     out.append("4. Run the **EDGAR full-text search** cross-check (Q4) and record what it finds.")
-    out.append("5. Apply the rubric. Rate only what the filing discloses — not news, later events or anything you know from elsewhere.")
-    out.append("6. If the rubric does not give a clear answer, **stop and write it under Ambiguities.** Rubric fixes happen before v1 is frozen, and never after seeing agent output. Do this before looking at any agent output for D2.")
+    out.append(
+        "5. Apply the rubric. Rate only what the filing discloses — not news, later events or anything you know from elsewhere."
+    )
+    out.append(
+        "6. If the rubric does not give a clear answer, **stop and write it under Ambiguities.** Rubric fixes happen before v1 is frozen, and never after seeing agent output. Do this before looking at any agent output for D2."
+    )
     out.append("")
     out.append(f"## D2 rubric ({config.RUBRIC_VERSION})")
     out.append("")
@@ -369,22 +442,34 @@ def render_worksheet(company: str, meta: dict, pdf_path: Path, sha256: str, cik:
     out.append("- **Q1 — Auditor's going-concern paragraph** (AS 2415): YES / NO")
     out.append("  - Auditor and report date: ")
     out.append("  - If YES, quote and PDF page: ")
-    out.append("- **Q2 — Management's disclosure, notes or MD&A** (ASC 205-40): NONE / ALLEVIATED (50-12) / NOT ALLEVIATED (50-13)")
+    out.append(
+        "- **Q2 — Management's disclosure, notes or MD&A** (ASC 205-40): NONE / ALLEVIATED (50-12) / NOT ALLEVIATED (50-13)"
+    )
     out.append("  - Quote and PDF page: ")
     out.append("- **Q3 — Chapter 11 debtor-in-possession on the signature date:** YES / NO")
     out.append("  - Evidence and PDF page (petition date; emergence date if any): ")
     out.append("- **Q4 — EDGAR full-text search cross-check:**")
     if link:
-        out.append(f"  - Link (search for \"substantial doubt\" in this company's 10-K filings made within six months after fiscal year-end {fye.isoformat()}): <{link}>")
-        out.append(f"  - If the link does not pre-fill: go to https://www.sec.gov/edgar/search/, search `\"substantial doubt\"`, set the company to CIK {cik}, form 10-K, filed between {fye.isoformat()} and {(fye + dt.timedelta(days=183)).isoformat()}.")
+        out.append(
+            f'  - Link (search for "substantial doubt" in this company\'s 10-K filings made within six months after fiscal year-end {fye.isoformat()}): <{link}>'
+        )
+        out.append(
+            f'  - If the link does not pre-fill: go to https://www.sec.gov/edgar/search/, search `"substantial doubt"`, set the company to CIK {cik}, form 10-K, filed between {fye.isoformat()} and {(fye + dt.timedelta(days=183)).isoformat()}.'
+        )
     else:
-        out.append("  - Link could not be built (CIK or fiscal year-end not found). Search https://www.sec.gov/edgar/search/ for `\"substantial doubt\"`, this company, form 10-K.")
-    out.append("  - A hit only means the words appear somewhere in the filing — risk factors match too, and EDGAR also searches the filing's exhibits, so check each hit's document type. Record what the hits are, and whether they agree with Q1–Q2: ")
+        out.append(
+            '  - Link could not be built (CIK or fiscal year-end not found). Search https://www.sec.gov/edgar/search/ for `"substantial doubt"`, this company, form 10-K.'
+        )
+    out.append(
+        "  - A hit only means the words appear somewhere in the filing — risk factors match too, and EDGAR also searches the filing's exhibits, so check each hit's document type. Record what the hits are, and whether they agree with Q1–Q2: "
+    )
     out.append("")
     out.append("## Verdict (you fill this in)")
     out.append("")
     out.append("- **Rating:** HIGH / MEDIUM / LOW")
-    out.append("- **Deciding criterion:** HIGH (a) auditor paragraph / HIGH (b) not alleviated / HIGH (c) Chapter 11 / MEDIUM alleviated / LOW")
+    out.append(
+        "- **Deciding criterion:** HIGH (a) auditor paragraph / HIGH (b) not alleviated / HIGH (c) Chapter 11 / MEDIUM alleviated / LOW"
+    )
     out.append("- **Deciding passage (verbatim):** ")
     out.append("- **PDF page:** ")
     out.append("- **Ambiguities — places the rubric did not give a clear answer:** ")
@@ -394,38 +479,56 @@ def render_worksheet(company: str, meta: dict, pdf_path: Path, sha256: str, cik:
     out.append("## Source A: auditor's report(s) on the financial statements (verbatim)")
     out.append("")
     if not fs_reports:
-        out.append("**Not located automatically.** Find the \"Report of Independent Registered Public Accounting Firm\" on the financial statements in Item 8 and read it there.")
+        out.append(
+            '**Not located automatically.** Find the "Report of Independent Registered Public Accounting Firm" on the financial statements in Item 8 and read it there.'
+        )
         out.append("")
     for r in fs_reports:
         out.extend(_report_block(r))
         out.append("")
     notes_on_skipped = []
     if other:
-        notes_on_skipped.append("reports on internal control only (not D2 evidence): "
-                                + ", ".join(f"PDF p. {r.section.first_page}" for r in other))
+        notes_on_skipped.append(
+            "reports on internal control only (not D2 evidence): "
+            + ", ".join(f"PDF p. {r.section.first_page}" for r in other)
+        )
     if skipped:
-        notes_on_skipped.append("report headings with no report under them (an index entry, or a reference to a report printed elsewhere): "
-                                + ", ".join(f"PDF p. {p}" for p in skipped))
+        notes_on_skipped.append(
+            "report headings with no report under them (an index entry, or a reference to a report printed elsewhere): "
+            + ", ".join(f"PDF p. {p}" for p in skipped)
+        )
     if notes_on_skipped:
         out.append("Not included: " + "; ".join(notes_on_skipped) + ".")
         out.append("")
 
-    out.extend(_pointer_list(
-        "## Source B: every \"substantial doubt\" / \"going concern\" sentence in the filing (pointer only)",
-        "Includes boilerplate (the basis-of-accounting sentence) and conditional risk-factor wording. Use it to find pages, then read them in the PDF.",
-        [(p, s + where(p)) for p, s in gc_hits],
-    ))
+    out.extend(
+        _pointer_list(
+            '## Source B: every "substantial doubt" / "going concern" sentence in the filing (pointer only)',
+            "Includes boilerplate (the basis-of-accounting sentence) and conditional risk-factor wording. Use it to find pages, then read them in the PDF.",
+            [(p, s + where(p)) for p, s in gc_hits],
+        )
+    )
 
-    out.append("## Source C: notes subsections on basis of presentation / liquidity / going concern (verbatim)")
+    out.append(
+        "## Source C: notes subsections on basis of presentation / liquidity / going concern (verbatim)"
+    )
     out.append("")
-    out.append("Copied from each matching heading to the next heading-like line (at most "
-               f"{_MAX_SUBSECTION_LINES} lines). The end is found by a rule of thumb — check the PDF page.")
+    out.append(
+        "Copied from each matching heading to the next heading-like line (at most "
+        f"{_MAX_SUBSECTION_LINES} lines). The end is found by a rule of thumb — check the PDF page."
+    )
     out.append("")
     if not notes:
-        out.append("**None found.** Read Note 1 (basis of presentation / significant accounting policies) in the PDF.")
+        out.append(
+            "**None found.** Read Note 1 (basis of presentation / significant accounting policies) in the PDF."
+        )
         out.append("")
     for n in notes:
-        pages = f"PDF p. {n.first_page}" if n.first_page == n.last_page else f"PDF pp. {n.first_page}–{n.last_page}"
+        pages = (
+            f"PDF p. {n.first_page}"
+            if n.first_page == n.last_page
+            else f"PDF pp. {n.first_page}–{n.last_page}"
+        )
         out.append(f"**`{n.heading}`** — {pages}")
         out.append("")
         out.append("```text")
@@ -433,15 +536,19 @@ def render_worksheet(company: str, meta: dict, pdf_path: Path, sha256: str, cik:
         out.append("```")
         out.append("")
 
-    out.extend(_pointer_list(
-        "## Source D: Chapter 11 / bankruptcy mentions (pointer only)",
-        "Sentences mentioning Chapter 11, debtor-in-possession, the Bankruptcy Code or a voluntary petition. Hypothetical risk-factor wording matches too.",
-        ch11_hits,
-    ))
+    out.extend(
+        _pointer_list(
+            "## Source D: Chapter 11 / bankruptcy mentions (pointer only)",
+            "Sentences mentioning Chapter 11, debtor-in-possession, the Bankruptcy Code or a voluntary petition. Hypothetical risk-factor wording matches too.",
+            ch11_hits,
+        )
+    )
     return "\n".join(out)
 
 
-def build_worksheet(company: str, filings_dir: Path = config.FILINGS_DIR, force: bool = False) -> tuple[Path, dict]:
+def build_worksheet(
+    company: str, filings_dir: Path = config.FILINGS_DIR, force: bool = False
+) -> tuple[Path, dict]:
     meta = PORTFOLIO[company]
     pdf_path = filings_dir / meta["filing"]
     pages = read_pages(pdf_path)
@@ -450,22 +557,43 @@ def build_worksheet(company: str, filings_dir: Path = config.FILINGS_DIR, force:
     reports, skipped = find_auditor_reports(text)
     fs_reports = [r for r in reports if r.covers_financial_statements]
     first_report = min((text.index(r.section.text) for r in fs_reports), default=0)
-    spans = [(text.index(r.section.text), text.index(r.section.text) + len(r.section.text)) for r in reports]
+    spans = [
+        (text.index(r.section.text), text.index(r.section.text) + len(r.section.text))
+        for r in reports
+    ]
     notes = find_notes_subsections(text, after=first_report, exclude=spans) if fs_reports else []
     gc_hits = going_concern_sentences(pages)
     ch11_hits = chapter11_sentences(pages)
 
-    worksheet = render_worksheet(company, meta, pdf_path, _sha256(pdf_path), edgar_cik(pdf_path), reports, skipped,
-                                 gc_hits, notes, ch11_hits, signature_date(pages), _load_d2_rubric())
+    worksheet = render_worksheet(
+        company,
+        meta,
+        pdf_path,
+        _sha256(pdf_path),
+        edgar_cik(pdf_path),
+        reports,
+        skipped,
+        gc_hits,
+        notes,
+        ch11_hits,
+        signature_date(pages),
+        _load_d2_rubric(),
+    )
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out_path = OUTPUT_DIR / f"{company.lower()}.md"
     if out_path.exists() and not force:
         # A worksheet on disk may hold a human's answers; regenerating would erase them.
-        raise FileExistsError(f"{out_path} exists and may hold filled-in answers; pass --force to overwrite it")
+        raise FileExistsError(
+            f"{out_path} exists and may hold filled-in answers; pass --force to overwrite it"
+        )
     out_path.write_text(worksheet, encoding="utf-8")
 
     summary = {
-        "fs_reports": [f"pp. {r.section.first_page}-{r.section.last_page}{'' if r.complete else ' (INCOMPLETE)'}" for r in fs_reports] or "NOT LOCATED",
+        "fs_reports": [
+            f"pp. {r.section.first_page}-{r.section.last_page}{'' if r.complete else ' (INCOMPLETE)'}"
+            for r in fs_reports
+        ]
+        or "NOT LOCATED",
         "notes_subsections": [f"{n.heading[:40]} p.{n.first_page}" for n in notes],
         "gc_sentences": len(gc_hits),
         "ch11_sentences": len(ch11_hits),
@@ -475,10 +603,17 @@ def build_worksheet(company: str, filings_dir: Path = config.FILINGS_DIR, force:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build D2 human-labeling worksheets.")
-    parser.add_argument("--company", choices=sorted(PORTFOLIO), action="append",
-                        help="Company to build (repeatable). Default: all.")
-    parser.add_argument("--force", action="store_true",
-                        help="Overwrite existing worksheets, erasing any answers filled in.")
+    parser.add_argument(
+        "--company",
+        choices=sorted(PORTFOLIO),
+        action="append",
+        help="Company to build (repeatable). Default: all.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing worksheets, erasing any answers filled in.",
+    )
     args = parser.parse_args()
     for company in args.company or sorted(PORTFOLIO):
         path, summary = build_worksheet(company, force=args.force)

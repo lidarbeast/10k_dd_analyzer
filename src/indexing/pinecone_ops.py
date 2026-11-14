@@ -35,14 +35,14 @@ def _get_genai_client() -> genai.Client:
     if _genai_client is None:
         if not config.GOOGLE_API_KEY:
             raise ValueError(
-                "GOOGLE_API_KEY is not set. "
-                "Get one at https://aistudio.google.com/apikey"
+                "GOOGLE_API_KEY is not set. Get one at https://aistudio.google.com/apikey"
             )
         _genai_client = genai.Client(api_key=config.GOOGLE_API_KEY)
     return _genai_client
 
 
 # ── Embeddings ───────────────────────────────────────────────
+
 
 def _get_local_embedder():
     """Return a lazily-initialised sentence-transformers embedder."""
@@ -194,10 +194,7 @@ def init_pinecone():
     dim = _embedding_dimension()
 
     if index_name not in _pinecone_client.list_indexes().names():
-        _log.info(
-            f"Creating Pinecone index '{index_name}' "
-            f"(dim={dim}, metric=cosine)..."
-        )
+        _log.info(f"Creating Pinecone index '{index_name}' (dim={dim}, metric=cosine)...")
         _pinecone_client.create_index(
             name=index_name,
             dimension=dim,
@@ -287,10 +284,7 @@ def upsert_chunks(chunks: list[dict], namespace: str = "") -> int:
 
     index = init_pinecone()
     source_doc = chunks[0].get("source_document", "unknown")
-    _log.info(
-        f"Upserting {len(chunks)} chunks from '{source_doc}' "
-        f"to namespace '{namespace}'..."
-    )
+    _log.info(f"Upserting {len(chunks)} chunks from '{source_doc}' to namespace '{namespace}'...")
 
     batch_size = 100
     total_upserted = 0
@@ -303,8 +297,7 @@ def upsert_chunks(chunks: list[dict], namespace: str = "") -> int:
         embeddings = _get_embeddings_with_retry(texts)
         if len(embeddings) != len(texts):
             raise RuntimeError(
-                "Embedding count mismatch: "
-                f"expected {len(texts)}, got {len(embeddings)}"
+                f"Embedding count mismatch: expected {len(texts)}, got {len(embeddings)}"
             )
 
         # Build Pinecone vectors
@@ -322,11 +315,13 @@ def upsert_chunks(chunks: list[dict], namespace: str = "") -> int:
                 "text": chunk["text"],
             }
 
-            vectors.append({
-                "id": chunk_id,
-                "values": embedding,
-                "metadata": metadata,
-            })
+            vectors.append(
+                {
+                    "id": chunk_id,
+                    "values": embedding,
+                    "metadata": metadata,
+                }
+            )
 
         upsert_response = index.upsert(vectors=vectors, namespace=namespace)
 
@@ -414,22 +409,22 @@ def query_index(
         if section_types:
             headings = meta.get("headings", [])
             section_matched = any(
-                st.lower().replace("_", " ") in h.lower()
-                for st in section_types
-                for h in headings
+                st.lower().replace("_", " ") in h.lower() for st in section_types for h in headings
             )
             if section_matched:
                 score = min(1.0, score + config.SECTION_BOOST_WEIGHT)
 
-        parsed.append({
-            "id": match.get("id", ""),
-            "text": meta.get("text", ""),
-            "score": score,
-            "headings": meta.get("headings", []),
-            "source_document": meta.get("source_document", ""),
-            "source_page": meta.get("source_page", 0),
-            "label": meta.get("label", ""),
-        })
+        parsed.append(
+            {
+                "id": match.get("id", ""),
+                "text": meta.get("text", ""),
+                "score": score,
+                "headings": meta.get("headings", []),
+                "source_document": meta.get("source_document", ""),
+                "source_page": meta.get("source_page", 0),
+                "label": meta.get("label", ""),
+            }
+        )
 
     # Re-sort by score (boost may have changed order) and trim to top_k.
     parsed.sort(key=lambda x: x["score"], reverse=True)
@@ -456,10 +451,7 @@ def build_index(input_path: Path | None = None) -> None:
         processed_files = sorted(config.PARSED_DIR.glob("*_processed.json"))
 
     if not processed_files:
-        _log.error(
-            "No *_processed.json files found in data/parsed/. "
-            "Run post_process.py first."
-        )
+        _log.error("No *_processed.json files found in data/parsed/. Run post_process.py first.")
         return
 
     for path in processed_files:

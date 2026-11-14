@@ -64,11 +64,9 @@ def parse_pdf(
     pipeline_options.ocr_options = TesseractCliOcrOptions()
 
     converter = DocumentConverter(
-        format_options={
-            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
-        }
+        format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)}
     )
-    
+
     result = converter.convert(str(pdf_path))
     doc = result.document
 
@@ -78,7 +76,7 @@ def parse_pdf(
     doc_dict = doc.export_to_dict()
     # Add our source_document identifier to the top level for convenience later
     doc_dict["source_document"] = source_document
-    
+
     if write_outputs:
         json_path = output_dir / f"{source_document}_parsed.json"
         with json_path.open("w", encoding="utf-8") as f:
@@ -139,4 +137,3 @@ if __name__ == "__main__":
             )
         except Exception as e:
             _log.error(f"  ✗ {pdf_path.name}: {e}")
-

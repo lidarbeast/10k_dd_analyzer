@@ -66,7 +66,9 @@ def validate_dimension_loading() -> list[dict[str, Any]]:
     print(f"Loaded {len(dimensions)} dimensions")
     for index, dim in enumerate(dimensions, start=1):
         missing = REQUIRED_KEYS.difference(dim.keys())
-        assert not missing, f"Dimension {dim.get('dimension_id')} missing required keys: {sorted(missing)}"
+        assert not missing, (
+            f"Dimension {dim.get('dimension_id')} missing required keys: {sorted(missing)}"
+        )
 
         print(f"  {index}. {dim['dimension_id']} — {dim['name']}")
         print(f"     retrieval_queries: {len(dim['retrieval_queries'])}")
@@ -105,9 +107,13 @@ def validate_document_agent_run(company_name: str, filing_path: str) -> dict[str
     assert state["verdicts"] == [], "Document Agent should reset verdicts"
     assert state["retrieval_attempts"] == [], "Document Agent should reset retrieval_attempts"
     assert state["confidence_scores"] == [], "Document Agent should reset confidence_scores"
-    assert state.get("_retrieved_chunks") == [], "Document Agent should initialize _retrieved_chunks"
+    assert state.get("_retrieved_chunks") == [], (
+        "Document Agent should initialize _retrieved_chunks"
+    )
     assert state.get("_retrieval_score") == 0.0, "Document Agent should initialize _retrieval_score"
-    assert state.get("_retrieval_attempts") == 1, "Document Agent should initialize _retrieval_attempts"
+    assert state.get("_retrieval_attempts") == 1, (
+        "Document Agent should initialize _retrieval_attempts"
+    )
     assert state.get("_warnings") == [], "Document Agent should initialize _warnings"
     assert state["namespace"] == Path(filing_path).stem, "Namespace is the filing stem"
     assert state["indexed_chunk_count"] == 352

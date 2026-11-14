@@ -39,6 +39,7 @@ _MAX_CHARS = _MAX_TOKENS * _CHARS_PER_TOKEN  # ≈ 2048
 
 # ── Stage 1: Short-chunk merge ───────────────────────────────────────────────
 
+
 def merge_short_chunks(
     chunks: list[dict],
     min_chars: int = config.SHORT_CHUNK_MIN_CHARS,
@@ -71,6 +72,7 @@ def merge_short_chunks(
 
 
 # ── Full pipeline ────────────────────────────────────────────────────────────
+
 
 def post_process(
     chunks: list[dict],
@@ -149,7 +151,6 @@ if __name__ == "__main__":
             raw_chunks = json.load(f)
 
         processed = post_process(raw_chunks, min_chars=args.min_chars)
-
 
         # Write output alongside the input file
         stem = chunk_path.stem.replace("_chunks", "")

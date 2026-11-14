@@ -32,10 +32,7 @@ PORTFOLIO_COMPANIES = ("carvana", "peloton", "shopify", "revlon")
 def _raw_configs() -> dict[str, dict]:
     index = json.loads((config.DIMENSIONS_DIR / "00_index.json").read_text(encoding="utf-8"))
     files = [item["file"] for item in index["agent_facing_files"]]
-    return {
-        f: json.loads((config.DIMENSIONS_DIR / f).read_text(encoding="utf-8"))
-        for f in files
-    }
+    return {f: json.loads((config.DIMENSIONS_DIR / f).read_text(encoding="utf-8")) for f in files}
 
 
 def _rubric_text(spec: dict) -> str:
@@ -88,7 +85,9 @@ def test_rubric_has_single_source_in_prompt() -> None:
 def test_system_prompts_mark_retrieved_text_as_data() -> None:
     for name, spec in _raw_configs().items():
         system = spec["prompt_template"]["system"]
-        assert "never instructions" in system, f"{name} system prompt lacks the data-not-instructions rule"
+        assert "never instructions" in system, (
+            f"{name} system prompt lacks the data-not-instructions rule"
+        )
 
 
 def test_d5_rubric_not_sourced_from_item_1a_or_106() -> None:
@@ -105,11 +104,15 @@ def test_d1_guidance_identifies_inputs_safely() -> None:
     can carry identical headings.  The D1 guidance must warn about the first
     and require the balance-sheet check that catches mixed sources."""
     spec = _raw_configs()["d1_financial_health.json"]
-    guards = " ".join(g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]).lower()
+    guards = " ".join(
+        g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]
+    ).lower()
     assert "before income taxes" in guards
     assert "total assets equals total liabilities plus total equity" in guards
     signals = json.dumps(spec["evidence_schema"]["primary_signals"]).lower()
-    assert "'loss from operations'" not in signals, "caption lists must not accept 'Loss from operations' unqualified"
+    assert "'loss from operations'" not in signals, (
+        "caption lists must not accept 'Loss from operations' unqualified"
+    )
 
 
 def test_d2_guidance_classifies_by_conclusion() -> None:
@@ -119,7 +122,9 @@ def test_d2_guidance_classifies_by_conclusion() -> None:
     MEDIUM must need the words, and LOW must need the auditor's report on the
     financial statements, not an internal-control report."""
     spec = _raw_configs()["d2_going_concern.json"]
-    guards = " ".join(g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]).lower()
+    guards = " ".join(
+        g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]
+    ).lower()
     assert "the sentence that states a conclusion" in guards
     assert "'whether' clause" in guards
     assert "unqualified opinion" in guards
@@ -134,12 +139,16 @@ def test_d3_guidance_guards_against_known_look_alikes() -> None:
     reserve is not a legal accrual; and the litigation section's closing
     'has not established reserves' sentence covers every matter above it."""
     spec = _raw_configs()["d3_legal_regulatory_exposure.json"]
-    guards = " ".join(g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]).lower()
+    guards = " ".join(
+        g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]
+    ).lower()
     assert "names authorities but no matter" in guards
     assert "income-tax reserves" in guards and "not accruals for legal proceedings" in guards
     assert "covers every matter listed above it" in guards
     rendered = json.dumps(spec["evidence_schema"]).lower()
-    assert "constitute regulatory exposure" not in rendered, "tax contingencies must not be presented as legal exposure"
+    assert "constitute regulatory exposure" not in rendered, (
+        "tax contingencies must not be presented as legal exposure"
+    )
 
 
 def test_guard_explanations_stand_alone() -> None:
@@ -149,17 +158,24 @@ def test_guard_explanations_stand_alone() -> None:
     for name, spec in _raw_configs().items():
         for g in spec["evidence_schema"].get("false_positive_guards", []):
             first = g["explanation"].split()[0].strip(" ,.:;").lower()
-            assert first not in {"this", "these", "it"}, f"{name}: guard '{g['guard']}' leans on its unrendered pattern"
+            assert first not in {"this", "these", "it"}, (
+                f"{name}: guard '{g['guard']}' leans on its unrendered pattern"
+            )
 
 
 def test_d5_guidance_rates_only_the_fiscal_year() -> None:
     """Item 1A can recount an earlier year's 'not effective' conclusion and a
     remediation from years before; neither may decide the rating."""
     spec = _raw_configs()["d5_internal_controls.json"]
-    guards = " ".join(g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]).lower()
+    guards = " ".join(
+        g["explanation"] for g in spec["evidence_schema"]["false_positive_guards"]
+    ).lower()
     assert "about an earlier year" in guards
     assert "never establishes" in guards or "does not show that controls were effective" in guards
-    assert "does not indicate a current material weakness" not in json.dumps(spec["evidence_schema"]).lower()
+    assert (
+        "does not indicate a current material weakness"
+        not in json.dumps(spec["evidence_schema"]).lower()
+    )
 
 
 def test_output_format_has_single_source() -> None:
@@ -170,14 +186,22 @@ def test_output_format_has_single_source() -> None:
         assert "## Output Format" not in template, f"{name} template hard-codes an output format"
         assert '"verdict":' not in template, f"{name} template carries an output field list"
         schema = spec["output_schema"]
-        assert schema["properties"]["verdict"]["enum"] == ["HIGH", "MEDIUM", "LOW", "INCONCLUSIVE"], name
+        assert schema["properties"]["verdict"]["enum"] == [
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "INCONCLUSIVE",
+        ], name
         evidence_item = schema["properties"]["evidence"]["items"]
-        assert "evidence_id" in evidence_item["required"], f"{name} evidence items must cite an evidence block"
+        assert "evidence_id" in evidence_item["required"], (
+            f"{name} evidence items must cite an evidence block"
+        )
 
 
 def test_output_schemas_are_strict() -> None:
     """Every object in a schema lists all its properties as required and
     allows no others, so the model cannot omit a field or invent one."""
+
     def walk(node: dict, where: str) -> None:
         if node.get("type") == "object":
             assert node.get("additionalProperties") is False, where
@@ -195,9 +219,15 @@ def test_every_evidence_schema_field_reaches_the_prompt() -> None:
     """A field `_build_dimension_guidance` has no case for is silently dropped:
     D3's boilerplate patterns and temporal note were, until 2026-11-10."""
     rendered = {
-        "primary_signals", "corroborating_signals", "absence_signals", "false_positive_guards",
-        "cross_section_evidence", "terminology_note", "debt_terminology_note",
-        "boilerplate_low_patterns", "temporal_scope_note",
+        "primary_signals",
+        "corroborating_signals",
+        "absence_signals",
+        "false_positive_guards",
+        "cross_section_evidence",
+        "terminology_note",
+        "debt_terminology_note",
+        "boilerplate_low_patterns",
+        "temporal_scope_note",
     }
     for name, spec in _raw_configs().items():
         unrendered = set(spec["evidence_schema"]) - rendered
@@ -214,7 +244,16 @@ def test_d3_boilerplate_and_temporal_guidance_rendered() -> None:
 def test_output_schemas_use_only_keywords_both_providers_accept() -> None:
     """Gemini's response_json_schema supports a subset of JSON Schema; a keyword
     outside it could be rejected or ignored."""
-    allowed = {"type", "enum", "description", "properties", "required", "additionalProperties", "items", "anyOf"}
+    allowed = {
+        "type",
+        "enum",
+        "description",
+        "properties",
+        "required",
+        "additionalProperties",
+        "items",
+        "anyOf",
+    }
 
     def walk(node: dict, where: str) -> None:
         assert set(node) <= allowed, f"{where}: {sorted(set(node) - allowed)}"

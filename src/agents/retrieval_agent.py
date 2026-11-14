@@ -229,7 +229,9 @@ def run(state: DDState) -> DDState:
 
     # The Document Agent confirmed this namespace holds the filing's vectors.
     filing_stem = state.get("namespace") or Path(state["filing_path"]).stem
-    _log.info("Retrieval Agent: namespace='%s' for %s / %s", filing_stem, company, dimension["name"])
+    _log.info(
+        "Retrieval Agent: namespace='%s' for %s / %s", filing_stem, company, dimension["name"]
+    )
 
     # First retrieval pass with primary queries
     primary_queries = dimension.get("retrieval_queries", [])
@@ -261,11 +263,15 @@ def run(state: DDState) -> DDState:
         state["_retrieved_chunks"] = []
         state["_retrieval_score"] = 0.0
         state["_retrieval_attempts"] = attempts
-        _set_audit(state, dimension["dimension_id"], {
-            "per_query": merged_query_stats,
-            "confidence": {"score": 0.0, "max": 0.0},
-            "outcome": "zero_results",
-        })
+        _set_audit(
+            state,
+            dimension["dimension_id"],
+            {
+                "per_query": merged_query_stats,
+                "confidence": {"score": 0.0, "max": 0.0},
+                "outcome": "zero_results",
+            },
+        )
         return state
 
     # Confidence-based retry with alternate queries.
@@ -278,7 +284,9 @@ def run(state: DDState) -> DDState:
     if retry_enabled and confidence_score < confidence_threshold and alternate_queries:
         _log.info(
             "  Low confidence (%.3f < %.3f). Retrying with %d alternate queries...",
-            confidence_score, confidence_threshold, len(alternate_queries),
+            confidence_score,
+            confidence_threshold,
+            len(alternate_queries),
         )
         alt_results, alt_confidence, alt_stats = retrieve_evidence(
             queries=alternate_queries,
@@ -299,29 +307,41 @@ def run(state: DDState) -> DDState:
         _log.info(
             "  Hard floor not met (max_score=%.3f < %.3f) after %d attempt(s). "
             "Signalling no-evidence to Analysis Agent.",
-            max_score, config.RETRIEVAL_HARD_FLOOR, attempts,
+            max_score,
+            config.RETRIEVAL_HARD_FLOOR,
+            attempts,
         )
         state["_retrieved_chunks"] = []
         state["_retrieval_score"] = max_score
         state["_retrieval_attempts"] = attempts
-        _set_audit(state, dimension["dimension_id"], {
-            "per_query": merged_query_stats,
-            "confidence": {"score": retry_score, "max": max_score},
-            "outcome": "hard_floor_not_met",
-        })
+        _set_audit(
+            state,
+            dimension["dimension_id"],
+            {
+                "per_query": merged_query_stats,
+                "confidence": {"score": retry_score, "max": max_score},
+                "outcome": "hard_floor_not_met",
+            },
+        )
         return state
 
     _log.info(
         "  Retrieved %d chunks, confidence=%.3f, attempts=%d",
-        len(results), retry_score, attempts,
+        len(results),
+        retry_score,
+        attempts,
     )
 
-    _set_audit(state, dimension["dimension_id"], {
-        "per_query": merged_query_stats,
-        "confidence": {"score": retry_score, "max": max_score},
-        "outcome": "ok",
-        "retrieved": _retrieved_summary(results),
-    })
+    _set_audit(
+        state,
+        dimension["dimension_id"],
+        {
+            "per_query": merged_query_stats,
+            "confidence": {"score": retry_score, "max": max_score},
+            "outcome": "ok",
+            "retrieved": _retrieved_summary(results),
+        },
+    )
     state["_retrieved_chunks"] = results
     state["_retrieval_score"] = retry_score
     state["_retrieval_attempts"] = attempts

@@ -71,7 +71,9 @@ def run_provenance() -> dict:
         "temperature": config.LLM_TEMPERATURE if config.llm_provider() == "google" else None,
         "retrieval_top_k": config.RETRIEVAL_TOP_K,
         "embedding_model": (
-            config.LOCAL_EMBEDDING_MODEL if config.EMBEDDING_PROVIDER == "local" else config.EMBEDDING_MODEL
+            config.LOCAL_EMBEDDING_MODEL
+            if config.EMBEDDING_PROVIDER == "local"
+            else config.EMBEDDING_MODEL
         ),
         **git_state(),
     }
@@ -106,7 +108,8 @@ def write_run(state: dict, runs_dir: Path | None = None) -> Path:
         "git_sha": report.get("git_sha"),
         "git_dirty": report.get("git_dirty"),
         "run_dir": run_dir.relative_to(config.PROJECT_ROOT).as_posix()
-        if run_dir.is_relative_to(config.PROJECT_ROOT) else str(run_dir),
+        if run_dir.is_relative_to(config.PROJECT_ROOT)
+        else str(run_dir),
     }
     with (runs_dir / LEDGER_NAME).open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")

@@ -30,15 +30,17 @@ _log = logging.getLogger(__name__)
 # its answer could not be used, or it reported that the evidence the rubric
 # requires was not retrieved.  A rating carrying one of these must never be
 # read as analysis.
-DEGRADED_FLAGS = frozenset({
-    "no_evidence",
-    "parse_error",
-    "analysis_error",
-    "inconclusive",
-    "invalid_rating",
-    "refusal",     # the model declined the request
-    "truncated",   # the answer was cut off at max_tokens
-})
+DEGRADED_FLAGS = frozenset(
+    {
+        "no_evidence",
+        "parse_error",
+        "analysis_error",
+        "inconclusive",
+        "invalid_rating",
+        "refusal",  # the model declined the request
+        "truncated",  # the answer was cut off at max_tokens
+    }
+)
 
 
 def summarize_flags(verdicts: list) -> tuple[dict, dict]:
@@ -50,9 +52,7 @@ def summarize_flags(verdicts: list) -> tuple[dict, dict]:
     """
     flags = {v["dimension"]: list(v.get("flags") or []) for v in verdicts if v.get("flags")}
     degraded = {
-        dim: sorted(set(f) & DEGRADED_FLAGS)
-        for dim, f in flags.items()
-        if set(f) & DEGRADED_FLAGS
+        dim: sorted(set(f) & DEGRADED_FLAGS) for dim, f in flags.items() if set(f) & DEGRADED_FLAGS
     }
     return flags, degraded
 
@@ -66,7 +66,9 @@ def build_report(state: DDState) -> dict:
     if degraded:
         _log.warning(
             "%d of %d dimensions produced a degraded verdict (no model finding): %s",
-            len(degraded), len(verdicts), degraded,
+            len(degraded),
+            len(verdicts),
+            degraded,
         )
 
     usage_total: dict[str, int] = {}
@@ -83,11 +85,15 @@ def build_report(state: DDState) -> dict:
         "dimension_count": len(verdicts),
         "ratings": {v["dimension"]: v["rating"] for v in verdicts},
         "raw_verdicts": {v["dimension"]: v.get("raw_verdict") for v in verdicts},
-        "served_models": {v["dimension"]: v.get("served_model") for v in verdicts if v.get("served_model")},
+        "served_models": {
+            v["dimension"]: v.get("served_model") for v in verdicts if v.get("served_model")
+        },
         "flags": flags,
         "degraded_dimensions": degraded,
         "trustworthy": not degraded,
-        "quote_checks": {v["dimension"]: v["quote_check"] for v in verdicts if v.get("quote_check")},
+        "quote_checks": {
+            v["dimension"]: v["quote_check"] for v in verdicts if v.get("quote_check")
+        },
         "usage_total": usage_total,
         "retrieval_audits": state.get("_retrieval_audits", {}),
         "warnings": state.get("_warnings", []),
@@ -152,7 +158,9 @@ def run_graph(company_name: str, filing_path: str) -> DDState:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the due diligence LangGraph pipeline.")
     parser.add_argument("--company", required=True, help="Company name")
-    parser.add_argument("--filing", required=True, help="Path to filing PDF (or logical filing path)")
+    parser.add_argument(
+        "--filing", required=True, help="Path to filing PDF (or logical filing path)"
+    )
     parser.add_argument(
         "--out",
         type=str,

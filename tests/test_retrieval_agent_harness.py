@@ -28,6 +28,7 @@ from src.agents.document_agent import load_dimensions
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 @contextlib.contextmanager
 def patched_query_index(mock):
     """Swap `retrieval_agent.query_index` for `mock`, restoring it on exit.
@@ -45,7 +46,9 @@ def patched_query_index(mock):
         retrieval_agent.query_index = original
 
 
-def build_state(company_name: str = "Shopify", filing_path: str = "data/filings/shop-20251231.pdf") -> dict:
+def build_state(
+    company_name: str = "Shopify", filing_path: str = "data/filings/shop-20251231.pdf"
+) -> dict:
     dimensions = load_dimensions()
     return {
         "company_name": company_name,
@@ -62,7 +65,10 @@ def build_state(company_name: str = "Shopify", filing_path: str = "data/filings/
 
 def _make_mock(score: float, n_results: int = 3):
     """Return a mock `query_index` that always returns `n_results` hits at `score`."""
-    def mock_query_index(query: str, top_k: int | None = None, section_types=None, namespace: str = ""):
+
+    def mock_query_index(
+        query: str, top_k: int | None = None, section_types=None, namespace: str = ""
+    ):
         if top_k is None:
             top_k = 5
         return [
@@ -76,12 +82,16 @@ def _make_mock(score: float, n_results: int = 3):
             }
             for i in range(min(n_results, top_k))
         ]
+
     return mock_query_index
 
 
 def _make_dispatch_mock(primary_score: float, alternate_score: float, n_results: int = 3):
     """Return a mock that returns different scores for primary vs alternate queries."""
-    def mock_query_index(query: str, top_k: int | None = None, section_types=None, namespace: str = ""):
+
+    def mock_query_index(
+        query: str, top_k: int | None = None, section_types=None, namespace: str = ""
+    ):
         # Callers populate the module-level `_alternate_set` before running so
         # this mock can tell primary queries from alternates.
         score = alternate_score if query in _alternate_set else primary_score
@@ -98,6 +108,7 @@ def _make_dispatch_mock(primary_score: float, alternate_score: float, n_results:
             }
             for i in range(min(n_results, top_k))
         ]
+
     return mock_query_index
 
 
@@ -107,6 +118,7 @@ _alternate_set: set[str] = set()
 # ---------------------------------------------------------------------------
 # Test 1: retry fires when primary confidence is low, alternates are high
 # ---------------------------------------------------------------------------
+
 
 def test_retry_on_low_confidence() -> None:
     """Primary queries produce low scores; alternate queries produce high scores.
@@ -133,6 +145,7 @@ def test_retry_on_low_confidence() -> None:
 # Test 2: zero results → early exit, no retry attempted
 # ---------------------------------------------------------------------------
 
+
 def test_zero_results_early_exit() -> None:
     """All queries return empty lists (namespace miss).
     Expect: early exit with outcome 'zero_results', no chunks, no LLM call.
@@ -155,6 +168,7 @@ def test_zero_results_early_exit() -> None:
 # ---------------------------------------------------------------------------
 # Test 3: hard floor not met after retry
 # ---------------------------------------------------------------------------
+
 
 def test_hard_floor_not_met() -> None:
     """All queries (primary + alternate) return scores below RETRIEVAL_HARD_FLOOR.
@@ -179,6 +193,7 @@ def test_hard_floor_not_met() -> None:
 # Test 4: happy path — primary scores above threshold, single pass
 # ---------------------------------------------------------------------------
 
+
 def test_ok_no_retry() -> None:
     """Primary queries return scores above CONFIDENCE_THRESHOLD.
     Expect: single pass (attempts == 1), chunks populated, outcome 'ok'.
@@ -195,6 +210,7 @@ def test_ok_no_retry() -> None:
 # ---------------------------------------------------------------------------
 # Test 5: per-dimension confidence_floor suppresses retry
 # ---------------------------------------------------------------------------
+
 
 def test_per_dimension_confidence_floor() -> None:
     """Dimension overrides confidence_floor=0.50. Primary queries return 0.60,
@@ -223,6 +239,7 @@ def test_per_dimension_confidence_floor() -> None:
 # Test 6: audits accumulate across dimensions instead of overwriting
 # ---------------------------------------------------------------------------
 
+
 def test_audit_accumulates_across_dimensions() -> None:
     """Run every dimension through `run()` the way the graph loop does.
     Expect: `_retrieval_audits` holds one entry per dimension, while
@@ -248,6 +265,7 @@ def test_audit_accumulates_across_dimensions() -> None:
 # ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
+
 
 def main() -> int:
     tests = [

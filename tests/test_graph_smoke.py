@@ -25,7 +25,9 @@ from src.agents import analysis_agent, document_agent, retrieval_agent
 from src.graph.build import _new_state, build_graph
 
 
-def _mock_query_index(query: str, top_k: int | None = None, section_types=None, namespace: str = ""):
+def _mock_query_index(
+    query: str, top_k: int | None = None, section_types=None, namespace: str = ""
+):
     if top_k is None:
         top_k = 5
     return [
@@ -57,17 +59,27 @@ def _failing_call_model(system_prompt, user_prompt, output_schema, dimension_id)
 @contextlib.contextmanager
 def _mocked(fail: bool = False):
     """Install the fakes, restoring the real functions afterwards."""
-    originals = (retrieval_agent.query_index, analysis_agent._call_model, document_agent.namespace_vector_count)
+    originals = (
+        retrieval_agent.query_index,
+        analysis_agent._call_model,
+        document_agent.namespace_vector_count,
+    )
     retrieval_agent.query_index = _mock_query_index
     analysis_agent._call_model = _failing_call_model if fail else _mock_call_model
     document_agent.namespace_vector_count = lambda namespace: 352
     try:
         yield
     finally:
-        retrieval_agent.query_index, analysis_agent._call_model, document_agent.namespace_vector_count = originals
+        (
+            retrieval_agent.query_index,
+            analysis_agent._call_model,
+            document_agent.namespace_vector_count,
+        ) = originals
 
 
-def run_mocked_graph(company_name: str = "Shopify", filing_path: str = "data/filings/shop-20251231.pdf") -> dict[str, Any]:
+def run_mocked_graph(
+    company_name: str = "Shopify", filing_path: str = "data/filings/shop-20251231.pdf"
+) -> dict[str, Any]:
     """Run the compiled graph end-to-end with index, retrieval and LLM calls mocked out."""
     with _mocked():
         compiled = build_graph()
@@ -97,6 +109,7 @@ def validate_graph_run() -> dict[str, Any]:
     assert report["dimension_count"] == dim_count
     # Every report names the rubric version it was judged against.
     from src import config as _config
+
     assert report["rubric_version"] == _config.RUBRIC_VERSION
     assert set(report["ratings"].keys()) == {d["dimension_id"] for d in final_state["dimensions"]}
     assert all(rating in {"LOW", "MEDIUM", "HIGH"} for rating in report["ratings"].values())
@@ -125,6 +138,7 @@ def validate_degraded_run() -> dict[str, Any]:
     like real analysis — the failure mode the report must make visible.
     """
     from src import config as _config
+
     orig_delay = _config.LLM_RETRY_BASE_SECONDS
     _config.LLM_RETRY_BASE_SECONDS = 0.0
     try:

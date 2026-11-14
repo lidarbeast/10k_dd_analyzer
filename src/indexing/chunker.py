@@ -42,7 +42,9 @@ def _build_chunker(max_tokens: int) -> HybridChunker:
 
     return HybridChunker(max_tokens=max_tokens)
 
+
 # ── Chunking logic ──────────────────────────────────────────
+
 
 def chunk_document(
     parsed_doc_dict: dict,
@@ -74,7 +76,7 @@ def chunk_document(
     # Max tokens controls chunk size and retrieval granularity.
     # When using local embeddings, align chunk tokenizer with embedding tokenizer.
     chunker = _build_chunker(max_tokens=max_tokens)
-    
+
     chunk_iter = chunker.chunk(dl_doc=doc)
     doc_chunks: list[BaseChunk] = list(chunk_iter)
 
@@ -88,11 +90,11 @@ def chunk_document(
     for chunk in doc_chunks:
         # Get contextualized text (includes heading context)
         text = chunker.contextualize(chunk)
-        
+
         # Determine the source page natively from chunk meta
         first_page = 0
         label = "unknown"
-        
+
         if chunk.meta.doc_items and len(chunk.meta.doc_items) > 0:
             item = chunk.meta.doc_items[0]
             if hasattr(item, "prov") and item.prov and len(item.prov) > 0:
@@ -100,7 +102,6 @@ def chunk_document(
             if hasattr(item, "label"):
                 label = item.label
 
-        
         # Keep all headings natively returned by Docling
         headings = list(chunk.meta.headings) if chunk.meta.headings else []
 
@@ -117,17 +118,19 @@ def chunk_document(
     _log.info(f"{source_document}: produced {len(chunks)} chunks using HybridChunker")
     return chunks
 
+
 # ── CLI entry-point ──────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
 
     parser = argparse.ArgumentParser(description="Chunk parsed filing JSONs.")
     parser.add_argument(
-        "input_file", 
-        nargs="?", 
-        help="Path to a specific *_parsed.json file to chunk. If not provided, chunks all *_parsed.json files in data/parsed/."
+        "input_file",
+        nargs="?",
+        help="Path to a specific *_parsed.json file to chunk. If not provided, chunks all *_parsed.json files in data/parsed/.",
     )
     parser.add_argument(
         "--max-tokens",
@@ -138,7 +141,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     parsed_dir = config.PARSED_DIR
-    
+
     if args.input_file:
         input_path = Path(args.input_file)
         if not input_path.exists():
@@ -156,7 +159,7 @@ if __name__ == "__main__":
             source_doc = json_path.stem
             if source_doc.endswith("_parsed"):
                 source_doc = source_doc[: -len("_parsed")]
-            
+
             with open(json_path, encoding="utf-8") as f:
                 parsed_doc_dict = json.load(f)
 

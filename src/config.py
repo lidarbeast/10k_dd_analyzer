@@ -160,9 +160,7 @@ def validate_config() -> list[str]:
     if EMBEDDING_PROVIDER not in {"google", "local"}:
         errors.append("EMBEDDING_PROVIDER must be 'google' or 'local'")
     if EMBEDDING_PROVIDER == "google" and not GOOGLE_API_KEY:
-        errors.append(
-            "GOOGLE_API_KEY is not set. Get one at https://aistudio.google.com/apikey"
-        )
+        errors.append("GOOGLE_API_KEY is not set. Get one at https://aistudio.google.com/apikey")
     if not PINECONE_API_KEY:
         errors.append("PINECONE_API_KEY is not set. Sign up at https://www.pinecone.io/")
     return errors

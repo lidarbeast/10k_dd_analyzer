@@ -89,19 +89,22 @@ def _get_gemini_client() -> genai.Client:
 @dataclass
 class ModelReply:
     """What one analysis call returned, independent of either SDK's types."""
+
     text: str
-    stop_reason: str              # "end_turn" | "max_tokens" | "refusal" | provider-specific
+    stop_reason: str  # "end_turn" | "max_tokens" | "refusal" | provider-specific
     model: str
     fallback_used: bool = False
     usage: dict = field(default_factory=dict)
-    stop_detail: str = ""         # why the model stopped without answering, if known
+    stop_detail: str = ""  # why the model stopped without answering, if known
 
 
 def _is_retryable(error: Exception) -> bool:
     """Rate limits, server errors and network failures are transient; any
     other API error (bad request, auth, unknown model) will fail again, and so
     will a free-tier daily quota until it resets."""
-    if isinstance(error, (anthropic.RateLimitError, anthropic.APIConnectionError, httpx.TransportError)):
+    if isinstance(
+        error, (anthropic.RateLimitError, anthropic.APIConnectionError, httpx.TransportError)
+    ):
         return True  # APITimeoutError is an APIConnectionError
     if isinstance(error, anthropic.APIStatusError):
         return error.status_code >= 500
@@ -162,7 +165,12 @@ def _usage_dict(usage: Any) -> dict:
     if usage is None:
         return {}
     out = {}
-    for name in ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"):
+    for name in (
+        "input_tokens",
+        "output_tokens",
+        "cache_read_input_tokens",
+        "cache_creation_input_tokens",
+    ):
         value = getattr(usage, name, None)
         if isinstance(value, int):
             out[name] = value
@@ -191,7 +199,9 @@ def _call_claude(
         "betas": [_FALLBACK_BETA],
         "fallbacks": "default",
     }
-    response = _invoke_with_retry(lambda: _get_client().beta.messages.create(**request), dimension_id)
+    response = _invoke_with_retry(
+        lambda: _get_client().beta.messages.create(**request), dimension_id
+    )
 
     text = "".join(
         getattr(block, "text", "") or ""
@@ -377,8 +387,10 @@ def _build_dimension_guidance(dimension: dict) -> str:
         # its "pattern" field is rendered.
         boilerplate = [
             f'- "{_collapse_ws(item["pattern"])}": {_collapse_ws(item["classification"])}. '
-            f'{_collapse_ws(item["explanation"])}'
-            for item in (evidence_schema.get("boilerplate_low_patterns") or [])[:_MAX_GUIDANCE_ITEMS]
+            f"{_collapse_ws(item['explanation'])}"
+            for item in (evidence_schema.get("boilerplate_low_patterns") or [])[
+                :_MAX_GUIDANCE_ITEMS
+            ]
         ]
         if boilerplate:
             if not lines:
@@ -396,9 +408,8 @@ def _build_dimension_guidance(dimension: dict) -> str:
         # String-valued note (not a list) — helps the model recognise how the
         # evidence actually names things (e.g. "Senior Notes"/"Term Loan" rather
         # than "long-term debt"), so it must reach analysis, not just retrieval.
-        terminology_note = (
-            evidence_schema.get("terminology_note")
-            or evidence_schema.get("debt_terminology_note")
+        terminology_note = evidence_schema.get("terminology_note") or evidence_schema.get(
+            "debt_terminology_note"
         )
         if isinstance(terminology_note, str) and terminology_note.strip():
             if not lines:
@@ -500,7 +511,9 @@ def _render_evidence(retrieved_chunks: list[dict]) -> str:
     return "\n\n".join(blocks) + ("\n" if blocks else "")
 
 
-def _build_prompt(dimension: dict, company_name: str, retrieved_chunks: list[dict]) -> tuple[str, str]:
+def _build_prompt(
+    dimension: dict, company_name: str, retrieved_chunks: list[dict]
+) -> tuple[str, str]:
     """
     Builds the system and user prompts from the dimension config template.
 
@@ -573,12 +586,24 @@ def _parse_verdict(response_text: str, dimension_id: str) -> dict[str, Any]:
 # Quote verification: every passage the model quotes must be in the evidence
 # ---------------------------------------------------------------------------
 
-_QUOTE_TRANSLATION = str.maketrans({
-    "‘": "'", "’": "'", "‚": "'", "‛": "'",
-    "“": '"', "”": '"', "„": '"',
-    "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "−": "-",
-    " ": " ",
-})
+_QUOTE_TRANSLATION = str.maketrans(
+    {
+        "‘": "'",
+        "’": "'",
+        "‚": "'",
+        "‛": "'",
+        "“": '"',
+        "”": '"',
+        "„": '"',
+        "‐": "-",
+        "‑": "-",
+        "‒": "-",
+        "–": "-",
+        "—": "-",
+        "−": "-",
+        " ": " ",
+    }
+)
 _ELLIPSIS = re.compile(r"\s*(?:\[(?:\.\.\.|\u2026)\]|\.\.\.|\u2026)\s*")
 # Fragments shorter than this between ellipses carry too little to verify.
 _MIN_FRAGMENT_CHARS = 12
@@ -593,10 +618,7 @@ def _quote_in(quote: str, haystack_normalized: str) -> bool:
     """True when the quote appears in the text, ignoring whitespace, case and
     typographic quote/dash variants.  An elided quote ("A ... B") must have
     each fragment present, in order."""
-    fragments = [
-        _normalize_for_match(f).strip(" \"'")
-        for f in _ELLIPSIS.split(str(quote))
-    ]
+    fragments = [_normalize_for_match(f).strip(" \"'") for f in _ELLIPSIS.split(str(quote))]
     fragments = [f for f in fragments if f]
     if not fragments:
         return False
@@ -683,6 +705,7 @@ def _check_quotes(details: dict, retrieved_chunks: list[dict]) -> tuple[list[dic
 # ---------------------------------------------------------------------------
 # Analysis
 # ---------------------------------------------------------------------------
+
 
 def analyze_dimension(
     dimension: dict,
@@ -783,7 +806,9 @@ def analyze_dimension(
     if reply is not None and reply.fallback_used and "model_fallback" not in flags:
         flags.append("model_fallback")
 
-    citations, quote_check = _check_quotes(parsed, retrieved_chunks) if model_answered else ([], None)
+    citations, quote_check = (
+        _check_quotes(parsed, retrieved_chunks) if model_answered else ([], None)
+    )
     if quote_check and quote_check["failed"] and "unverified_quote" not in flags:
         flags.append("unverified_quote")
 
