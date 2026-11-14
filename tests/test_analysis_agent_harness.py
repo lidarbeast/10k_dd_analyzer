@@ -37,6 +37,9 @@ from src.agents.document_agent import load_dimensions
 # Helpers
 # ---------------------------------------------------------------------------
 
+# These tests exercise the Claude path; patched_llm selects it by model name.
+_CLAUDE_MODEL = "claude-sonnet-5-5"
+
 def _message(text: str = "", *, stop_reason: str = "end_turn", model: str | None = None,
              fallback: bool = False) -> SimpleNamespace:
     """A Messages API response: a thinking block (empty text, as by default)
@@ -93,6 +96,8 @@ def patched_llm(responder, *, max_retries: int = 1):
     original = analysis_agent._get_client
     orig_retries = config.LLM_MAX_RETRIES
     orig_delay = config.LLM_RETRY_BASE_SECONDS
+    orig_model = config.LLM_MODEL
+    config.LLM_MODEL = _CLAUDE_MODEL
     analysis_agent._get_client = lambda: fake
     config.LLM_MAX_RETRIES = max_retries
     config.LLM_RETRY_BASE_SECONDS = 0.0
@@ -102,6 +107,7 @@ def patched_llm(responder, *, max_retries: int = 1):
         analysis_agent._get_client = original
         config.LLM_MAX_RETRIES = orig_retries
         config.LLM_RETRY_BASE_SECONDS = orig_delay
+        config.LLM_MODEL = orig_model
 
 
 _REQUEST = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
@@ -253,7 +259,7 @@ def test_valid_json_response() -> None:
     }]
     assert verdict["quote_check"] == {"checked": 1, "verified": 1, "failed": []}
     assert verdict["retrieved_chunk_ids"] == ["test-20991231_chunk_7"]
-    assert verdict["served_model"] == config.LLM_MODEL
+    assert verdict["served_model"] == _CLAUDE_MODEL
     assert verdict["usage"] == {"input_tokens": 1200, "output_tokens": 300}
     # confidence carries the retrieval score, not anything the model reported
     assert verdict["confidence"] == 0.72
@@ -279,7 +285,7 @@ def test_request_carries_schema_effort_and_fallback() -> None:
     with patched_llm(lambda r: _payload("HIGH")) as fake:
         _analyze(_dimension(output_schema=schema), chunks=[_chunk()])
     request = fake.calls[0]
-    assert request["model"] == config.LLM_MODEL
+    assert request["model"] == _CLAUDE_MODEL
     assert request["output_config"] == {
         "effort": config.LLM_EFFORT,
         "format": {"type": "json_schema", "schema": schema},

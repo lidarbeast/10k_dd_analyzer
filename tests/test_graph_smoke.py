@@ -4,7 +4,7 @@ This file is both:
 - a runnable script: `python tests/test_graph_smoke.py`
 - a pytest test module: `pytest tests/test_graph_smoke.py`
 
-Mocks the Pinecone index check, retrieval and the Anthropic call so the full
+Mocks the Pinecone index check, retrieval and the model call so the full
 graph (document_agent -> retrieval_agent -> analysis_agent loop -> build_report)
 can be exercised without live API calls or credentials.
 """
@@ -20,7 +20,6 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 import contextlib
-from types import SimpleNamespace
 
 from src.agents import analysis_agent, document_agent, retrieval_agent
 from src.graph.build import build_graph, _new_state
@@ -42,34 +41,30 @@ def _mock_query_index(query: str, top_k: int | None = None, section_types=None, 
     ]
 
 
-class _FakeMessages:
-    def __init__(self, fail: bool) -> None:
-        self.fail = fail
+def _mock_call_model(system_prompt, user_prompt, output_schema, dimension_id):
+    return analysis_agent.ModelReply(
+        text='{"verdict": "LOW", "reasoning": "mock", "evidence": [], "flags": []}',
+        stop_reason="end_turn",
+        model="mock-model",
+        usage={"input_tokens": 10, "output_tokens": 5},
+    )
 
-    def create(self, **request):
-        if self.fail:
-            raise RuntimeError("503 model overloaded")
-        text = '{"verdict": "LOW", "reasoning": "mock", "evidence": [], "flags": []}'
-        return SimpleNamespace(
-            content=[SimpleNamespace(type="text", text=text)],
-            stop_reason="end_turn",
-            model=request["model"],
-            usage=SimpleNamespace(input_tokens=10, output_tokens=5, iterations=None),
-        )
+
+def _failing_call_model(system_prompt, user_prompt, output_schema, dimension_id):
+    raise RuntimeError("503 model overloaded")
 
 
 @contextlib.contextmanager
 def _mocked(fail: bool = False):
     """Install the fakes, restoring the real functions afterwards."""
-    originals = (retrieval_agent.query_index, analysis_agent._get_client, document_agent.namespace_vector_count)
-    client = SimpleNamespace(beta=SimpleNamespace(messages=_FakeMessages(fail)))
+    originals = (retrieval_agent.query_index, analysis_agent._call_model, document_agent.namespace_vector_count)
     retrieval_agent.query_index = _mock_query_index
-    analysis_agent._get_client = lambda: client
+    analysis_agent._call_model = _failing_call_model if fail else _mock_call_model
     document_agent.namespace_vector_count = lambda namespace: 352
     try:
         yield
     finally:
-        retrieval_agent.query_index, analysis_agent._get_client, document_agent.namespace_vector_count = originals
+        retrieval_agent.query_index, analysis_agent._call_model, document_agent.namespace_vector_count = originals
 
 
 def run_mocked_graph(company_name: str = "Shopify", filing_path: str = "data/filings/shop-20251231.pdf") -> dict[str, Any]:

@@ -209,3 +209,21 @@ def test_d3_boilerplate_and_temporal_guidance_rendered() -> None:
     guidance = analysis_agent._build_dimension_guidance(spec)
     assert "From time to time, we may be subject to legal proceedings" in guidance
     assert "Do not import knowledge from outside the filing text" in guidance
+
+
+def test_output_schemas_use_only_keywords_both_providers_accept() -> None:
+    """Gemini's response_json_schema supports a subset of JSON Schema; a keyword
+    outside it could be rejected or ignored."""
+    allowed = {"type", "enum", "description", "properties", "required", "additionalProperties", "items", "anyOf"}
+
+    def walk(node: dict, where: str) -> None:
+        assert set(node) <= allowed, f"{where}: {sorted(set(node) - allowed)}"
+        for key, child in node.get("properties", {}).items():
+            walk(child, f"{where}.{key}")
+        if "items" in node:
+            walk(node["items"], f"{where}[]")
+        for child in node.get("anyOf", []):
+            walk(child, f"{where}|")
+
+    for name, spec in _raw_configs().items():
+        walk(spec["output_schema"], name)

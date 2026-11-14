@@ -67,7 +67,8 @@ def run_provenance() -> dict:
         "rubric_version": config.RUBRIC_VERSION,
         "rubric_hash": rubric_hash(),
         "model": config.LLM_MODEL,
-        "effort": config.LLM_EFFORT,
+        "effort": config.LLM_EFFORT if config.llm_provider() == "anthropic" else None,
+        "temperature": config.LLM_TEMPERATURE if config.llm_provider() == "google" else None,
         "retrieval_top_k": config.RETRIEVAL_TOP_K,
         "embedding_model": (
             config.LOCAL_EMBEDDING_MODEL if config.EMBEDDING_PROVIDER == "local" else config.EMBEDDING_MODEL
@@ -101,6 +102,7 @@ def write_run(state: dict, runs_dir: Path | None = None) -> Path:
         "rubric_hash": report.get("rubric_hash"),
         "model": report.get("model"),
         "effort": report.get("effort"),
+        "temperature": report.get("temperature"),
         "git_sha": report.get("git_sha"),
         "git_dirty": report.get("git_dirty"),
         "run_dir": run_dir.relative_to(config.PROJECT_ROOT).as_posix()

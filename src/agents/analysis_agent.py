@@ -5,7 +5,8 @@ Responsibilities:
   1. Receive retrieved chunks from the Retrieval Agent
   2. Render them as delimited, identified evidence blocks (E1, E2, ...) under
      the dimension's rubric and guidance
-  3. Call Claude (Anthropic API) with the dimension's JSON output schema
+  3. Call the configured model (Gemini or Claude) with the dimension's JSON
+     output schema
   4. Check every quoted passage against the evidence block it cites
   5. Output a structured VerdictCard and accumulate it in DDState
 """
@@ -16,9 +17,12 @@ import logging
 import re
 import time
 import unicodedata
-from typing import Any
+from typing import Any, Callable
 
 import anthropic
+from google import genai
+from google.genai import errors as genai_errors, types as genai_types
+import httpx
 
 from src import config
 from src.state import DDState, VerdictCard
@@ -32,21 +36,34 @@ _log = logging.getLogger(__name__)
 # per-item text — only bound the item count.
 _MAX_GUIDANCE_ITEMS = 12
 
-# Server-side refusal fallback ("default" routing).  If a safety classifier
-# declines the request, the API re-runs it on Anthropic's recommended model
-# for that refusal category; the verdict then records which model answered.
+# Server-side refusal fallback ("default" routing, Claude only).  If a safety
+# classifier declines the request, the API re-runs it on Anthropic's recommended
+# model for that refusal category; the verdict then records which model answered.
 _FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
-# Module-level singleton — avoids re-initialising the client on every dimension.
+# Gemini finish reasons meaning the model stopped without answering.  RECITATION
+# matters here: the prompts ask for verbatim quotes from filings.
+_GEMINI_BLOCKED = frozenset({"SAFETY", "RECITATION", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII"})
+
+# Gemini's 429 says how long to wait: "Please retry in 25.856440294s."
+_RETRY_HINT = re.compile(r"retry in ([0-9.]+)s", re.IGNORECASE)
+_MAX_RETRY_WAIT_SECONDS = 120.0
+
+# Module-level singletons — avoid re-initialising a client on every dimension.
 _client: anthropic.Anthropic | None = None
+_gemini_client: genai.Client | None = None
+
+
+def _check_llm_config() -> None:
+    llm_errors = config.validate_llm_config()
+    if llm_errors:
+        raise RuntimeError("; ".join(llm_errors))
 
 
 def _get_client() -> anthropic.Anthropic:
     global _client
     if _client is None:
-        errors = config.validate_llm_config()
-        if errors:
-            raise RuntimeError("; ".join(errors))
+        _check_llm_config()
         _client = anthropic.Anthropic(
             timeout=config.LLM_TIMEOUT_SECONDS,
             # Retry is handled explicitly in _invoke_with_retry so that each
@@ -56,27 +73,54 @@ def _get_client() -> anthropic.Anthropic:
     return _client
 
 
+def _get_gemini_client() -> genai.Client:
+    global _gemini_client
+    if _gemini_client is None:
+        _check_llm_config()
+        _gemini_client = genai.Client(
+            api_key=config.GOOGLE_API_KEY,
+            http_options=genai_types.HttpOptions(timeout=int(config.LLM_TIMEOUT_SECONDS * 1000)),
+        )
+    return _gemini_client
+
+
 @dataclass
 class ModelReply:
-    """What one analysis call returned, independent of the SDK's types."""
+    """What one analysis call returned, independent of either SDK's types."""
     text: str
-    stop_reason: str
+    stop_reason: str              # "end_turn" | "max_tokens" | "refusal" | provider-specific
     model: str
     fallback_used: bool = False
     usage: dict = field(default_factory=dict)
+    stop_detail: str = ""         # why the model stopped without answering, if known
 
 
 def _is_retryable(error: Exception) -> bool:
     """Rate limits, server errors and network failures are transient; any
-    other API error (bad request, auth, unknown model) will fail again."""
-    if isinstance(error, (anthropic.RateLimitError, anthropic.APIConnectionError)):
+    other API error (bad request, auth, unknown model) will fail again, and so
+    will a free-tier daily quota until it resets."""
+    if isinstance(error, (anthropic.RateLimitError, anthropic.APIConnectionError, httpx.TransportError)):
         return True  # APITimeoutError is an APIConnectionError
     if isinstance(error, anthropic.APIStatusError):
         return error.status_code >= 500
+    if isinstance(error, genai_errors.APIError):
+        if error.code == 429:
+            return "PerDay" not in str(error)
+        return error.code >= 500
     return False
 
 
-def _invoke_with_retry(request: dict, dimension_id: str):
+def _retry_delay(error: Exception, attempt: int, base_delay: float) -> float:
+    """Seconds to wait before the next attempt: the server's own "retry in Xs"
+    when it gives one (a retry sooner just spends the per-minute quota),
+    otherwise exponential backoff."""
+    hint = _RETRY_HINT.search(str(error))
+    if hint:
+        return min(float(hint.group(1)) + 1.0, _MAX_RETRY_WAIT_SECONDS)
+    return base_delay * (2 ** (attempt - 1))
+
+
+def _invoke_with_retry(call: Callable[[], Any], dimension_id: str):
     """Invoke the analysis model with bounded retries and exponential backoff.
 
     Mirrors `_get_embeddings_with_retry` in src/indexing/pinecone_ops.py.  Without
@@ -90,13 +134,13 @@ def _invoke_with_retry(request: dict, dimension_id: str):
 
     for attempt in range(1, max_retries + 1):
         try:
-            return _get_client().beta.messages.create(**request)
+            return call()
         except Exception as e:
             last_error = e
             if not _is_retryable(e) or attempt == max_retries:
                 break
 
-            sleep_seconds = base_delay * (2 ** (attempt - 1))
+            sleep_seconds = _retry_delay(e, attempt, base_delay)
             _log.warning(
                 "Analysis call failed for %s (attempt %s/%s): %s. Retrying in %.1fs",
                 dimension_id,
@@ -123,14 +167,15 @@ def _usage_dict(usage: Any) -> dict:
     return out
 
 
-def _call_model(
+def _call_claude(
     system_prompt: str,
     user_prompt: str,
     output_schema: dict | None,
     dimension_id: str,
 ) -> ModelReply:
-    """One analysis request.  The reply's text is the JSON answer; thinking
-    blocks are skipped (their text is empty by default and is not the answer)."""
+    """One request to the Anthropic API.  The reply's text is the JSON answer;
+    thinking blocks are skipped (their text is empty by default and is not the
+    answer)."""
     output_config: dict[str, Any] = {"effort": config.LLM_EFFORT}
     if output_schema:
         output_config["format"] = {"type": "json_schema", "schema": output_schema}
@@ -144,7 +189,7 @@ def _call_model(
         "betas": [_FALLBACK_BETA],
         "fallbacks": "default",
     }
-    response = _invoke_with_retry(request, dimension_id)
+    response = _invoke_with_retry(lambda: _get_client().beta.messages.create(**request), dimension_id)
 
     text = "".join(
         getattr(block, "text", "") or ""
@@ -161,6 +206,79 @@ def _call_model(
         fallback_used=fallback_used,
         usage=_usage_dict(usage),
     )
+
+
+def _call_gemini(
+    system_prompt: str,
+    user_prompt: str,
+    output_schema: dict | None,
+    dimension_id: str,
+) -> ModelReply:
+    """One request to the Gemini API, normalised to the same ModelReply.  The
+    answer is read from the non-thought text parts of the first candidate."""
+    request_config: dict[str, Any] = {
+        "system_instruction": system_prompt,
+        "temperature": config.LLM_TEMPERATURE,
+        "max_output_tokens": config.LLM_MAX_TOKENS,
+    }
+    if output_schema:
+        request_config["response_mime_type"] = "application/json"
+        request_config["response_json_schema"] = output_schema
+
+    response = _invoke_with_retry(
+        lambda: _get_gemini_client().models.generate_content(
+            model=config.LLM_MODEL,
+            contents=user_prompt,
+            config=request_config,
+        ),
+        dimension_id,
+    )
+
+    candidates = response.candidates or []
+    parts = (candidates[0].content.parts or []) if candidates and candidates[0].content else []
+    text = "".join(p.text for p in parts if p.text and not p.thought)
+
+    finish = candidates[0].finish_reason if candidates else None
+    finish_name = str(getattr(finish, "name", finish) or "")
+    block = getattr(response.prompt_feedback, "block_reason", None)
+    block_name = str(getattr(block, "name", block) or "")
+    if block_name:
+        stop_reason, stop_detail = "refusal", block_name
+    elif finish_name in _GEMINI_BLOCKED:
+        stop_reason, stop_detail = "refusal", finish_name
+    elif finish_name == "MAX_TOKENS":
+        stop_reason, stop_detail = "max_tokens", ""
+    else:
+        stop_reason, stop_detail = "end_turn" if finish_name == "STOP" else finish_name, ""
+
+    meta = response.usage_metadata
+    usage = {
+        "input_tokens": getattr(meta, "prompt_token_count", None),
+        "output_tokens": getattr(meta, "candidates_token_count", None),
+        "thinking_tokens": getattr(meta, "thoughts_token_count", None),
+    }
+    return ModelReply(
+        text=text,
+        stop_reason=stop_reason,
+        model=str(response.model_version or config.LLM_MODEL),
+        usage={k: v for k, v in usage.items() if isinstance(v, int)},
+        stop_detail=stop_detail,
+    )
+
+
+def _call_model(
+    system_prompt: str,
+    user_prompt: str,
+    output_schema: dict | None,
+    dimension_id: str,
+) -> ModelReply:
+    """One analysis request to the provider that serves LLM_MODEL."""
+    if config.llm_provider() == "anthropic":
+        return _call_claude(system_prompt, user_prompt, output_schema, dimension_id)
+    if config.llm_provider() == "google":
+        return _call_gemini(system_prompt, user_prompt, output_schema, dimension_id)
+    _check_llm_config()
+    raise RuntimeError(f"No provider for LLM_MODEL={config.LLM_MODEL!r}")
 
 
 def _collapse_ws(value: Any) -> str:
@@ -638,7 +756,7 @@ def analyze_dimension(
                 parsed = {
                     "dimension": dimension_id,
                     "verdict": "MEDIUM",
-                    "reasoning": "The model declined the request (stop_reason=refusal); no finding.",
+                    "reasoning": f"The model declined the request ({reply.stop_detail or 'refusal'}); no finding.",
                     "evidence": [],
                     "flags": ["refusal"],
                 }

@@ -29,13 +29,17 @@ REPORTS_DIR = DATA_DIR / "reports"
 RUNS_DIR = DATA_DIR / "runs"
 
 # ---------------------------------------------------------------------------
-# LLM Configuration (Anthropic Claude — Analysis Agent)
+# LLM Configuration (Analysis Agent)
 # ---------------------------------------------------------------------------
+# The provider follows the model name: "gemini-*" calls the Google Gemini API,
+# "claude-*" the Anthropic API.
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.8-flash")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-5-5")
-# Thinking depth and token spend (low | medium | high | xhigh | max).  There is
-# no temperature setting: Claude Sonnet 5.5 rejects a non-default temperature,
-# so repeated runs are not guaranteed to agree.
+# Gemini only: Claude Sonnet 5.5 rejects a non-default temperature.  Even at 0
+# repeated runs are not guaranteed to agree.
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.0"))
+# Claude only: thinking depth and token spend (low | medium | high | xhigh | max).
 LLM_EFFORT = os.getenv("LLM_EFFORT", "high")
 LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "16000"))
 
@@ -43,11 +47,10 @@ LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "16000"))
 # into a verdict that reads like a real one.  The timeout covers thinking at
 # high effort over a full evidence block.
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "300"))
-LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "3"))
-LLM_RETRY_BASE_SECONDS = float(os.getenv("LLM_RETRY_BASE_SECONDS", "2.0"))
-
-# Google key — needed only when EMBEDDING_PROVIDER=google.
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+# The backoff is long because the Gemini free tier allows 5 requests a minute
+# and returns 503 under load: quick retries only use up that allowance.
+LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "4"))
+LLM_RETRY_BASE_SECONDS = float(os.getenv("LLM_RETRY_BASE_SECONDS", "15.0"))
 
 # ---------------------------------------------------------------------------
 # Embedding Configuration
@@ -164,14 +167,23 @@ def validate_config() -> list[str]:
     return errors
 
 
+def llm_provider() -> str:
+    """Which API serves LLM_MODEL: "anthropic", "google" or "" if neither."""
+    if LLM_MODEL.startswith("claude-"):
+        return "anthropic"
+    if LLM_MODEL.startswith("gemini-"):
+        return "google"
+    return ""
+
+
 def validate_llm_config() -> list[str]:
     """Check the Analysis Agent's settings.  Returns a list of errors."""
     errors = []
-    if not LLM_MODEL.startswith("claude-"):
-        errors.append(
-            f"LLM_MODEL={LLM_MODEL!r} is not a Claude model; the Analysis Agent "
-            "calls the Anthropic API (set LLM_MODEL=claude-sonnet-5-5 in .env)"
-        )
-    if LLM_EFFORT not in {"low", "medium", "high", "xhigh", "max"}:
+    provider = llm_provider()
+    if not provider:
+        errors.append(f"LLM_MODEL={LLM_MODEL!r} must be a gemini-* or claude-* model")
+    if provider == "google" and not GOOGLE_API_KEY:
+        errors.append("GOOGLE_API_KEY is not set. Get one at https://aistudio.google.com/apikey")
+    if provider == "anthropic" and LLM_EFFORT not in {"low", "medium", "high", "xhigh", "max"}:
         errors.append(f"LLM_EFFORT={LLM_EFFORT!r} must be low|medium|high|xhigh|max")
     return errors
