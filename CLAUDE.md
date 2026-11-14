@@ -56,7 +56,18 @@ The Retrieval Agent writes the scratch fields; the Analysis Agent pops the first
 
 ## Commands
 
+Dependencies live in `pyproject.toml`, pinned in `uv.lock`. torch comes from one of two extras: `cu128` (local NVIDIA GPU) or `cpu` (CI, containers). **A bare `uv sync` or `uv run` drops the extra and swaps torch for PyPI's build**, so sync once with the extra and run commands inside the activated `.venv`. After changing dependencies, run `uv lock` and commit `uv.lock`. CI (`.github/workflows/ci.yml`) runs `uv lock --check`, ruff lint and format, and the offline tests on CPU torch with `HF_HUB_OFFLINE=1`.
+
 ```bash
+# Setup (once): environment, then git hooks (ruff, uv-lock, large-file guard)
+uv sync --extra cu128            # or --extra cpu
+source .venv/bin/activate
+pre-commit install
+
+# Lint and format (pre-commit runs both on commit)
+ruff check . && ruff format --check .
+pre-commit run --all-files
+
 # Tests (the `live` mark needs network + API keys)
 python -m pytest -q -m "not live"
 python -m pytest -q -m live
