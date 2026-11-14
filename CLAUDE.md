@@ -32,7 +32,7 @@ LangGraph StateGraph:
   Retrieval Agent → per-query dense search, quota merge, top-8
                   → confidence retry (1x) → hard-floor gate
   Analysis Agent  → <evidence id="E1" …> blocks + rubric guidance
-                  → Claude, JSON-schema output → quote check against cited blocks
+                  → Gemini (or Claude), JSON-schema output → quote check against cited blocks
   Conditional loop over 4 dimensions
   Report Node     → verdict cards + provenance; every run → data/runs/ + ledger
 ```
@@ -165,14 +165,14 @@ Ordering is the safeguard: **define rule → derive labels → freeze rubrics �
 **Currently holding:**
 
 - Rubric definitions are fixed inputs — changing a rubric invalidates prior eval runs and requires a new MLflow experiment, not an edit to an existing one
-- Every LLM call has explicit retry and timeout handling — `_invoke_with_retry` in [src/agents/analysis_agent.py](src/agents/analysis_agent.py), bounded retries with exponential backoff for rate limits, server errors and network failures only (a 400 fails at once), `LLM_TIMEOUT_SECONDS` on the client. The client's own `max_retries` is set to 0 so every attempt is logged rather than retried silently.
-- The model answers in the dimension's `output_schema` (JSON Schema, passed as `output_config.format`) — the only place the output fields are defined; templates no longer carry an "Output Format" block (`tests/test_rubric_spec.py`).
+- Every LLM call has explicit retry and timeout handling — `_invoke_with_retry` in [src/agents/analysis_agent.py](src/agents/analysis_agent.py), bounded retries for rate limits, server errors and network failures only (a 400 or a free-tier daily quota fails at once), waiting as long as the server's "retry in Xs" asks, otherwise exponential backoff from 15 s; `LLM_TIMEOUT_SECONDS` on the client. The client's own `max_retries` is set to 0 so every attempt is logged rather than retried silently.
+- The model answers in the dimension's `output_schema` (JSON Schema, passed as Gemini's `response_json_schema` or Claude's `output_config.format`, so it uses only keywords both accept) — the only place the output fields are defined; templates no longer carry an "Output Format" block (`tests/test_rubric_spec.py`).
 - Every quote is checked. Evidence items cite a block by `evidence_id`; the quote must appear in that block (whitespace, case and typographic quotes/dashes ignored; `...` elisions allowed). Other quote fields must appear in some retrieved block. A failure adds the diagnostic flag `unverified_quote` and is listed in the verdict's `quote_check`; the citation's page and chunk ID come from the cited block, never from the model.
 - Embedding calls have bounded retry with exponential backoff (`_get_embeddings_with_retry` in [src/indexing/pinecone_ops.py](src/indexing/pinecone_ops.py))
 - Retrieval failures are contained per query — one failed query does not abort the dimension
 - The no-evidence path never calls the model; the fallback rating comes from the dimension's explicit `no_evidence_rating`, never from parsing prose
-- **A verdict that is not a finding is visibly marked.** `no_evidence`, `parse_error`, `analysis_error`, `inconclusive` (the model said the rubric's required evidence was missing), `invalid_rating`, `refusal` (the model declined) and `truncated` (cut off at `max_tokens`) reach the report as `degraded_dimensions`, and `report["trustworthy"]` is `False` whenever any are present. Check that field before believing any rating. `raw_verdict` keeps the model's own answer (e.g. INCONCLUSIVE) where `rating` coerces it.
-- Refusals fall back server-side (`fallbacks: "default"`); a verdict answered by another model carries `model_fallback`, and `served_model` names the model that answered.
+- **A verdict that is not a finding is visibly marked.** `no_evidence`, `parse_error`, `analysis_error`, `inconclusive` (the model said the rubric's required evidence was missing), `invalid_rating`, `refusal` (the model declined, including Gemini's RECITATION and SAFETY stops) and `truncated` (cut off at `max_tokens`) reach the report as `degraded_dimensions`, and `report["trustworthy"]` is `False` whenever any are present. Check that field before believing any rating. `raw_verdict` keeps the model's own answer (e.g. INCONCLUSIVE) where `rating` coerces it.
+- On Claude, refusals fall back server-side (`fallbacks: "default"`); a verdict answered by another model carries `model_fallback`, and `served_model` names the model that answered.
 - LangSmith tracing uploads prompts, including filing text, so `src/config.py` turns it off unless `LANGCHAIN_TRACING_V2=true` *and* a real `LANGCHAIN_API_KEY` is set.
 
 **Targets, not yet implemented** — do not assume these when reading the code:
@@ -186,10 +186,12 @@ Ordering is the safeguard: **define rule → derive labels → freeze rubrics �
 
 | Role | Setting | Current value |
 |---|---|---|
-| Rubric judgment (Analysis Agent) | `LLM_MODEL`, `LLM_EFFORT` | `claude-sonnet-5-5` at effort `high`, via the official `anthropic` SDK (set 2026-10-18; replaced `gemini-3.8-flash`, whose free tier allowed 20 calls a day) |
+| Rubric judgment (Analysis Agent) | `LLM_MODEL`, `LLM_TEMPERATURE` | `gemini-3.8-flash` at temperature 0, free tier, via `google-genai` (decided 2026-11-10: the owner does not want to pay for API calls). `gemini-3.5-flash-lite` for testing plumbing only, never for results |
 | Embeddings | `EMBEDDING_PROVIDER`, `LOCAL_EMBEDDING_MODEL` | `local` — sentence-transformers `BAAI/bge-m3`, `EMBEDDING_DIMENSION=1024` (the code defaults match; the index was built with them) |
 | Embeddings (unused while provider is `local`) | `EMBEDDING_MODEL` | `models/gemini-embedding-001` |
 
-**There is no temperature setting.** Claude Sonnet 5.5 rejects a non-default temperature, so two runs of the same filing can disagree; measure repeat-run agreement before reading a single run's verdict as stable. Thinking is adaptive (on), and the answer is read from the response's `text` block only. `config.validate_llm_config()` refuses a non-Claude `LLM_MODEL`. Verify `LLM_MODEL` against Anthropic's current lineup before the first MLflow experiment; a stale model ID is one of the few things that silently devalues the whole result.
+The provider follows the model name: `gemini-*` calls Google, `claude-*` calls Anthropic (`claude-sonnet-5-5` with `LLM_EFFORT`; the path is kept but needs paid API credits, which a Claude subscription does not include). `config.validate_llm_config()` refuses anything else.
+
+**Free-tier limits shape every run** (observed 2026-11-10 on `gemini-3.8-flash`): 20 requests a day, 5 a minute, and 503 "high demand" errors that can last minutes. Google describes the tier as best-effort, so a run can fail for reasons unrelated to the agent; those verdicts are flagged `analysis_error`. Even at temperature 0 two runs can disagree; measure repeat-run agreement before reading a single run's verdict as stable. Settle on one model before any scored experiment, and verify `LLM_MODEL` against Google's current lineup first; a stale model ID is one of the few things that silently devalues the whole result. Answers are read from non-thought text only.
 
 See Conventions above for which of this file's stated practices are implemented and which are still targets.
