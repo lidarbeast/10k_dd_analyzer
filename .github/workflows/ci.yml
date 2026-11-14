@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.13.8"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    name: Lint and format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Lock file matches pyproject.toml
+        run: uv lock --check
+
+      - name: Ruff lint
+        run: uv run --frozen --only-group lint ruff check --output-format=github .
+
+      - name: Ruff format
+        run: uv run --frozen --only-group lint ruff format --check .
+
+  test:
+    name: Offline tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # Offline tests must not reach model hubs or APIs.  No secrets are set,
+      # so `live` tests are deselected, not skipped for a missing key.
+      HF_HUB_OFFLINE: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Install locked dependencies (CPU torch)
+        run: uv sync --frozen --extra cpu
+
+      - name: Run tests
+        run: uv run --no-sync pytest -m "not live" -ra
