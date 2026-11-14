@@ -1,0 +1,87 @@
+[project]
+name = "dd-analyzer"
+version = "0.1.0"
+description = "Agentic RAG over SEC 10-K filings with graded verdicts evaluated against externally sourced ground truth."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Direct imports only; each lower bound is the version the pipeline was last
+# run with.  uv.lock pins the exact versions.
+dependencies = [
+    "anthropic>=1.15.0",
+    "docling>=2.76.0",
+    "docling-core>=2.67.1",
+    "google-genai>=1.67.0",
+    "httpx>=0.28.1",
+    "langgraph>=1.1.2",
+    "pinecone>=8.1.0",
+    "pypdfium2>=5.5.0",
+    "python-dotenv>=1.2.2",
+    "sentence-transformers>=5.2.3",
+    "transformers>=4.57.6",
+]
+
+[project.optional-dependencies]
+# torch build: pick exactly one.  `cpu` for CI and containers, `cu128` for a
+# local NVIDIA GPU (faster Docling indexing).  Neither falls back to PyPI's.
+cpu = ["torch>=2.10.0", "torchvision>=0.25.0"]
+cu128 = ["torch>=2.10.0", "torchvision>=0.25.0"]
+# Experiment tracking (plan Phase 1c).
+tracking = ["mlflow>=3.10.1"]
+
+[dependency-groups]
+lint = ["ruff==0.15.4"]
+dev = [
+    { include-group = "lint" },
+    "pre-commit>=4.0.0",
+    "pytest>=9.0.2",
+]
+
+[tool.uv]
+# Linux only: the target for development, CI and the container image.
+environments = ["sys_platform == 'linux'"]
+default-groups = ["dev"]
+conflicts = [[{ extra = "cpu" }, { extra = "cu128" }]]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu128", extra = "cu128" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu128", extra = "cu128" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["venv"]
+
+[tool.ruff.lint]
+# pycodestyle errors, pyflakes, import order, bugbear, pyupgrade
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests and one-off check scripts put the project root on sys.path before
+# importing src.
+"tests/**" = ["E402"]
+"data/**" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "api"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: test makes real network/API calls (Pinecone, Gemini) and requires credentials in .env. Deselect with -m \"not live\".",
+]
