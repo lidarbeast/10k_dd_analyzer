@@ -16,15 +16,15 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import (
+from docling.datamodel.base_models import InputFormat  # noqa: E402
+from docling.datamodel.pipeline_options import (  # noqa: E402
     PdfPipelineOptions,
     TableStructureOptions,
     TesseractCliOcrOptions,
 )
-from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.document_converter import DocumentConverter, PdfFormatOption  # noqa: E402
 
-from src import config
+from src import config  # noqa: E402
 
 _log = logging.getLogger(__name__)
 

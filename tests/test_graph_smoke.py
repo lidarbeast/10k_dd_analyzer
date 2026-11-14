@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
 import contextlib
 
 from src.agents import analysis_agent, document_agent, retrieval_agent
-from src.graph.build import build_graph, _new_state
+from src.graph.build import _new_state, build_graph
 
 
 def _mock_query_index(query: str, top_k: int | None = None, section_types=None, namespace: str = ""):

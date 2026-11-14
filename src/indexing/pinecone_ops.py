@@ -10,17 +10,16 @@ import json
 import logging
 import sys
 import time
-
 from pathlib import Path
 
 # ── Path bootstrap (allows running from any directory) ──────────────────────
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from google import genai                  # noqa: E402
+from google import genai  # noqa: E402
 from pinecone import Pinecone, ServerlessSpec  # noqa: E402
 from pinecone.exceptions import NotFoundException  # noqa: E402
 
-from src import config                    # noqa: E402
+from src import config  # noqa: E402
 
 _log = logging.getLogger(__name__)
 
@@ -310,7 +309,7 @@ def upsert_chunks(chunks: list[dict], namespace: str = "") -> int:
 
         # Build Pinecone vectors
         vectors = []
-        for j, (chunk, embedding) in enumerate(zip(batch, embeddings)):
+        for j, (chunk, embedding) in enumerate(zip(batch, embeddings, strict=True)):
             chunk_id = f"{source_doc}_chunk_{i + j}"
 
             metadata = {
@@ -465,7 +464,7 @@ def build_index(input_path: Path | None = None) -> None:
 
     for path in processed_files:
         _log.info(f"Loading {path.name}...")
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             chunks = json.load(f)
 
         if not chunks:

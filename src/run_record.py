@@ -13,11 +13,11 @@ pipeline configuration, with which results.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import hashlib
 import json
-from pathlib import Path
 import subprocess
+from datetime import UTC, datetime
+from pathlib import Path
 
 from src import config
 
@@ -81,7 +81,7 @@ def write_run(state: dict, runs_dir: Path | None = None) -> Path:
     """Save the run's full state and append its ledger line.  Returns the run directory."""
     runs_dir = runs_dir or config.RUNS_DIR
     report = state.get("report") or {}
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stem = report.get("namespace") or Path(state.get("filing_path", "unknown")).stem
     sha = report.get("git_sha", "unknown")
 

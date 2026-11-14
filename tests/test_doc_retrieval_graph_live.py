@@ -34,7 +34,6 @@ from src.agents import document_agent, retrieval_agent
 from src.graph.build import _new_state
 from src.state import DDState
 
-
 _COMPANY = "Shopify"
 _FILING_PATH = "data/filings/shop-20251231.pdf"
 

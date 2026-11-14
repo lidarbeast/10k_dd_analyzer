@@ -8,8 +8,8 @@ filings when they are present locally (the PDFs are git-ignored).
 
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pytest
 

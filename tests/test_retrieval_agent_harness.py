@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import contextlib
 import copy
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -23,7 +23,6 @@ if str(PROJECT_ROOT) not in sys.path:
 from src import config
 from src.agents import retrieval_agent
 from src.agents.document_agent import load_dimensions
-
 
 # ---------------------------------------------------------------------------
 # Helpers

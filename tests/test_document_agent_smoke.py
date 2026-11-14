@@ -26,7 +26,6 @@ import contextlib
 from src.agents import document_agent
 from src.agents.document_agent import load_dimensions, run
 
-
 REQUIRED_KEYS = {
     "dimension_id",
     "name",

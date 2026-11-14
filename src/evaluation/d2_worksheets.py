@@ -37,9 +37,9 @@ import pypdfium2 as pdfium
 
 from src import config
 from src.evaluation.d3_worksheets import (
+    _SENTENCE_SPLIT,
     PORTFOLIO,
     Section,
-    _SENTENCE_SPLIT,
     _page_at,
     _section,
     _sha256,
@@ -341,7 +341,7 @@ def render_worksheet(company: str, meta: dict, pdf_path: Path, sha256: str, cik:
     out.append(f"- **Filing:** `data/filings/{pdf_path.name}` — {meta['fiscal_year']}")
     out.append(f"- **Filing SHA-256:** `{sha256}`")
     out.append(f"- **SEC CIK:** `{cik or 'not found'}`")
-    out.append(f"- **10-K signature date:** " + (f"{signed[1]} (PDF p. {signed[0]})" if signed else
+    out.append("- **10-K signature date:** " + (f"{signed[1]} (PDF p. {signed[0]})" if signed else
                                                  "not found automatically — see the signature page; the auditor's report date is shown in Source A"))
     out.append(f"- **Rubric version:** `{config.RUBRIC_VERSION}`")
     out.append("- **Built by:** `python -m src.evaluation.d2_worksheets` — deterministic extraction; no model was used")

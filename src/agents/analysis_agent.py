@@ -11,18 +11,20 @@ Responsibilities:
   5. Output a structured VerdictCard and accumulate it in DDState
 """
 
-from dataclasses import dataclass, field
 import json
 import logging
 import re
 import time
 import unicodedata
-from typing import Any, Callable
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any
 
 import anthropic
-from google import genai
-from google.genai import errors as genai_errors, types as genai_types
 import httpx
+from google import genai
+from google.genai import errors as genai_errors
+from google.genai import types as genai_types
 
 from src import config
 from src.state import DDState, VerdictCard

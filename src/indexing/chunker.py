@@ -7,9 +7,9 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from docling.chunking import HybridChunker
+from docling_core.transforms.chunker import BaseChunk
 from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 from docling_core.types.doc.document import DoclingDocument
-from docling_core.transforms.chunker import BaseChunk
 from transformers import AutoTokenizer
 
 from src import config
@@ -157,7 +157,7 @@ if __name__ == "__main__":
             if source_doc.endswith("_parsed"):
                 source_doc = source_doc[: -len("_parsed")]
             
-            with open(json_path, "r", encoding="utf-8") as f:
+            with open(json_path, encoding="utf-8") as f:
                 parsed_doc_dict = json.load(f)
 
             if parsed_doc_dict.get("source_document"):

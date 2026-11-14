@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import contextlib
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]

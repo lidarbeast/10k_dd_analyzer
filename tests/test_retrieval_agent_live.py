@@ -122,7 +122,7 @@ def _assert_dimension(dim_index: int, *, verbose: bool = True) -> dict:
     elif outcome == "hard_floor_not_met":
         # Not a test failure — it means evidence is genuinely sparse for this
         # dimension in this filing, which is valid.  Just surface it clearly.
-        print(f"    NOTE: hard floor not met — Analysis Agent will use no_evidence_handling")
+        print("    NOTE: hard floor not met — Analysis Agent will use no_evidence_handling")
 
     return {
         "dim_index": dim_index,

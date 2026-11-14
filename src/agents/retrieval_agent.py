@@ -11,12 +11,12 @@ Responsibilities:
 
 import logging
 import math
-from pathlib import Path
 import statistics
+from pathlib import Path
 
 from src import config
-from src.state import DDState
 from src.indexing.pinecone_ops import query_index
+from src.state import DDState
 
 _log = logging.getLogger(__name__)
 

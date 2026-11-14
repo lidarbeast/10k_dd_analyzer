@@ -5,7 +5,11 @@ A and B1 ran on gemini-3.8-flash on 2026-10-08 (d2_check_A.json,
 d2_check_B1.json; the content-block extraction was done here then).  Since
 2026-10-18 the agent calls Claude through `_call_model`, and results are
 written to d2_check_<set>.<model>.json so the Gemini results are kept."""
-import json, random, sys, logging
+import json
+import logging
+import random
+import sys
+
 logging.disable(logging.WARNING)
 from src import config
 from src.agents import analysis_agent as aa

@@ -145,7 +145,7 @@ if __name__ == "__main__":
     for chunk_path in chunk_files:
         _log.info(f"Processing {chunk_path.name} ...")
 
-        with open(chunk_path, "r", encoding="utf-8") as f:
+        with open(chunk_path, encoding="utf-8") as f:
             raw_chunks = json.load(f)
 
         processed = post_process(raw_chunks, min_chars=args.min_chars)
