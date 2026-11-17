@@ -1,5 +1,6 @@
-# Runs on every `git commit` after a one-time `uv run pre-commit install`.
-# Run by hand on everything: uv run pre-commit run --all-files
+# Runs on every `git commit` after a one-time `pre-commit install` (inside the
+# activated .venv; a bare `uv run` would swap torch, see README).
+# Run by hand on everything: pre-commit run --all-files
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.4  # keep equal to the ruff pin in pyproject.toml
